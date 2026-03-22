@@ -36,11 +36,14 @@ export default function Login() {
     setErrorText('');
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({ 
-        email: 'prathamsahu03@gmail.com', 
-        password: '1234qwerty@' 
-      });
-      if (error) throw error;
+      const credentials = { email: 'prathamsahu03@gmail.com', password: '1234qwerty@' };
+      const { error } = await supabase.auth.signInWithPassword(credentials);
+      
+      if (error) {
+        // Fallback: auto-create the guest account if it does not exist
+        const { error: signUpError } = await supabase.auth.signUp(credentials);
+        if (signUpError) throw signUpError;
+      }
     } catch (err: any) {
       setErrorText(err.message);
     } finally {

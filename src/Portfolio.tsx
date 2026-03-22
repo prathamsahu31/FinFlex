@@ -90,6 +90,7 @@ export default function Portfolio() {
 
   // Calculate projected savings at retirement age
   const yearsToRetire = retirementAge - currentAge;
+  const annualReturn = 7; // Assumed 7% historic real return
   const monthlyRate = annualReturn / 100 / 12;
   const months = yearsToRetire * 12;
 

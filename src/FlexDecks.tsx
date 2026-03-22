@@ -195,7 +195,7 @@ export default function FlexDecks() {
                         {card.category}
                       </span>
                       <span className="text-white/60 text-sm font-medium">
-                        {cards.length - index}/{DECKS.length}
+                        {cards.length - index}/{INITIAL_DECKS.length}
                       </span>
                     </div>
                     
