@@ -30,6 +30,17 @@ import {
 } from 'recharts';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
+import CountUp from './CountUp';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.15 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Shopping': '#1e293b',
@@ -158,39 +169,52 @@ export default function Dashboard() {
     >
       
       {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <motion.div whileHover={{ y: -4 }} className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-5 text-white shadow-sm cursor-pointer">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-5 text-white shadow-sm cursor-pointer">
           <p className="text-indigo-100 text-sm font-medium mb-1">Total Balance</p>
-          <h2 className="text-3xl font-bold mb-1">{stats.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</h2>
+          <h2 className="text-3xl font-bold mb-1">
+            <CountUp value={stats.balance} prefix="₹" decimals={2} />
+          </h2>
           <span className="flex items-center text-indigo-100 text-xs font-medium">
             <TrendingUp size={14} className="mr-1"/> All Time
           </span>
         </motion.div>
         
-        <motion.div whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
           <div className="flex justify-between items-start mb-1">
             <p className="text-slate-500 text-sm font-medium">Income</p>
           </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-1">{stats.income.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</h2>
+          <h2 className="text-3xl font-bold text-slate-800 mb-1">
+            <CountUp value={stats.income} prefix="₹" decimals={2} />
+          </h2>
           <p className="text-slate-400 text-xs">All incoming transfers & salary</p>
         </motion.div>
         
-        <motion.div whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
           <div className="flex justify-between items-start mb-1">
             <p className="text-slate-500 text-sm font-medium">Expenses</p>
           </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-1">{stats.expenses.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</h2>
+          <h2 className="text-3xl font-bold text-slate-800 mb-1">
+            <CountUp value={stats.expenses} prefix="₹" decimals={2} />
+          </h2>
           <p className="text-slate-400 text-xs">Bills, shopping & daily spend</p>
         </motion.div>
         
-        <motion.div whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
+        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
           <div className="flex justify-between items-start mb-1">
             <p className="text-slate-500 text-sm font-medium">Net Savings Rate</p>
           </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-1">{stats.netSavingsRate.toFixed(1)}%</h2>
+          <h2 className="text-3xl font-bold text-slate-800 mb-1">
+            <CountUp value={stats.netSavingsRate} suffix="%" decimals={1} />
+          </h2>
           <p className="text-slate-400 text-xs">of total income saved</p>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

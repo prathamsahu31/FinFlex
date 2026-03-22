@@ -44,9 +44,14 @@ export default function Portfolio() {
       }
       setIsLoading(false);
 
-      const { data: profile } = await supabase.from('profiles').select('fire_target').eq('id', user.id).single();
-      if (profile && profile.fire_target) {
-        setFireNumber(Number(profile.fire_target));
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (profile) {
+        if (profile.fire_target) setFireNumber(Number(profile.fire_target));
+        if (profile.age) setCurrentAge(Number(profile.age));
+        if (profile.monthly_income && profile.monthly_expenses) {
+          const savings = Number(profile.monthly_income) - Number(profile.monthly_expenses);
+          if (savings >= 0) setMonthlySavings(savings);
+        }
       }
     };
     initData();

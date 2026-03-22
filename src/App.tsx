@@ -18,7 +18,8 @@ import {
   Wrench,
   Calendar,
   LogOut,
-  Users
+  Users,
+  User as UserIcon
 } from 'lucide-react';
 import { cn } from './utils';
 import Dashboard from './Dashboard';
@@ -29,6 +30,8 @@ import AIAgent from './AIAgent';
 import Tools from './Tools';
 import BillSplit from './BillSplit';
 import Login from './Login';
+import Onboarding from './Onboarding';
+import ProfileSettings from './ProfileSettings';
 import { supabase } from './lib/supabase';
 
 const TABS = [
@@ -36,28 +39,44 @@ const TABS = [
   { id: 'transactions', label: 'Transactions', icon: CreditCard, component: Transactions },
   { id: 'bill-split', label: 'Bill Split', icon: Users, component: BillSplit },
   { id: 'portfolio', label: 'Portfolio & FIRE', icon: TrendingUp, component: Portfolio },
-  { id: 'flex-decks', label: 'flex-decks', icon: BookOpen, component: FlexDecks },
+  { id: 'flex-decks', label: 'Flex-Decks', icon: BookOpen, component: FlexDecks },
   { id: 'ai-agent', label: 'AI Agent', icon: Bot, component: AIAgent },
   { id: 'tools', label: 'Tools', icon: Wrench, component: Tools },
+  { id: 'settings', label: 'Settings', icon: UserIcon, component: ProfileSettings },
 ];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(TABS[0].id);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+
+  const loadProfile = async (userId: string) => {
+    if (!supabase) return;
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (data) setProfile(data);
+  };
 
   useEffect(() => {
     if (supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
         setSession(session);
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        }
         setIsInitializing(false);
       });
 
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
+      } = supabase.auth.onAuthStateChange(async (_event, session) => {
         setSession(session);
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
       });
 
       return () => subscription.unsubscribe();
@@ -84,6 +103,10 @@ export default function App() {
 
   if (!session) {
     return <Login />;
+  }
+
+  if (profile && profile.onboarding_completed === false) {
+    return <Onboarding user={session.user} onComplete={() => loadProfile(session.user.id)} />;
   }
 
   const ActiveComponent = TABS.find(t => t.id === activeTab)?.component || Dashboard;
