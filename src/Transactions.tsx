@@ -177,14 +177,23 @@ export default function Transactions() {
               No transactions found. Click "Data Entry +" to add some.
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <motion.ul 
+              initial="hidden"
+              animate="show"
+              variants={{
+                show: { transition: { staggerChildren: 0.05 } }
+              }}
+              className="divide-y divide-slate-100"
+            >
               <AnimatePresence>
                 {filteredTransactions.map((t) => (
                   <motion.li 
                     key={t.id}
                     layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    variants={{
+                      hidden: { opacity: 0, x: -20 },
+                      show: { opacity: 1, x: 0 }
+                    }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="relative group overflow-hidden bg-white"
                   >
@@ -256,7 +265,7 @@ export default function Transactions() {
                   </motion.li>
                 ))}
               </AnimatePresence>
-            </ul>
+            </motion.ul>
           )}
         </div>
       </div>

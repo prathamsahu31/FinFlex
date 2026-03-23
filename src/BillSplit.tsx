@@ -193,33 +193,39 @@ export default function BillSplit() {
         
         {/* Left Sidebar - Navigation & Lists */}
         <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-          <div className="flex border-b border-slate-100 p-2 shrink-0">
-            <button 
-              onClick={() => setActiveTab('groups')}
-              className={cn("flex-1 py-2 text-sm font-medium rounded-lg transition-colors", activeTab === 'groups' ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50")}
-            >
-              Groups
-            </button>
-            <button 
-              onClick={() => setActiveTab('friends')}
-              className={cn("flex-1 py-2 text-sm font-medium rounded-lg transition-colors", activeTab === 'friends' ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50")}
-            >
-              Friends
-            </button>
+          <div className="flex border-b border-slate-100 p-2 shrink-0 bg-slate-50/50 rounded-t-2xl relative">
+            {['groups', 'friends'].map(tab => (
+              <button 
+                key={tab}
+                onClick={() => setActiveTab(tab as any)}
+                className={cn(
+                  "flex-1 py-2 text-sm font-medium rounded-lg transition-colors relative z-10 capitalize", 
+                  activeTab === tab ? "text-indigo-700" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                )}
+              >
+                {activeTab === tab && (
+                  <motion.div 
+                    layoutId="activeTabBillSplit" 
+                    className="absolute inset-0 bg-white shadow-sm border border-slate-200 rounded-lg -z-10" 
+                  />
+                )}
+                {tab}
+              </button>
+            ))}
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
             {activeTab === 'groups' && (
-              <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-3">
+                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                     <Plus size={20} />
                   </div>
                   <span className="font-medium">Start a new group</span>
-                </button>
+                </motion.button>
                 {groups.length === 0 && <p className="text-slate-400 text-sm text-center py-4">No groups yet.</p>}
                 {groups.map(group => (
-                  <motion.div whileHover={{ x: 4 }} key={group.name} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 transition-all">
+                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={group.name} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 transition-all">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                         <Users size={20} />
@@ -232,20 +238,20 @@ export default function BillSplit() {
                     <ChevronRight size={16} className="text-slate-400" />
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
 
             {activeTab === 'friends' && (
-              <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-3">
+                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                     <UserPlus size={20} />
                   </div>
                   <span className="font-medium">Add a friend</span>
-                </button>
+                </motion.button>
                 {friends.length === 0 && <p className="text-slate-400 text-sm text-center py-4">No friends with balances yet.</p>}
                 {friends.map(friend => (
-                  <motion.div whileHover={{ x: 4 }} key={friend.name} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 transition-all">
+                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={friend.name} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 transition-all">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold shrink-0">
                         {friend.avatar}
@@ -263,7 +269,7 @@ export default function BillSplit() {
                     </div>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
