@@ -54,8 +54,16 @@ export default function App() {
 
   const loadProfile = async (userId: string) => {
     if (!supabase) return;
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    if (data) setProfile(data);
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (error) {
+        console.error('Error loading profile:', error.message);
+        return;
+      }
+      if (data) setProfile(data);
+    } catch (err) {
+      console.error('Profile fetch failed:', err);
+    }
   };
 
   useEffect(() => {
@@ -63,8 +71,14 @@ export default function App() {
       supabase.auth.getSession().then(async ({ data: { session } }) => {
         setSession(session);
         if (session?.user) {
-          await loadProfile(session.user.id);
+          try {
+            await loadProfile(session.user.id);
+          } catch (err) {
+            console.error('Failed to load profile during init:', err);
+          }
         }
+        setIsInitializing(false);
+      }).catch(() => {
         setIsInitializing(false);
       });
 
@@ -73,7 +87,11 @@ export default function App() {
       } = supabase.auth.onAuthStateChange(async (_event, session) => {
         setSession(session);
         if (session?.user) {
-          await loadProfile(session.user.id);
+          try {
+            await loadProfile(session.user.id);
+          } catch (err) {
+            console.error('Failed to load profile on auth change:', err);
+          }
         } else {
           setProfile(null);
         }
