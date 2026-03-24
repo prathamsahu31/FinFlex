@@ -1,10 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface LandingProps {
   onGetStarted: () => void;
 }
 
 export default function Landing({ onGetStarted }: LandingProps) {
+  const [stats, setStats] = useState({
+    rebels: '40k+',
+    money: '$2M+',
+    rating: '4.9/5',
+    support: '24/7',
+    visits: 0
+  });
+
+  useEffect(() => {
+    // Get and increment visit count from localStorage
+    const savedVisits = localStorage.getItem('finflex_visit_count');
+    const visitCount = savedVisits ? parseInt(savedVisits, 10) + 1 : 1;
+    localStorage.setItem('finflex_visit_count', visitCount.toString());
+
+    // Calculate dynamic stats based on visit count
+    const rebelsBase = 40000;
+    const moneyBase = 2.0;
+    
+    setStats({
+      rebels: (rebelsBase + visitCount).toLocaleString() + '+',
+      money: '$' + (moneyBase + (visitCount * 0.01)).toFixed(2) + 'M+',
+      rating: '4.9/5',
+      support: '24/7',
+      visits: visitCount
+    });
+  }, []);
+
   return (
     <div className="bg-background text-on-background font-body antialiased min-h-screen">
       {/* Top Navigation Bar */}
@@ -137,19 +164,19 @@ export default function Landing({ onGetStarted }: LandingProps) {
         <section className="border-4 border-black bg-white">
           <div className="grid grid-cols-2 md:grid-cols-4">
             <div className="text-center p-8 md:p-12 border-b-4 md:border-b-0 border-r-4 border-black hover:bg-gumroad-pink transition-colors">
-              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">40k+</p>
+              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">{stats.rebels}</p>
               <p className="font-label uppercase font-black tracking-widest text-xs md:text-sm">Active Rebels</p>
             </div>
             <div className="text-center p-8 md:p-12 border-b-4 md:border-b-0 md:border-r-4 border-black hover:bg-gumroad-yellow transition-colors">
-              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">$2M+</p>
+              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">{stats.money}</p>
               <p className="font-label uppercase font-black tracking-widest text-xs md:text-sm">Money Tracked</p>
             </div>
             <div className="text-center p-8 md:p-12 border-r-4 border-black hover:bg-gumroad-pink transition-colors">
-              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">4.9/5</p>
+              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">{stats.rating}</p>
               <p className="font-label uppercase font-black tracking-widest text-xs md:text-sm">App Rating</p>
             </div>
             <div className="text-center p-8 md:p-12 hover:bg-gumroad-yellow transition-colors">
-              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">24/7</p>
+              <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">{stats.support}</p>
               <p className="font-label uppercase font-black tracking-widest text-xs md:text-sm">Live Support</p>
             </div>
           </div>
@@ -167,6 +194,16 @@ export default function Landing({ onGetStarted }: LandingProps) {
             <p className="text-white/60 font-black uppercase tracking-widest text-sm text-center md:text-left max-w-xs">
               © 2024 Finflex. No-line finance for the provocateur.
             </p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black neo-brutalism-shadow-xs group cursor-default">
+                <span className="text-[10px] font-black font-label uppercase tracking-widest text-black">Made with</span>
+                <span className="text-lg animate-bounce inline-block">❤️</span>
+                <span className="text-[10px] font-black font-label uppercase tracking-widest text-black">in India</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-gumroad-pink border-2 border-black neo-brutalism-shadow-xs group cursor-default">
+                <span className="text-[10px] font-black font-label uppercase tracking-widest text-black italic">Visitor #{stats.visits}</span>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap justify-center gap-10">
             <a className="text-white hover:text-gumroad-pink transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-pink pb-1" href="#">Terms</a>

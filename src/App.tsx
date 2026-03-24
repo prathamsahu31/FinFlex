@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
-  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon
+  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon, MoreVertical
 } from 'lucide-react';
 import { cn } from './utils';
 import Dashboard from './Dashboard';
@@ -21,6 +21,7 @@ import Login from './Login';
 import Landing from './Landing';
 import Onboarding from './Onboarding';
 import ProfileSettings from './ProfileSettings';
+import PullToRefresh from './PullToRefresh';
 import { supabase } from './lib/supabase';
 
 const TABS = [
@@ -41,6 +42,7 @@ export default function App() {
   const [profile, setProfile] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [showLanding, setShowLanding] = useState(true);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const loadProfile = async (userId: string) => {
     if (!supabase) return;
@@ -107,6 +109,14 @@ export default function App() {
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (session?.user) {
+      await loadProfile(session.user.id);
+      // Trigger a small delay for visual feedback
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   };
 
@@ -193,13 +203,58 @@ export default function App() {
           })}
         </nav>
         
-        <div className="p-6 border-t-4 border-black bg-white">
+        <div className="p-4 border-t-4 border-black bg-white relative">
+          {/* Profile Menu Popover */}
+          {isProfileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute bottom-full left-4 right-4 mb-2 bg-white border-4 border-black neo-brutalism-shadow-lg z-50 flex flex-col overflow-hidden"
+            >
+              <button 
+                onClick={() => {
+                  setActiveTab('settings');
+                  setIsProfileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-gumroad-pink transition-colors font-black font-headline uppercase text-xs border-b-4 border-black text-left"
+              >
+                <UserIcon size={18} strokeWidth={3} />
+                View Profile
+              </button>
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-error hover:text-white transition-colors font-black font-headline uppercase text-xs text-left"
+              >
+                <LogOut size={18} strokeWidth={3} />
+                Sign Out
+              </button>
+            </motion.div>
+          )}
+
           <button 
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-3 py-4 border-4 border-black text-sm font-black font-headline uppercase text-black bg-white hover:bg-error hover:text-white neo-brutalism-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            className={cn(
+              "w-full flex items-center gap-3 p-3 border-4 border-black transition-all cursor-pointer neo-brutalism-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none",
+              isProfileMenuOpen ? "bg-gumroad-pink" : "bg-white"
+            )}
           >
-            <LogOut size={20} strokeWidth={3} />
-            Sign Out
+            <div className="w-10 h-10 border-2 border-black bg-gumroad-yellow flex-shrink-0 overflow-hidden">
+              {user?.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="User" className="w-full h-full object-cover" />
+              ) : (
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'Guest'}`} alt="User" className="w-full h-full object-cover" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-[10px] font-black font-headline uppercase truncate leading-tight text-black">
+                {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+              </p>
+              <p className="text-[8px] font-bold font-label truncate opacity-60 text-black uppercase tracking-widest mt-0.5">
+                {user?.email}
+              </p>
+            </div>
+            <MoreVertical size={16} strokeWidth={3} className="text-black/40" />
           </button>
         </div>
       </aside>
@@ -220,43 +275,50 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex-1 max-w-xl px-8 hidden lg:block">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black" size={20} strokeWidth={3} />
-              <input 
-                type="text" 
-                placeholder="SEARCH FOR TRANSACTIONS, DECKS..." 
-                className="w-full pl-12 pr-4 py-3 bg-white border-4 border-black focus:bg-gumroad-pink/10 focus:outline-none font-bold font-label tracking-widest text-sm placeholder-black/50 text-black transition-colors neo-brutalism-shadow-sm"
-              />
+            <div className="flex items-center h-full">
+              {/* Profile button removed from topbar as it's now in sidebar */}
             </div>
-          </div>
-
-          <div className="flex items-center gap-4 lg:gap-8 h-full">
-            <div className="hidden md:flex items-center gap-2 text-xs font-black font-label tracking-widest uppercase text-black bg-gumroad-yellow px-4 py-2 border-2 border-black neo-brutalism-shadow">
-              <Calendar size={16} strokeWidth={3} />
-              {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </div>
-            
-            <button className="text-black hover:text-gumroad-pink relative transition-colors cursor-pointer">
-              <Bell size={28} strokeWidth={3} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-error border-2 border-black rounded-none animate-pulse"></span>
-            </button>
-            
-            <div className="flex items-center gap-3 pl-4 lg:pl-8 border-l-4 border-black h-full">
-              <div className="w-12 h-12 border-2 border-black bg-gumroad-pink flex items-center justify-center text-black font-black overflow-hidden neo-brutalism-shadow">
-                {user?.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="User" className="w-full h-full object-cover" />
-                ) : (
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'Guest'}`} alt="User" className="w-full h-full object-cover" />
-                )}
-              </div>
-            </div>
-          </div>
         </header>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-          <ActiveComponent />
+        {/* Scrollable Content Area with Pull to Refresh */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <PullToRefresh onRefresh={handleRefresh}>
+            <div className="p-4 lg:p-8 min-h-full flex flex-col">
+              <div className="flex-1">
+                <ActiveComponent />
+              </div>
+              
+              {/* Footer */}
+              <footer className="mt-12 py-8 border-t-4 border-black/10 flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 font-black font-headline text-black/20 uppercase tracking-tighter text-xl">
+                  <TrendingUp size={20} strokeWidth={3} />
+                  <span>FinFlex</span>
+                </div>
+                
+                <div className="flex flex-col gap-2 items-center">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black neo-brutalism-shadow-xs group cursor-default">
+                    <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">Made with</span>
+                    <span className="text-lg animate-bounce inline-block">❤️</span>
+                    <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">in India</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gumroad-pink border-2 border-black neo-brutalism-shadow-xs group cursor-default">
+                    <span className="text-[10px] font-black font-label uppercase tracking-widest text-black italic">Visitor #{localStorage.getItem('finflex_visit_count') || '1'}</span>
+                  </div>
+                </div>
+
+                <p className="text-[10px] font-black font-label uppercase tracking-[0.2em] text-black/30 text-center max-w-md leading-relaxed px-4">
+                  © {new Date().getFullYear()} FinFlex Financial Revolution. All Rights Reserved. 
+                  <br className="sm:hidden" /> 
+                  Built for the Provocateur. No Jargon. No Limits.
+                </p>
+                <div className="flex gap-6 mt-2 opacity-20 hover:opacity-100 transition-opacity">
+                  {['Security', 'Privacy', 'Legal'].map(item => (
+                    <a key={item} href="#" className="text-[9px] font-black font-label uppercase tracking-widest text-black hover:text-gumroad-pink transition-colors">{item}</a>
+                  ))}
+                </div>
+              </footer>
+            </div>
+          </PullToRefresh>
         </div>
       </main>
     </div>
