@@ -197,7 +197,7 @@ export default function FlexDecks() {
                         {card.category}
                       </span>
                       <span className="text-black font-black text-xs uppercase tracking-tighter opacity-60">
-                        {cards.length - index}/{INITIAL_DECKS.length}
+                        {cards.length - index}/{allCards.length}
                       </span>
                     </div>
                     
@@ -207,12 +207,18 @@ export default function FlexDecks() {
                     </div>
  
                     <div className="flex justify-between items-center mt-auto">
-                      <div className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center text-black neo-brutalism-shadow-sm">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSwipe(card.id, 'left'); }}
+                        className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center text-black neo-brutalism-shadow-sm hover:bg-red-100 transition-colors cursor-pointer"
+                      >
                         <X size={28} strokeWidth={4} />
-                      </div>
-                      <div className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center text-black neo-brutalism-shadow-sm">
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleSwipe(card.id, 'right'); }}
+                        className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center text-black neo-brutalism-shadow-sm hover:bg-green-100 transition-colors cursor-pointer"
+                      >
                         <Check size={28} strokeWidth={4} />
-                      </div>
+                      </button>
                     </div>
                   </div>
                 </motion.div>

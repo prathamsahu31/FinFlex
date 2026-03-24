@@ -13,6 +13,8 @@ export default function BillSplit() {
   const [isLoading, setIsLoading] = useState(true);
   const [billSplits, setBillSplits] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [showAllExpenses, setShowAllExpenses] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   // New Expense State
   const [description, setDescription] = useState('');
@@ -88,6 +90,11 @@ export default function BillSplit() {
 
     return { groups: groupsList, friends: friendsList, expenses: expensesList, totalOwedToYou: owed, totalYouOwe: owe };
   }, [billSplits]);
+
+  const filteredExpenses = useMemo(() => {
+    if (!selectedGroup) return expenses;
+    return expenses.filter((e: any) => e.group === selectedGroup);
+  }, [expenses, selectedGroup]);
 
   const handleSaveExpense = async () => {
     if (!supabase || !user || !description || !amount) return;
@@ -216,7 +223,7 @@ export default function BillSplit() {
           <div className="flex-1 overflow-y-auto p-4 grid-bg">
             {activeTab === 'groups' && (
               <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4">
-                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm">
+                <motion.button onClick={() => { setIsAddExpenseOpen(true); setGroupName(''); }} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm cursor-pointer">
                   <div className="w-12 h-12 border-4 border-black bg-white flex items-center justify-center shrink-0">
                     <Plus size={24} strokeWidth={3} />
                   </div>
@@ -224,7 +231,7 @@ export default function BillSplit() {
                 </motion.button>
                 {groups.length === 0 && <p className="text-black font-bold text-sm text-center py-6">No groups yet.</p>}
                 {groups.map(group => (
-                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={group.name} className="flex items-center justify-between p-4 bg-white border-4 border-black neo-brutalism-shadow-sm cursor-pointer hover:bg-gumroad-pink transition-all group">
+                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={group.name} onClick={() => setSelectedGroup(selectedGroup === group.name ? null : group.name)} className={cn("flex items-center justify-between p-4 bg-white border-4 border-black neo-brutalism-shadow-sm cursor-pointer hover:bg-gumroad-pink transition-all group", selectedGroup === group.name && "bg-gumroad-pink")}>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 border-4 border-black bg-gumroad-yellow text-black flex items-center justify-center shrink-0 group-hover:bg-white transition-colors">
                         <Users size={24} strokeWidth={3} />
@@ -242,7 +249,7 @@ export default function BillSplit() {
 
             {activeTab === 'friends' && (
               <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4">
-                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm">
+                <motion.button onClick={() => alert('Friends are automatically added when you create expenses. Add an expense with their name to get started!')} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm cursor-pointer">
                   <div className="w-12 h-12 border-4 border-black bg-white flex items-center justify-center shrink-0">
                     <UserPlus size={24} strokeWidth={3} />
                   </div>
@@ -277,13 +284,13 @@ export default function BillSplit() {
         <div className="lg:col-span-2 bg-white border-4 border-black neo-brutalism-shadow flex flex-col overflow-hidden">
           <div className="p-5 border-b-4 border-black flex justify-between items-center shrink-0 bg-gumroad-pink/10">
             <h3 className="font-black font-headline text-2xl uppercase tracking-tighter text-black">Recent Expenses</h3>
-            <button className="text-xs font-black uppercase tracking-widest text-black bg-white border-4 border-black px-4 py-2 neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer">View All</button>
+            <button onClick={() => setShowAllExpenses(!showAllExpenses)} className="text-xs font-black uppercase tracking-widest text-black bg-white border-4 border-black px-4 py-2 neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer">{showAllExpenses ? 'Show Recent' : 'View All'}</button>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 grid-bg">
             <div className="space-y-4">
-              {expenses.length === 0 && <p className="text-black font-bold text-sm text-center py-8">No expenses yet. Click 'Add Expense' to get started.</p>}
-              {expenses.map(expense => (
+              {(showAllExpenses ? filteredExpenses : filteredExpenses.slice(0, 5)).length === 0 && <p className="text-black font-bold text-sm text-center py-8">{selectedGroup ? `No expenses in group "${selectedGroup}".` : "No expenses yet. Click 'Add Expense' to get started."}</p>}
+              {(showAllExpenses ? filteredExpenses : filteredExpenses.slice(0, 5)).map(expense => (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

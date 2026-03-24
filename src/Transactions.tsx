@@ -11,6 +11,8 @@ export default function Transactions() {
   const [user, setUser] = useState<any>(null);
   const [isDataEntryOpen, setIsDataEntryOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   useEffect(() => {
     if (supabase) {
@@ -118,11 +120,13 @@ export default function Transactions() {
     ));
   };
 
-  const filteredTransactions = transactions.filter(t => 
-    t.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (t.custom_tag && t.custom_tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredTransactions = transactions.filter(t => {
+    const matchesSearch = t.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t.custom_tag && t.custom_tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = filterCategory === 'all' || t.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="p-4 lg:p-8 max-w-5xl mx-auto space-y-8">
@@ -156,9 +160,33 @@ export default function Transactions() {
               className="w-full pl-10 pr-4 py-3 bg-white border-4 border-black focus:bg-gumroad-yellow/10 outline-none font-bold placeholder:text-black/50"
             />
           </div>
-          <button className="flex items-center gap-2 text-black bg-white border-4 border-black px-4 py-2 font-black uppercase text-xs neo-brutalism-shadow hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer">
-            <Filter size={16} strokeWidth={3} /> Filter
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className={cn(
+                "flex items-center gap-2 text-black border-4 border-black px-4 py-2 font-black uppercase text-xs neo-brutalism-shadow hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer",
+                filterCategory !== 'all' ? 'bg-gumroad-pink' : 'bg-white'
+              )}
+            >
+              <Filter size={16} strokeWidth={3} /> {filterCategory === 'all' ? 'Filter' : filterCategory}
+            </button>
+            {showFilterDropdown && (
+              <div className="absolute right-0 top-full mt-2 bg-white border-4 border-black neo-brutalism-shadow-lg z-50 min-w-[200px]">
+                {['all', 'Shopping', 'Transport', 'Food & Dining', 'Rent & Bills', 'Entertainment', 'Other', 'Salary'].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => { setFilterCategory(cat); setShowFilterDropdown(false); }}
+                    className={cn(
+                      "w-full text-left px-4 py-3 text-xs font-black uppercase tracking-widest border-b-2 border-black last:border-b-0 hover:bg-gumroad-yellow transition-colors cursor-pointer",
+                      filterCategory === cat && 'bg-gumroad-pink'
+                    )}
+                  >
+                    {cat === 'all' ? '✕ Clear Filter' : cat}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="p-0">

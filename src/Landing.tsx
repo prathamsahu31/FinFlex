@@ -45,10 +45,10 @@ export default function Landing({ onGetStarted }: LandingProps) {
             />
           </div>
           <div className="hidden md:flex items-center space-x-0 border-x-4 border-black h-full">
-            <a className="px-6 py-3 bg-gumroad-pink text-black border-r-4 border-black font-headline font-bold uppercase tracking-tight hover:bg-white transition-colors" href="#">Dashboard</a>
-            <a className="px-6 py-3 text-black border-r-4 border-black font-headline font-bold uppercase tracking-tight hover:bg-gumroad-yellow transition-colors" href="#">Flex-O-Meter</a>
-            <a className="px-6 py-3 text-black border-r-4 border-black font-headline font-bold uppercase tracking-tight hover:bg-gumroad-pink transition-colors" href="#">Insights</a>
-            <a className="px-6 py-3 text-black font-headline font-bold uppercase tracking-tight hover:bg-gumroad-yellow transition-colors" href="#">Community</a>
+            <button onClick={onGetStarted} className="px-6 py-3 bg-gumroad-pink text-black border-r-4 border-black font-headline font-bold uppercase tracking-tight hover:bg-white transition-colors cursor-pointer">Dashboard</button>
+            <a className="px-6 py-3 text-black border-r-4 border-black font-headline font-bold uppercase tracking-tight hover:bg-gumroad-yellow transition-colors" href="#hero-section">Flex-O-Meter</a>
+            <a className="px-6 py-3 text-black border-r-4 border-black font-headline font-bold uppercase tracking-tight hover:bg-gumroad-pink transition-colors" href="#why-finflex">Insights</a>
+            <a className="px-6 py-3 text-black font-headline font-bold uppercase tracking-tight hover:bg-gumroad-yellow transition-colors" href="#social-proof">Community</a>
           </div>
           <button
             onClick={onGetStarted}
@@ -60,7 +60,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
       
       <main className="pt-28 px-4 md:px-8 pb-12 max-w-[1440px] mx-auto">
         {/* Hero Section Container */}
-        <section className="border-4 border-black bg-white mb-12 overflow-hidden">
+        <section id="hero-section" className="border-4 border-black bg-white mb-12 overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12">
             {/* Left Content */}
             <div className="lg:col-span-7 p-8 md:p-16 border-b-4 lg:border-b-0 lg:border-r-4 border-black bg-gumroad-yellow/10">
@@ -131,7 +131,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
         </section>
         
         {/* Why Finflex Section */}
-        <section className="border-4 border-black bg-black overflow-hidden mb-12">
+        <section id="why-finflex" className="border-4 border-black bg-black overflow-hidden mb-12">
           <div className="grid grid-cols-1 md:grid-cols-12">
             <div className="md:col-span-8 p-12 bg-white border-b-4 md:border-b-0 md:border-r-4 border-black">
               <h2 className="font-headline font-black text-5xl md:text-8xl tracking-tighter mb-6 uppercase">Why Finflex?</h2>
@@ -161,7 +161,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
         </section>
 
         {/* Social Proof Numbers Section */}
-        <section className="border-4 border-black bg-white">
+        <section id="social-proof" className="border-4 border-black bg-white">
           <div className="grid grid-cols-2 md:grid-cols-4">
             <div className="text-center p-8 md:p-12 border-b-4 md:border-b-0 border-r-4 border-black hover:bg-gumroad-pink transition-colors">
               <p className="font-headline font-black text-4xl md:text-6xl text-black mb-2">{stats.rebels}</p>
@@ -206,18 +206,18 @@ export default function Landing({ onGetStarted }: LandingProps) {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-10">
-            <a className="text-white hover:text-gumroad-pink transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-pink pb-1" href="#">Terms</a>
-            <a className="text-white hover:text-gumroad-yellow transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-yellow pb-1" href="#">Privacy</a>
-            <a className="text-white hover:text-gumroad-pink transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-pink pb-1" href="#">Manifesto</a>
-            <a className="text-white hover:text-gumroad-yellow transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-yellow pb-1" href="#">Support</a>
+            <button onClick={() => alert('Terms page coming soon!')} className="text-white hover:text-gumroad-pink transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-pink pb-1 cursor-pointer bg-transparent">Terms</button>
+            <button onClick={() => alert('Privacy policy coming soon!')} className="text-white hover:text-gumroad-yellow transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-yellow pb-1 cursor-pointer bg-transparent">Privacy</button>
+            <button onClick={() => alert('Manifesto coming soon!')} className="text-white hover:text-gumroad-pink transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-pink pb-1 cursor-pointer bg-transparent">Manifesto</button>
+            <button onClick={() => alert('Support page coming soon!')} className="text-white hover:text-gumroad-yellow transition-colors font-black uppercase tracking-widest text-sm border-b-2 border-transparent hover:border-gumroad-yellow pb-1 cursor-pointer bg-transparent">Support</button>
           </div>
           <div className="flex gap-6">
-            <div className="w-14 h-14 border-4 border-white flex items-center justify-center text-white hover:bg-gumroad-pink hover:text-black hover:border-black transition-all cursor-pointer neo-brutalism-shadow bg-transparent">
+            <button onClick={() => alert('Website coming soon!')} className="w-14 h-14 border-4 border-white flex items-center justify-center text-white hover:bg-gumroad-pink hover:text-black hover:border-black transition-all cursor-pointer neo-brutalism-shadow bg-transparent">
               <span className="material-symbols-outlined text-2xl font-black" data-icon="public">public</span>
-            </div>
-            <div className="w-14 h-14 border-4 border-white flex items-center justify-center text-white hover:bg-gumroad-yellow hover:text-black hover:border-black transition-all cursor-pointer neo-brutalism-shadow bg-transparent">
+            </button>
+            <button onClick={() => alert('Podcast coming soon!')} className="w-14 h-14 border-4 border-white flex items-center justify-center text-white hover:bg-gumroad-yellow hover:text-black hover:border-black transition-all cursor-pointer neo-brutalism-shadow bg-transparent">
               <span className="material-symbols-outlined text-2xl font-black" data-icon="podcasts">podcasts</span>
-            </div>
+            </button>
           </div>
         </div>
       </footer>

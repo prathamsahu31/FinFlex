@@ -30,7 +30,7 @@ async function startServer() {
       
       bot.onText(/\/start/, (msg) => {
       const chatId = msg.chat.id;
-      bot?.sendMessage(chatId, "Welcome to Spendsin Clawbot! Send me your expenses like: '50 for groceries' and I will log them. Make sure your Telegram ID is linked in your Spendsin account.");
+      bot?.sendMessage(chatId, "Welcome to FinFlex Clawbot! Send me your expenses like: '50 for groceries' and I will log them. Make sure your Telegram ID is linked in your FinFlex account.");
     });
 
     bot.on('message', async (msg) => {
@@ -52,7 +52,7 @@ async function startServer() {
               .single();
 
             if (userError || !users) {
-              bot?.sendMessage(chatId, `I couldn't find a Spendsin account linked to this Telegram chat. Your Chat ID is: ${chatId}. Please link it in your settings.`);
+              bot?.sendMessage(chatId, `I couldn't find a FinFlex account linked to this Telegram chat. Your Chat ID is: ${chatId}. Please link it in your settings.`);
               return;
             }
 

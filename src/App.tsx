@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
@@ -43,6 +43,20 @@ export default function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [showLanding, setShowLanding] = useState(true);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close profile menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileMenuOpen]);
 
   const loadProfile = async (userId: string) => {
     if (!supabase) return;
@@ -123,8 +137,12 @@ export default function App() {
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center grid-bg">
-        <div className="w-20 h-20 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg animate-pulse">
-          <TrendingUp size={40} strokeWidth={3} />
+        <div className="w-20 h-20 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg">
+          <img 
+            src="https://lh3.googleusercontent.com/aida/ADBb0ugmnrvLWzVOL6D08TQZVGQwliZk63CMaFypWY-WxxTMWZ4-bzrWw1S4P7qkyTrz6RpiXTS46gK5MgU7YzanAebC1edYRelKK0nyCHFDc0TpfrsO8N7TOGFk5OnBXPzBQXmO0iH-E9HQeJT1wHvO0YYDGixNGo1zGe77jEXizUXG9PbhllqOF3xgikndex24TJPa6A1YBOVUN1p1_MGsjTM691oSq7zkN60lZGzmN0uwDNgb603t6Ux-fNGe" 
+            alt="FinFlex" 
+            className="w-14 h-14"
+          />
         </div>
         <p className="mt-6 font-headline font-black uppercase text-xl text-black">Loading FinFlex...</p>
       </div>
@@ -165,8 +183,12 @@ export default function App() {
       )}>
         <div className="flex items-center justify-between h-20 px-6 border-b-4 border-black bg-gumroad-yellow">
           <div className="flex items-center gap-3 font-black text-xl tracking-tight text-black">
-            <div className="w-10 h-10 border-2 border-black bg-gumroad-pink flex items-center justify-center text-black neo-brutalism-shadow">
-              <TrendingUp size={24} strokeWidth={3} />
+            <div className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center overflow-hidden neo-brutalism-shadow">
+              <img 
+                src="https://lh3.googleusercontent.com/aida/ADBb0ugmnrvLWzVOL6D08TQZVGQwliZk63CMaFypWY-WxxTMWZ4-bzrWw1S4P7qkyTrz6RpiXTS46gK5MgU7YzanAebC1edYRelKK0nyCHFDc0TpfrsO8N7TOGFk5OnBXPzBQXmO0iH-E9HQeJT1wHvO0YYDGixNGe77jEXizUXG9PbhllqOF3xgikndex24TJPa6A1YBOVUN1p1_MGsjTM691oSq7zkN60lZGzmN0uwDNgb603t6Ux-fNGe" 
+                alt="Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-black font-headline uppercase tracking-tight text-black leading-none">FinFlex</span>
@@ -203,7 +225,7 @@ export default function App() {
           })}
         </nav>
         
-        <div className="p-4 border-t-4 border-black bg-white relative">
+        <div className="p-4 border-t-4 border-black bg-white relative" ref={profileMenuRef}>
           {/* Profile Menu Popover */}
           {isProfileMenuOpen && (
             <motion.div 
@@ -285,7 +307,7 @@ export default function App() {
           <PullToRefresh onRefresh={handleRefresh}>
             <div className="p-4 lg:p-8 min-h-full flex flex-col">
               <div className="flex-1">
-                <ActiveComponent />
+                <ActiveComponent setActiveTab={setActiveTab} />
               </div>
               
               {/* Footer */}
@@ -313,7 +335,7 @@ export default function App() {
                 </p>
                 <div className="flex gap-6 mt-2 opacity-20 hover:opacity-100 transition-opacity">
                   {['Security', 'Privacy', 'Legal'].map(item => (
-                    <a key={item} href="#" className="text-[9px] font-black font-label uppercase tracking-widest text-black hover:text-gumroad-pink transition-colors">{item}</a>
+                    <button key={item} onClick={() => alert(`${item} page coming soon!`)} className="text-[9px] font-black font-label uppercase tracking-widest text-black hover:text-gumroad-pink transition-colors cursor-pointer bg-transparent">{item}</button>
                   ))}
                 </div>
               </footer>

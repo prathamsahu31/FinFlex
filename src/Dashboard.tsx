@@ -61,9 +61,10 @@ const MOCK_BUDGETS: Record<string, number> = {
   'Other': 100
 };
 
-export default function Dashboard() {
+export default function Dashboard({ setActiveTab }: { setActiveTab?: (tab: string) => void }) {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [trendRange, setTrendRange] = useState<'month' | '3months' | 'all'>('month');
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -129,9 +130,7 @@ export default function Dashboard() {
     });
   }, [categoryData]);
 
-  const trendData = useMemo(() => {
-    // Simple mock grouping for trend (e.g., last 5 days we have data for)
-    // Group by date string "MMM D"
+  const trendDataAll = useMemo(() => {
     const map = new Map<string, { income: number, expenses: number }>();
     transactions.forEach(t => {
       const dateObj = new Date(t.date || t.created_at);
@@ -148,8 +147,14 @@ export default function Dashboard() {
       name,
       income: vals.income,
       expenses: vals.expenses
-    })).slice(-14); // Return last 14 unique dates
+    }));
   }, [transactions]);
+
+  const trendData = useMemo(() => {
+    if (trendRange === 'all') return trendDataAll;
+    if (trendRange === '3months') return trendDataAll.slice(-42);
+    return trendDataAll.slice(-14);
+  }, [trendDataAll, trendRange]);
 
   const cashTrackingData = trendData.slice(-7); // Just use the last 7 items from trendData for cash tracking mock
 
@@ -220,8 +225,8 @@ export default function Dashboard() {
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Portfolio</h3>
               <div className="flex gap-3 text-black">
-                <Briefcase size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
-                <MoreVertical size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
+                <Briefcase size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" onClick={() => setActiveTab?.('portfolio')} />
+                <MoreVertical size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" onClick={() => alert('More options coming soon!')} />
               </div>
             </div>
             
@@ -250,7 +255,7 @@ export default function Dashboard() {
           <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Cashflow</h3>
-              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} />
+              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} onClick={() => alert('Cashflow details coming soon!')} />
             </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -273,7 +278,7 @@ export default function Dashboard() {
           <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Budgets</h3>
-              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} />
+              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} onClick={() => alert('Budget customization coming soon!')} />
             </div>
             <div className="space-y-6">
               {budgetProgress.map(b => (
@@ -308,9 +313,10 @@ export default function Dashboard() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-xs font-black font-label uppercase tracking-widest text-black bg-gumroad-yellow hover:bg-gumroad-pink px-4 py-2 border-4 border-black neo-brutalism-shadow transition-colors"
+                onClick={() => setTrendRange(prev => prev === 'month' ? '3months' : prev === '3months' ? 'all' : 'month')}
+                className="flex items-center gap-2 text-xs font-black font-label uppercase tracking-widest text-black bg-gumroad-yellow hover:bg-gumroad-pink px-4 py-2 border-4 border-black neo-brutalism-shadow transition-colors cursor-pointer"
               >
-                THIS MONTH <ChevronDown size={16} strokeWidth={3} />
+                {trendRange === 'month' ? 'THIS MONTH' : trendRange === '3months' ? 'LAST 3 MO' : 'ALL TIME'} <ChevronDown size={16} strokeWidth={3} />
               </motion.button>
             </div>
             <div className="h-[300px] w-full">
@@ -349,8 +355,8 @@ export default function Dashboard() {
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Recent Transactions</h3>
               <div className="flex gap-4 text-black">
-                <Search size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
-                <Filter size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
+                <Search size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" onClick={() => setActiveTab?.('transactions')} />
+                <Filter size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" onClick={() => setActiveTab?.('transactions')} />
               </div>
             </div>
             

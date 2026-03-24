@@ -26,6 +26,25 @@ export default function Portfolio() {
     { id: 2, name: 'House Downpayment', target: 60000, current: 18000, color: 'bg-blue-500', icon: '🏠' },
     { id: 3, name: 'Japan Trip', target: 5000, current: 2300, color: 'bg-emerald-500', icon: '✈️' }
   ]);
+  const [showAddBucket, setShowAddBucket] = useState(false);
+  const [newBucket, setNewBucket] = useState({ name: '', target: '', current: '', icon: '🎯' });
+
+  const BUCKET_COLORS = ['bg-rose-500', 'bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500', 'bg-cyan-500'];
+
+  const handleAddBucket = () => {
+    if (!newBucket.name || !newBucket.target) return;
+    const newId = Math.max(...buckets.map(b => b.id), 0) + 1;
+    setBuckets(prev => [...prev, {
+      id: newId,
+      name: newBucket.name,
+      target: Number(newBucket.target),
+      current: Number(newBucket.current) || 0,
+      color: BUCKET_COLORS[newId % BUCKET_COLORS.length],
+      icon: newBucket.icon || '🎯'
+    }]);
+    setShowAddBucket(false);
+    setNewBucket({ name: '', target: '', current: '', icon: '🎯' });
+  };
 
   useEffect(() => {
     const initData = async () => {
@@ -321,11 +340,47 @@ export default function Portfolio() {
           </div>
           <motion.button 
             whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
+            onClick={() => setShowAddBucket(!showAddBucket)}
             className="flex items-center gap-2 text-xs font-black px-4 py-2 border-4 border-black bg-white text-black neo-brutalism-shadow-sm cursor-pointer transition-all uppercase tracking-widest"
           >
-            <Plus size={14} strokeWidth={3} /> Add Bucket
+            {showAddBucket ? <X size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
+            {showAddBucket ? 'Cancel' : 'Add Bucket'}
           </motion.button>
         </div>
+
+        <AnimatePresence>
+          {showAddBucket && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 p-6 bg-gumroad-yellow/10 border-4 border-black neo-brutalism-shadow-sm overflow-hidden"
+            >
+              <h4 className="text-sm font-black text-black uppercase tracking-widest mb-4">New Savings Bucket</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Name</label>
+                  <input type="text" value={newBucket.name} onChange={e => setNewBucket({...newBucket, name: e.target.value})} placeholder="e.g. Vacation" className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 placeholder:text-black/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Target ($)</label>
+                  <input type="number" value={newBucket.target} onChange={e => setNewBucket({...newBucket, target: e.target.value})} placeholder="10000" className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 placeholder:text-black/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Current ($)</label>
+                  <input type="number" value={newBucket.current} onChange={e => setNewBucket({...newBucket, current: e.target.value})} placeholder="0" className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 placeholder:text-black/30" />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Icon</label>
+                  <input type="text" value={newBucket.icon} onChange={e => setNewBucket({...newBucket, icon: e.target.value})} className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10" />
+                </div>
+              </div>
+              <button onClick={handleAddBucket} className="w-full py-3 bg-black text-white font-black uppercase tracking-widest text-xs hover:bg-gumroad-pink hover:text-black transition-colors border-4 border-black neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none cursor-pointer">
+                Save Bucket
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {buckets.map(bucket => {
