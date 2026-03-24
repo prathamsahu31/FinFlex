@@ -6,20 +6,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
-  LayoutDashboard, 
-  CreditCard, 
-  TrendingUp, 
-  BookOpen, 
-  Bot,
-  Search,
-  Bell,
-  Menu,
-  X,
-  Wrench,
-  Calendar,
-  LogOut,
-  Users,
-  User as UserIcon
+  LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
+  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon
 } from 'lucide-react';
 import { cn } from './utils';
 import Dashboard from './Dashboard';
@@ -30,6 +18,7 @@ import AIAgent from './AIAgent';
 import Tools from './Tools';
 import BillSplit from './BillSplit';
 import Login from './Login';
+import Landing from './Landing';
 import Onboarding from './Onboarding';
 import ProfileSettings from './ProfileSettings';
 import { supabase } from './lib/supabase';
@@ -51,6 +40,7 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showLanding, setShowLanding] = useState(true);
 
   const loadProfile = async (userId: string) => {
     if (!supabase) return;
@@ -111,16 +101,20 @@ export default function App() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white animate-pulse">
-          <TrendingUp size={32} strokeWidth={3} />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center grid-bg">
+        <div className="w-20 h-20 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg animate-pulse">
+          <TrendingUp size={40} strokeWidth={3} />
         </div>
+        <p className="mt-6 font-headline font-black uppercase text-xl text-black">Loading FinFlex...</p>
       </div>
     );
   }
 
   if (!session) {
-    return <Login />;
+    if (showLanding) {
+      return <Landing onGetStarted={() => setShowLanding(false)} />;
+    }
+    return <Login onBack={() => setShowLanding(true)} />;
   }
 
   if (profile && profile.onboarding_completed === false) {
@@ -131,116 +125,114 @@ export default function App() {
   const user = session?.user;
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-background font-body text-on-background overflow-hidden selection:bg-gumroad-pink selection:text-black">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/80 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out flex flex-col",
+        "fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white border-r-4 border-black transition-transform duration-300 ease-in-out flex flex-col",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-100">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-slate-900">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-              <TrendingUp size={20} strokeWidth={3} />
+        <div className="flex items-center justify-between h-20 px-6 border-b-4 border-black bg-gumroad-yellow">
+          <div className="flex items-center gap-3 font-black text-xl tracking-tight text-black">
+            <div className="w-10 h-10 border-2 border-black bg-gumroad-pink flex items-center justify-center text-black neo-brutalism-shadow">
+              <TrendingUp size={24} strokeWidth={3} />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight text-slate-900 leading-none">FinFlex</span>
-              <span className="text-[10px] font-medium text-indigo-500 uppercase tracking-widest mt-0.5">Flex Financial Discipline</span>
+              <span className="text-2xl font-black font-headline uppercase tracking-tight text-black leading-none">FinFlex</span>
+              <span className="text-[10px] font-black font-label text-black uppercase tracking-widest mt-1">Financial Revolution</span>
             </div>
           </div>
-          <button className="lg:hidden text-slate-400 hover:text-slate-600" onClick={() => setIsSidebarOpen(false)}>
-            <X size={20} />
+          <button className="lg:hidden text-black hover:text-gumroad-pink transition-colors cursor-pointer" onClick={() => setIsSidebarOpen(false)}>
+            <X size={28} strokeWidth={3} />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-6 py-8 space-y-3 overflow-y-auto grid-bg">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id);
                   setIsSidebarOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                  "w-full flex items-center gap-4 px-4 py-3 border-4 text-sm font-black font-headline uppercase tracking-widest transition-all cursor-pointer",
                   isActive 
-                    ? "bg-indigo-50 text-indigo-600" 
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-gumroad-pink border-black neo-brutalism-shadow text-black translate-x-1 translate-y-1" 
+                    : "bg-white border-black text-black hover:bg-gumroad-yellow hover:neo-brutalism-shadow hover:-translate-y-1 hover:-translate-x-1"
                 )}
               >
-                <Icon size={18} className={cn(isActive ? "text-indigo-600" : "text-slate-400")} />
+                <Icon size={20} strokeWidth={isActive ? 3 : 2} className="text-black" />
                 {tab.label}
               </motion.button>
             );
           })}
         </nav>
         
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-6 border-t-4 border-black bg-white">
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+            className="w-full flex items-center justify-center gap-3 py-4 border-4 border-black text-sm font-black font-headline uppercase text-black bg-white hover:bg-error hover:text-white neo-brutalism-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
           >
-            <LogOut size={16} />
+            <LogOut size={20} strokeWidth={3} />
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background">
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 shrink-0">
+        <header className="h-20 bg-white border-b-4 border-black flex items-center justify-between px-4 lg:px-8 shrink-0 z-10">
           <div className="flex items-center gap-4">
             <button 
-              className="lg:hidden text-slate-500 hover:text-slate-700"
+              className="lg:hidden text-black hover:text-gumroad-pink transition-colors cursor-pointer"
               onClick={() => setIsSidebarOpen(true)}
             >
-              <Menu size={24} />
+              <Menu size={28} strokeWidth={3} />
             </button>
-            <div className="hidden md:flex items-center gap-2 text-lg font-bold text-slate-900">
+            <div className="hidden md:flex items-center gap-2 text-3xl font-black font-headline uppercase text-black tracking-tight">
               {TABS.find(t => t.id === activeTab)?.label}
             </div>
           </div>
 
           <div className="flex-1 max-w-xl px-8 hidden lg:block">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-black" size={20} strokeWidth={3} />
               <input 
                 type="text" 
-                placeholder="Search..." 
-                className="w-full pl-9 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-xl text-sm transition-all outline-none"
+                placeholder="SEARCH FOR TRANSACTIONS, DECKS..." 
+                className="w-full pl-12 pr-4 py-3 bg-white border-4 border-black focus:bg-gumroad-pink/10 focus:outline-none font-bold font-label tracking-widest text-sm placeholder-black/50 text-black transition-colors neo-brutalism-shadow-sm"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-4 lg:gap-6">
-            <div className="hidden md:flex items-center gap-2 text-sm text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-              <Calendar size={14} />
-              {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+          <div className="flex items-center gap-4 lg:gap-8 h-full">
+            <div className="hidden md:flex items-center gap-2 text-xs font-black font-label tracking-widest uppercase text-black bg-gumroad-yellow px-4 py-2 border-2 border-black neo-brutalism-shadow">
+              <Calendar size={16} strokeWidth={3} />
+              {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
             </div>
             
-            <button className="text-slate-500 hover:text-slate-700 relative">
-              <Bell size={20} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            <button className="text-black hover:text-gumroad-pink relative transition-colors cursor-pointer">
+              <Bell size={28} strokeWidth={3} />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-error border-2 border-black rounded-none animate-pulse"></span>
             </button>
             
-            <div className="flex items-center gap-3 pl-4 lg:pl-6 border-l border-slate-200">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold overflow-hidden">
+            <div className="flex items-center gap-3 pl-4 lg:pl-8 border-l-4 border-black h-full">
+              <div className="w-12 h-12 border-2 border-black bg-gumroad-pink flex items-center justify-center text-black font-black overflow-hidden neo-brutalism-shadow">
                 {user?.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="User" className="w-full h-full object-cover" />
                 ) : (
@@ -252,7 +244,7 @@ export default function App() {
         </header>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
           <ActiveComponent />
         </div>
       </main>

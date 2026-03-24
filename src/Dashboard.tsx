@@ -165,7 +165,7 @@ export default function Dashboard() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 lg:p-6 max-w-[1400px] mx-auto space-y-6 bg-slate-50/50 min-h-full"
+      className="max-w-[1400px] mx-auto space-y-8"
     >
       
       {/* Top Cards */}
@@ -173,79 +173,73 @@ export default function Dashboard() {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-5 text-white shadow-sm cursor-pointer">
-          <p className="text-indigo-100 text-sm font-medium mb-1">Total Balance</p>
-          <h2 className="text-3xl font-bold mb-1">
-            <CountUp value={stats.balance} prefix="₹" decimals={2} />
+        <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-gumroad-pink border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
+          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Total Balance</p>
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
+            <CountUp value={stats.balance} prefix="$" decimals={2} />
           </h2>
-          <span className="flex items-center text-indigo-100 text-xs font-medium">
-            <TrendingUp size={14} className="mr-1"/> All Time
+          <span className="flex items-center text-black text-xs font-bold bg-white border-2 border-black px-2 py-1 w-max neo-brutalism-shadow">
+            <TrendingUp size={16} className="mr-2" strokeWidth={3}/> ALL TIME
           </span>
         </motion.div>
         
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
-          <div className="flex justify-between items-start mb-1">
-            <p className="text-slate-500 text-sm font-medium">Income</p>
-          </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-1">
-            <CountUp value={stats.income} prefix="₹" decimals={2} />
+        <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
+          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Income</p>
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
+            <CountUp value={stats.income} prefix="$" decimals={2} />
           </h2>
-          <p className="text-slate-400 text-xs">All incoming transfers & salary</p>
+          <p className="text-black font-bold text-xs">All incoming transfers</p>
         </motion.div>
         
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
-          <div className="flex justify-between items-start mb-1">
-            <p className="text-slate-500 text-sm font-medium">Expenses</p>
-          </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-1">
-            <CountUp value={stats.expenses} prefix="₹" decimals={2} />
+        <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
+          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Expenses</p>
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
+            <CountUp value={stats.expenses} prefix="$" decimals={2} />
           </h2>
-          <p className="text-slate-400 text-xs">Bills, shopping & daily spend</p>
+          <p className="text-black font-bold text-xs">Bills & daily spend</p>
         </motion.div>
         
-        <motion.div variants={itemVariants} whileHover={{ y: -4 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 cursor-pointer">
-          <div className="flex justify-between items-start mb-1">
-            <p className="text-slate-500 text-sm font-medium">Net Savings Rate</p>
-          </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-1">
+        <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-gumroad-yellow border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
+          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Net Savings Rate</p>
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
             <CountUp value={stats.netSavingsRate} suffix="%" decimals={1} />
           </h2>
-          <p className="text-slate-400 text-xs">of total income saved</p>
+          <p className="text-black font-bold text-xs">Of total income saved</p>
         </motion.div>
       </motion.div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Column */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-4 space-y-8">
           {/* Investment Portfolio */}
-          <motion.div whileHover={{ scale: 1.01 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-slate-800">Investment Portfolio</h3>
-              <div className="flex gap-2 text-slate-400">
-                <Briefcase size={16} className="cursor-pointer hover:text-slate-600" />
-                <MoreVertical size={16} className="cursor-pointer hover:text-slate-600" />
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+            <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Portfolio</h3>
+              <div className="flex gap-3 text-black">
+                <Briefcase size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
+                <MoreVertical size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
               </div>
             </div>
-            <div className="relative h-40 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-white p-4 overflow-hidden shadow-md cursor-pointer hover:shadow-lg transition-shadow">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl -mr-10 -mt-10"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-500/20 rounded-full blur-xl -ml-10 -mb-10"></div>
+            
+            <div className="h-44 bg-black border-4 border-black text-white p-5 cursor-pointer hover:bg-zinc-900 transition-colors relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gumroad-pink/20 blur-2xl -mr-10 -mt-10 group-hover:bg-gumroad-pink/40 transition-colors"></div>
               <div className="relative z-10 flex flex-col justify-between h-full">
                 <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium opacity-90">Total Value</span>
-                  <span className="text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md">+8.4% YTD</span>
+                  <span className="text-sm font-black font-label uppercase tracking-widest">Total Value</span>
+                  <span className="text-xs font-black text-black bg-gumroad-yellow px-2 py-1 border-2 border-white">+8.4% YTD</span>
                 </div>
                 <div>
-                  <h4 className="text-2xl font-bold tracking-tight">$84,500.00</h4>
-                  <div className="flex justify-between items-end mt-2">
-                    <span className="text-xs opacity-80">S&P 500 ETF (VOO)</span>
-                    <span className="text-xs font-medium opacity-90">65%</span>
+                  <h4 className="text-3xl font-black font-headline tracking-tight mt-2">$84,500.00</h4>
+                  <div className="flex justify-between items-end mt-4">
+                    <span className="text-xs font-bold uppercase tracking-widest">S&P 500 ETF (VOO)</span>
+                    <span className="text-xs font-black">65%</span>
                   </div>
-                  <div className="w-full bg-slate-700/50 rounded-full h-1.5 mt-1.5">
-                    <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: '65%' }}></div>
+                  <div className="w-full bg-zinc-800 border-2 border-white h-3 mt-2 rounded-none">
+                    <div className="bg-gumroad-pink h-full" style={{ width: '65%' }}></div>
                   </div>
                 </div>
               </div>
@@ -253,256 +247,150 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Cash Tracking */}
-          <motion.div whileHover={{ scale: 1.01 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-slate-800">Cash Tracking</h3>
-              <MoreVertical size={16} className="text-slate-400 cursor-pointer hover:text-slate-600" />
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+            <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Cashflow</h3>
+              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} />
             </div>
-            <div className="h-40 w-full">
+            <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cashTrackingData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} dy={5} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={val => `$${val}`} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} dy={5} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} tickFormatter={val => `$${val}`} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
-                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ borderRadius: '0px', border: '4px solid black', boxShadow: '4px 4px 0px 0px #000', fontSize: '12px', fontWeight: 'bold' }}
+                    cursor={{ fill: '#fcd400' }}
                   />
-                  <Bar dataKey="income" fill="#10b981" radius={[2, 2, 0, 0]} barSize={8} />
-                  <Bar dataKey="expenses" fill="#64748b" radius={[2, 2, 0, 0]} barSize={8} />
+                  <Bar dataKey="income" fill="#ff90e8" radius={[0, 0, 0, 0]} barSize={12} stroke="#000" strokeWidth={2} />
+                  <Bar dataKey="expenses" fill="#000" radius={[0, 0, 0, 0]} barSize={12} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </motion.div>
 
-          {/* Future Transactions */}
-          <motion.div whileHover={{ scale: 1.01 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-slate-800">Future Transactions</h3>
-              <MoreVertical size={16} className="text-slate-400 cursor-pointer hover:text-slate-600" />
-            </div>
-            <div className="space-y-4 mb-5">
-              <div className="flex items-center justify-between hover:bg-slate-50 p-2 -mx-2 rounded-xl cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg">A</div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">Adobe</p>
-                    <p className="text-[11px] text-slate-400">Jan 28, 20:01</p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-slate-800">$100.00</span>
-              </div>
-              <div className="flex items-center justify-between hover:bg-slate-50 p-2 -mx-2 rounded-xl cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">in</div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">LinkedIn</p>
-                    <p className="text-[11px] text-slate-400">Jan 29, 00:01</p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-slate-800">$8.00</span>
-              </div>
-              <div className="flex items-center justify-between hover:bg-slate-50 p-2 -mx-2 rounded-xl cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-black text-red-600 flex items-center justify-center font-bold text-lg">N</div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">Netflix</p>
-                    <p className="text-[11px] text-slate-400">Jan 30, 00:01</p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-slate-800">$10.00</span>
-              </div>
-              <div className="flex items-center justify-between hover:bg-slate-50 p-2 -mx-2 rounded-xl cursor-pointer transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-lg">U</div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800 leading-tight">Unreal Subscription</p>
-                    <p className="text-[11px] text-slate-400">Feb 1, 00:01</p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-slate-800">$156.00</span>
-              </div>
-            </div>
-            <motion.button 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-2.5 border border-slate-200 text-indigo-600 rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
-            >
-              <Plus size={16} /> Add Reminder
-            </motion.button>
-          </motion.div>
-
           {/* Category Budgets */}
-          <motion.div whileHover={{ scale: 1.01 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-slate-800">Category Budgets</h3>
-              <MoreVertical size={16} className="text-slate-400 cursor-pointer hover:text-slate-600" />
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+            <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Budgets</h3>
+              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {budgetProgress.map(b => (
                 <div key={b.name}>
-                  <div className="flex justify-between items-end mb-1">
-                    <span className="text-xs font-semibold text-slate-700">{b.name}</span>
-                    <span className="text-[10px] text-slate-500">${b.value.toFixed(0)} / ${b.target}</span>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-xs font-black font-label uppercase tracking-widest text-black">{b.name}</span>
+                    <span className="text-xs font-bold text-black border-b-2 border-black">${b.value.toFixed(0)} / ${b.target}</span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-white border-4 border-black h-4 rounded-none overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${b.percent}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
-                      className={cn("h-1.5 rounded-full", b.isOver ? "bg-red-500" : "")} 
-                      style={{ backgroundColor: b.isOver ? undefined : b.color }}
+                      className={cn("h-full border-r-4 border-black", b.isOver ? "bg-error" : "")} 
+                      style={{ backgroundColor: b.isOver ? undefined : (b.color === '#60a5fa' || b.color === '#94a3b8' || b.color === '#cbd5e1' ? '#ffbd03' : b.color) }} 
                     />
                   </div>
                 </div>
               ))}
-              {budgetProgress.length === 0 && <p className="text-sm text-slate-400 text-center py-2">No expenses yet.</p>}
+              {budgetProgress.length === 0 && <p className="text-sm font-bold text-black text-center py-2">No expenses yet.</p>}
             </div>
           </motion.div>
         </div>
 
-        {/* Right Side (spans 9 columns) */}
-        <div className="lg:col-span-9 space-y-6">
+        {/* Right Side */}
+        <div className="lg:col-span-8 space-y-8">
           
           {/* Monthly Trend */}
-          <motion.div whileHover={{ scale: 1.01 }} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-semibold text-slate-800">Monthly Trend</h3>
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+            <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Monthly Trend</h3>
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-100 transition-colors"
+                className="flex items-center gap-2 text-xs font-black font-label uppercase tracking-widest text-black bg-gumroad-yellow hover:bg-gumroad-pink px-4 py-2 border-4 border-black neo-brutalism-shadow transition-colors"
               >
-                This Month <ChevronDown size={14} />
+                THIS MONTH <ChevronDown size={16} strokeWidth={3} />
               </motion.button>
             </div>
-            <div className="h-[260px] w-full">
+            <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={val => `$${val/1000}k`} />
+                  <CartesianGrid strokeDasharray="0" vertical={true} stroke="#e5e5e5" strokeWidth={2} />
+                  <XAxis dataKey="name" axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} dy={10} />
+                  <YAxis axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} tickFormatter={val => `$${val/1000}k`} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '0px', border: '4px solid black', boxShadow: '4px 4px 0px 0px #000', fontWeight: 'bold' }}
                     formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
                   />
                   <Line 
-                    type="monotone" 
+                    type="step" 
                     dataKey="income" 
                     stroke="#10b981" 
-                    strokeWidth={3} 
-                    dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} 
-                    activeDot={{ r: 7, strokeWidth: 0 }} 
+                    strokeWidth={4} 
+                    dot={{ r: 6, fill: '#10b981', strokeWidth: 3, stroke: '#000' }} 
+                    activeDot={{ r: 8, strokeWidth: 4, stroke: '#000' }} 
                   />
                   <Line 
-                    type="monotone" 
+                    type="step" 
                     dataKey="expenses" 
-                    stroke="#64748b" 
-                    strokeWidth={3} 
-                    dot={{ r: 5, fill: '#64748b', strokeWidth: 2, stroke: '#fff' }} 
-                    activeDot={{ r: 7, strokeWidth: 0 }} 
+                    stroke="#ff90e8" 
+                    strokeWidth={4} 
+                    dot={{ r: 6, fill: '#ff90e8', strokeWidth: 3, stroke: '#000' }} 
+                    activeDot={{ r: 8, strokeWidth: 4, stroke: '#000' }} 
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </motion.div>
 
-          {/* Bottom Row of Right Side */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {/* Recent Transactions */}
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+            <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Recent Transactions</h3>
+              <div className="flex gap-4 text-black">
+                <Search size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
+                <Filter size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" />
+              </div>
+            </div>
             
-            {/* Recent Transactions */}
-            <motion.div whileHover={{ scale: 1.01 }} className="md:col-span-3 bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-semibold text-slate-800">Recent Transactions</h3>
-                <div className="flex gap-3 text-slate-400">
-                  <Search size={16} className="cursor-pointer hover:text-slate-600" />
-                  <Filter size={16} className="cursor-pointer hover:text-slate-600" />
-                </div>
-              </div>
-              
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">All Recent</h4>
-                  <div className="space-y-2">
-                    {transactions.slice(0, 5).map(t => (
-                      <motion.div key={t.id} whileHover={{ x: 4 }} className="flex items-center justify-between p-2.5 hover:bg-slate-50 rounded-xl transition-colors group cursor-pointer">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl font-serif text-slate-700">
-                            {t.vendor.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">{t.vendor}</p>
-                            <p className="text-[11px] text-slate-400">
-                              {new Date(t.date || t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 sm:gap-8">
-                          <span className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 w-24">
-                            <div className="w-2 h-2 rounded-full" style={{backgroundColor: CATEGORY_COLORS[t.category] || '#94a3b8'}}></div> {t.category}
-                          </span>
-                          <span className={cn(
-                            "text-sm font-semibold w-24 text-right",
-                            t.type === 'income' ? 'text-emerald-500' : 'text-slate-800'
-                          )}>
-                            {t.type === 'income' ? '+' : '-'}{Number(t.amount).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
-                          </span>
-                          <CreditCard size={16} className="text-slate-300 group-hover:text-slate-400" />
-                        </div>
-                      </motion.div>
-                    ))}
-                    {transactions.length === 0 && (
-                      <p className="text-sm text-slate-500 p-4 text-center">No transactions yet.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Spending by Category */}
-            <motion.div whileHover={{ scale: 1.01 }} className="md:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-slate-800">Spending by Category</h3>
-                <MoreVertical size={16} className="text-slate-400 cursor-pointer hover:text-slate-600" />
-              </div>
-              
-              <div className="flex-1 min-h-[180px] relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="none"
-                      cornerRadius={4}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number) => [`${value}%`, '']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-2">
-                {categoryData.map(cat => (
-                  <div key={cat.name} className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }}></div>
-                    <span className="text-[11px] text-slate-500 truncate">{cat.name}</span>
-                  </div>
+            <div className="space-y-4">
+              <h4 className="text-xs font-black font-label uppercase tracking-widest text-black bg-gumroad-yellow inline-block px-2 py-1 border-2 border-black mb-2">History</h4>
+              <div className="space-y-4">
+                {transactions.slice(0, 5).map(t => (
+                  <motion.div key={t.id} whileHover={{ x: 4 }} className="flex items-center justify-between p-4 border-4 border-black hover:bg-gumroad-pink transition-colors group cursor-pointer neo-brutalism-shadow-sm bg-white">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center text-2xl font-black font-headline text-black">
+                        {t.vendor.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-xl font-black font-headline text-black uppercase">{t.vendor}</p>
+                        <p className="text-xs font-bold text-black border-b-2 border-transparent group-hover:border-black inline-block mt-1">
+                          {new Date(t.date || t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 sm:gap-8">
+                      <span className="hidden sm:flex items-center gap-2 text-xs font-bold text-black border-2 border-black px-2 py-1 bg-white">
+                        <div className="w-2 h-2 rounded-none border border-black" style={{backgroundColor: CATEGORY_COLORS[t.category] || '#ffbd03'}}></div> {t.category.toUpperCase()}
+                      </span>
+                      <span className={cn(
+                        "text-xl font-black w-28 text-right font-headline",
+                        t.type === 'income' ? 'text-emerald-500' : 'text-black'
+                      )}>
+                        {t.type === 'income' ? '+' : '-'}{Number(t.amount).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                      </span>
+                      <CreditCard size={24} strokeWidth={3} className="text-transparent group-hover:text-black transition-colors" />
+                    </div>
+                  </motion.div>
                 ))}
+                {transactions.length === 0 && (
+                  <p className="text-sm font-bold text-black p-4 text-center border-4 border-black border-dashed">No transactions yet.</p>
+                )}
               </div>
-            </motion.div>
-            
-          </div>
+            </div>
+          </motion.div>
+
         </div>
       </div>
     </motion.div>
