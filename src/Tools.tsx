@@ -5,12 +5,12 @@ import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
 const TOOLS = [
-  { id: 'emi', title: 'EMI Calculator', icon: Calculator, description: 'Calculate your monthly loan EMIs', color: 'bg-blue-100 text-blue-600' },
-  { id: 'fire', title: 'FIRE Calculator', icon: Target, description: 'Plan your early retirement', color: 'bg-emerald-100 text-emerald-600' },
-  { id: 'subs', title: 'Subscriptions', icon: Repeat, description: 'Track your recurring payments', color: 'bg-purple-100 text-purple-600' },
-  { id: 'currency', title: 'Currency Converter', icon: DollarSign, description: 'Real-time exchange rates', color: 'bg-amber-100 text-amber-600' },
-  { id: 'tax', title: 'Tax Estimator', icon: PieChart, description: 'Estimate your annual taxes', color: 'bg-rose-100 text-rose-600' },
-  { id: 'budget', title: 'Budget Planner', icon: CreditCard, description: '50/30/20 rule calculator', color: 'bg-indigo-100 text-indigo-600' },
+  { id: 'emi', title: 'EMI Calculator', icon: Calculator, description: 'Calculate your monthly loan EMIs', color: 'bg-gumroad-pink text-black' },
+  { id: 'fire', title: 'FIRE Calculator', icon: Target, description: 'Plan your early retirement', color: 'bg-gumroad-yellow text-black' },
+  { id: 'subs', title: 'Subscriptions', icon: Repeat, description: 'Track your recurring payments', color: 'bg-black text-white' },
+  { id: 'currency', title: 'Currency Converter', icon: DollarSign, description: 'Real-time exchange rates', color: 'bg-white text-black' },
+  { id: 'tax', title: 'Tax Estimator', icon: PieChart, description: 'Estimate your annual taxes', color: 'bg-gumroad-pink text-black' },
+  { id: 'budget', title: 'Budget Planner', icon: CreditCard, description: '50/30/20 rule calculator', color: 'bg-gumroad-yellow text-black' },
 ];
 
 function EmiCalculator() {
@@ -24,24 +24,24 @@ function EmiCalculator() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Loan Amount ($)</label>
-          <input type="number" value={principal} onChange={e => setPrincipal(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Loan Amount ($)</label>
+          <input type="number" value={principal} onChange={e => setPrincipal(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Interest Rate (%)</label>
-          <input type="number" value={rate} onChange={e => setRate(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Interest Rate (%)</label>
+          <input type="number" value={rate} onChange={e => setRate(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Tenure (Years)</label>
-          <input type="number" value={years} onChange={e => setYears(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Tenure (Years)</label>
+          <input type="number" value={years} onChange={e => setYears(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors" />
         </div>
       </div>
-      <div className="bg-blue-50 p-6 rounded-2xl text-center border border-blue-100">
-        <p className="text-sm text-blue-600 font-medium mb-1">Monthly EMI</p>
-        <h3 className="text-4xl font-bold text-blue-900">${emi ? emi.toFixed(2) : '0.00'}</h3>
-        <p className="text-xs text-blue-500 mt-2">Total Interest: ${emi ? ((emi * n) - principal).toFixed(2) : '0.00'}</p>
+      <div className="bg-gumroad-pink border-4 border-black p-6 neo-brutalism-shadow-sm text-center">
+        <p className="text-xs font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black pb-1 inline-block">Monthly EMI</p>
+        <h3 className="text-4xl font-black font-headline text-black tracking-tighter">${emi ? emi.toFixed(2) : '0.00'}</h3>
+        <p className="text-[10px] font-black text-black/60 uppercase tracking-widest mt-4">Total Interest: ${emi ? ((emi * n) - principal).toFixed(2) : '0.00'}</p>
       </div>
     </div>
   );
@@ -67,29 +67,29 @@ function FireCalculator() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-5">
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Current Age</label>
-          <input type="number" value={currentAge} onChange={e => setCurrentAge(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Current Age</label>
+          <input type="number" value={currentAge} onChange={e => setCurrentAge(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-yellow/10 transition-colors" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Retire Age</label>
-          <input type="number" value={retirementAge} onChange={e => setRetirementAge(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Retire Age</label>
+          <input type="number" value={retirementAge} onChange={e => setRetirementAge(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-yellow/10 transition-colors" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">Monthly Save ($)</label>
-          <input type="number" value={monthlySavings} onChange={e => setMonthlySavings(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Monthly Save ($)</label>
+          <input type="number" value={monthlySavings} onChange={e => setMonthlySavings(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-yellow/10 transition-colors" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">FIRE Target ($)</label>
-          <input type="number" value={fireNumber} onChange={e => setFireNumber(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">FIRE Target ($)</label>
+          <input type="number" value={fireNumber} onChange={e => setFireNumber(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-yellow/10 transition-colors" />
         </div>
       </div>
-      <div className="bg-emerald-50 p-6 rounded-2xl text-center border border-emerald-100">
-        <p className="text-sm text-emerald-600 font-medium mb-1">Projected Savings</p>
-        <h3 className="text-4xl font-bold text-emerald-900">${projectedSavings.toLocaleString('en-US', { maximumFractionDigits: 0 })}</h3>
-        <p className={cn("text-sm font-medium mt-3", isFireOnTrack ? "text-emerald-600" : "text-amber-600")}>
-          {isFireOnTrack ? "✨ You are on track!" : `Falling short by $${(fireNumber - projectedSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+      <div className="bg-gumroad-yellow border-4 border-black p-6 neo-brutalism-shadow-sm text-center">
+        <p className="text-xs font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black pb-1 inline-block">Projected Savings</p>
+        <h3 className="text-4xl font-black font-headline text-black tracking-tighter">${projectedSavings.toLocaleString('en-US', { maximumFractionDigits: 0 })}</h3>
+        <p className={cn("text-[10px] font-black uppercase tracking-widest mt-4 flex items-center justify-center gap-2", isFireOnTrack ? "text-black" : "text-rose-600")}>
+          {isFireOnTrack ? "✨ W. You are on track!" : `L. Falling short by $${(fireNumber - projectedSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
         </p>
       </div>
     </div>
@@ -155,20 +155,20 @@ function SubscriptionsTracker() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-purple-50 p-6 rounded-2xl text-center border border-purple-100">
-        <p className="text-sm text-purple-600 font-medium mb-1">Total Monthly Cost</p>
-        <h3 className="text-4xl font-bold text-purple-900">${total.toFixed(2)}</h3>
-        <p className="text-xs text-purple-500 mt-2">Auto-detected from your transactions.</p>
+      <div className="bg-black border-4 border-black p-6 neo-brutalism-shadow-sm text-center text-white">
+        <p className="text-xs font-black uppercase tracking-widest mb-2 border-b-2 border-white pb-1 inline-block">Total Monthly Cost</p>
+        <h3 className="text-4xl font-black font-headline tracking-tighter text-gumroad-pink">${total.toFixed(2)}</h3>
+        <p className="text-[10px] font-black uppercase tracking-widest mt-4 opacity-60">Auto-detected from your transactions.</p>
       </div>
-      <div className="space-y-3">
-        {subs.length === 0 && <p className="text-slate-400 text-sm text-center py-4">No recurring subscriptions detected.</p>}
+      <div className="space-y-4">
+        {subs.length === 0 && <p className="text-black font-bold text-sm text-center py-4">No recurring subscriptions detected.</p>}
         {subs.map((sub, i) => (
-          <div key={i} className="flex justify-between items-center p-3 border border-slate-100 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
+          <div key={i} className="flex justify-between items-center p-4 border-4 border-black bg-white hover:bg-gumroad-yellow transition-all cursor-pointer neo-brutalism-shadow-xs group">
             <div>
-              <p className="font-medium text-slate-900">{sub.name}</p>
-              <p className="text-xs text-slate-500">{sub.cycle}</p>
+              <p className="font-black font-headline text-black uppercase">{sub.name}</p>
+              <p className="text-xs font-black text-black/60 uppercase tracking-widest">{sub.cycle}</p>
             </div>
-            <p className="font-semibold text-slate-900">${sub.price.toFixed(2)}</p>
+            <p className="text-xl font-black font-headline text-black group-hover:scale-110 transition-transform">${sub.price.toFixed(2)}</p>
           </div>
         ))}
       </div>
@@ -196,28 +196,28 @@ function CurrencyConverter() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-5">
         <div className="col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
-          <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Amount</label>
+          <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
-          <select value={fromCurrency} onChange={e => setFromCurrency(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-white">
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">From</label>
+          <select value={fromCurrency} onChange={e => setFromCurrency(e.target.value)} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors appearance-none">
             {Object.keys(rates).map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">To</label>
-          <select value={toCurrency} onChange={e => setToCurrency(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-white">
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">To</label>
+          <select value={toCurrency} onChange={e => setToCurrency(e.target.value)} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors appearance-none">
             {Object.keys(rates).map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
       </div>
-      <div className="bg-amber-50 p-6 rounded-2xl text-center border border-amber-100">
-        <p className="text-sm text-amber-600 font-medium mb-1">Converted Amount</p>
-        <h3 className="text-4xl font-bold text-amber-900">{convertedAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} {toCurrency}</h3>
-        <p className="text-xs text-amber-500 mt-2">1 {fromCurrency} = {(rates[toCurrency] / rates[fromCurrency]).toFixed(4)} {toCurrency}</p>
+      <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow-sm text-center">
+        <p className="text-xs font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black pb-1 inline-block">Converted Amount</p>
+        <h3 className="text-4xl font-black font-headline text-black tracking-tighter">{convertedAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} {toCurrency}</h3>
+        <p className="text-[10px] font-black text-black/60 uppercase tracking-widest mt-4">1 {fromCurrency} = {(rates[toCurrency] / rates[fromCurrency]).toFixed(4)} {toCurrency}</p>
       </div>
     </div>
   );
@@ -265,25 +265,25 @@ function TaxEstimator() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Annual Income ($)</label>
-          <input type="number" value={income} onChange={e => setIncome(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Annual Income ($)</label>
+          <input type="number" value={income} onChange={e => setIncome(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Filing Status</label>
-          <select value={filingStatus} onChange={e => setFilingStatus(e.target.value)} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white">
+          <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Filing Status</label>
+          <select value={filingStatus} onChange={e => setFilingStatus(e.target.value)} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors appearance-none">
             <option value="single">Single</option>
             <option value="married">Married Filing Jointly</option>
           </select>
         </div>
       </div>
-      <div className="bg-rose-50 p-6 rounded-2xl text-center border border-rose-100">
-        <p className="text-sm text-rose-600 font-medium mb-1">Estimated Federal Tax</p>
-        <h3 className="text-4xl font-bold text-rose-900">${estimatedTax.toLocaleString('en-US', { maximumFractionDigits: 0 })}</h3>
-        <p className="text-xs text-rose-500 mt-2">Effective Tax Rate: {effectiveRate.toFixed(1)}%</p>
+      <div className="bg-gumroad-pink border-4 border-black p-6 neo-brutalism-shadow-sm text-center">
+        <p className="text-xs font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black pb-1 inline-block">Estimated Federal Tax</p>
+        <h3 className="text-4xl font-black font-headline text-black tracking-tighter">${estimatedTax.toLocaleString('en-US', { maximumFractionDigits: 0 })}</h3>
+        <p className="text-[10px] font-black text-black uppercase tracking-widest mt-4">Effective Tax Rate: {effectiveRate.toFixed(1)}%</p>
       </div>
-      <p className="text-xs text-slate-400 text-center">This is a simplified estimation and does not constitute professional tax advice.</p>
+      <p className="text-[10px] font-black text-black/40 uppercase tracking-widest text-center">This is a simplified estimation and does not constitute professional tax advice.</p>
     </div>
   );
 }
@@ -298,34 +298,24 @@ function BudgetPlanner() {
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Monthly After-Tax Income ($)</label>
-        <input type="number" value={income} onChange={e => setIncome(Number(e.target.value))} className="w-full border border-slate-200 rounded-xl px-4 py-2 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+        <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">Monthly After-Tax Income ($)</label>
+        <input type="number" value={income} onChange={e => setIncome(Number(e.target.value))} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-yellow/10 transition-colors" />
       </div>
       
       <div className="space-y-4">
-        <div className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex justify-between items-center">
-          <div>
-            <p className="font-bold text-slate-900">Needs (50%)</p>
-            <p className="text-xs text-slate-500">Housing, food, utilities, transport</p>
+        {[
+          { label: 'Needs (50%)', desc: 'Housing, food, utilities, transport', val: needs, color: 'bg-gumroad-pink' },
+          { label: 'Wants (30%)', desc: 'Entertainment, dining out, hobbies', val: wants, color: 'bg-gumroad-yellow' },
+          { label: 'Savings/Debt (20%)', desc: 'Investments, emergency fund, debt payoff', val: savings, color: 'bg-white' },
+        ].map((cat, i) => (
+          <div key={i} className={cn("p-5 border-4 border-black flex justify-between items-center neo-brutalism-shadow-xs", cat.color)}>
+            <div>
+              <p className="font-black font-headline text-black uppercase">{cat.label}</p>
+              <p className="text-[10px] font-black text-black/60 uppercase tracking-widest">{cat.desc}</p>
+            </div>
+            <p className="text-2xl font-black font-headline text-black">${cat.val.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
           </div>
-          <p className="font-bold text-indigo-600">${needs.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
-        </div>
-        
-        <div className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex justify-between items-center">
-          <div>
-            <p className="font-bold text-slate-900">Wants (30%)</p>
-            <p className="text-xs text-slate-500">Entertainment, dining out, hobbies</p>
-          </div>
-          <p className="font-bold text-purple-600">${wants.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
-        </div>
-        
-        <div className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex justify-between items-center">
-          <div>
-            <p className="font-bold text-slate-900">Savings/Debt (20%)</p>
-            <p className="text-xs text-slate-500">Investments, emergency fund, debt payoff</p>
-          </div>
-          <p className="font-bold text-emerald-600">${savings.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -349,54 +339,55 @@ export default function Tools() {
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Financial Tools</h1>
-        <p className="text-slate-500 text-sm mt-1">Calculators and trackers to manage your wealth</p>
+        <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Financial Tools</h1>
+        <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter">Calculators and trackers to manage your wealth</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {TOOLS.map(tool => (
-          <button
+          <motion.button
             key={tool.id}
+            whileHover={{ x: 4, y: 4, boxShadow: 'none' }}
             onClick={() => setActiveTool(tool.id)}
-            className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all text-left group"
+            className="bg-white p-8 border-4 border-black neo-brutalism-shadow text-left group transition-all"
           >
-            <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", tool.color)}>
-              <tool.icon size={24} />
+            <div className={cn("w-16 h-16 border-4 border-black flex items-center justify-center mb-6 neo-brutalism-shadow-sm", tool.color)}>
+              <tool.icon size={32} strokeWidth={3} />
             </div>
-            <h3 className="font-bold text-slate-900 mb-1">{tool.title}</h3>
-            <p className="text-sm text-slate-500">{tool.description}</p>
-          </button>
+            <h3 className="text-2xl font-black font-headline text-black mb-2 uppercase">{tool.title}</h3>
+            <p className="text-xs font-bold text-black uppercase tracking-tighter opacity-60">{tool.description}</p>
+          </motion.button>
         ))}
       </div>
 
       <AnimatePresence>
         {activeTool && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setActiveTool(null)}
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl shadow-xl w-full max-w-lg relative z-10 overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-white border-4 border-black neo-brutalism-shadow-lg w-full max-w-lg relative z-10 overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-900">
+              <div className="flex items-center justify-between p-6 border-b-4 border-black bg-gumroad-yellow">
+                <h2 className="text-2xl font-black font-headline text-black uppercase tracking-tighter">
                   {TOOLS.find(t => t.id === activeTool)?.title}
                 </h2>
                 <button 
                   onClick={() => setActiveTool(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center border-4 border-black bg-white text-black hover:bg-gumroad-pink transition-colors cursor-pointer"
                 >
-                  <X size={18} />
+                  <X size={24} strokeWidth={3} />
                 </button>
               </div>
-              <div className="p-6 overflow-y-auto">
+              <div className="p-8 overflow-y-auto grid-bg">
                 {renderToolContent()}
               </div>
             </motion.div>

@@ -5,12 +5,12 @@ import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
 const COLORS = [
-  "from-blue-500 to-indigo-600",
-  "from-emerald-500 to-teal-600",
-  "from-amber-500 to-orange-600",
-  "from-purple-500 to-fuchsia-600",
-  "from-rose-500 to-red-600",
-  "from-cyan-500 to-blue-600"
+  "bg-gumroad-pink",
+  "bg-gumroad-yellow",
+  "bg-black text-white",
+  "bg-white text-black",
+  "bg-gumroad-pink",
+  "bg-gumroad-yellow"
 ];
 
 const INITIAL_DECKS = [
@@ -122,17 +122,18 @@ export default function FlexDecks() {
 
   return (
     <div className="p-4 lg:p-8 max-w-5xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
-      <div className="mb-8 shrink-0 flex items-center justify-between">
+      <div className="mb-12 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Flex-Decks</h1>
-          <p className="text-slate-500 text-sm mt-1">Swipe right to save, left to skip. Master your money in minutes.</p>
+          <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Flex-Decks</h1>
+          <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter">Swipe right to save, left to skip. Master your money in minutes.</p>
         </div>
-        <button 
+        <motion.button 
+          whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition"
+          className="flex items-center gap-2 bg-gumroad-pink text-black px-8 py-4 border-4 border-black neo-brutalism-shadow font-headline font-black uppercase tracking-widest cursor-pointer transition-all"
         >
-          <Plus size={16} /> Add Card
-        </button>
+          <Plus size={20} strokeWidth={3} /> Add Card
+        </motion.button>
       </div>
 
       <div className="flex-1 relative flex items-center justify-center min-h-[400px]">
@@ -143,17 +144,18 @@ export default function FlexDecks() {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center"
             >
-              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpen size={32} />
+              <div className="w-24 h-24 border-4 border-black bg-gumroad-yellow text-black flex items-center justify-center mx-auto mb-8 neo-brutalism-shadow">
+                <BookOpen size={40} strokeWidth={3} />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">You're all caught up!</h3>
-              <p className="text-slate-500 mb-8 max-w-sm mx-auto">You've reviewed all the Flex-Decks for today. Come back tomorrow for more financial wisdom.</p>
-              <button 
+              <h3 className="text-4xl font-black font-headline text-black mb-4 uppercase tracking-tighter">You're all caught up!</h3>
+              <p className="text-black font-bold mb-10 max-w-sm mx-auto uppercase tracking-tighter opacity-60">You've reviewed all the Flex-Decks for today. Come back tomorrow for more financial wisdom.</p>
+              <motion.button 
+                whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
                 onClick={resetDecks}
-                className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 mx-auto"
+                className="bg-black text-white px-8 py-4 border-4 border-black neo-brutalism-shadow font-headline font-black uppercase tracking-widest cursor-pointer transition-all flex items-center gap-3 mx-auto"
               >
-                <RefreshCcw size={18} /> Review Again
-              </button>
+                <RefreshCcw size={20} strokeWidth={3} /> Review Again
+              </motion.button>
             </motion.div>
           ) : (
             cards.map((card, index) => {
@@ -163,7 +165,7 @@ export default function FlexDecks() {
                 <motion.div
                   key={card.id}
                   className={cn(
-                    "absolute w-full max-w-sm aspect-[3/4] rounded-3xl shadow-2xl overflow-hidden cursor-grab active:cursor-grabbing",
+                    "absolute w-full max-w-sm aspect-[3/4] border-4 border-black neo-brutalism-shadow-lg overflow-hidden cursor-grab active:cursor-grabbing",
                     isTop ? "z-10" : "z-0 pointer-events-none"
                   )}
                   drag={isTop ? "x" : false}
@@ -189,27 +191,27 @@ export default function FlexDecks() {
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className={cn("w-full h-full bg-gradient-to-br p-8 flex flex-col text-white", card.color)}>
+                  <div className={cn("w-full h-full p-10 flex flex-col grid-bg", card.color)}>
                     <div className="flex justify-between items-start mb-auto">
-                      <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                      <span className="bg-white border-4 border-black px-4 py-2 text-[10px] font-black uppercase tracking-widest text-black neo-brutalism-shadow-xs">
                         {card.category}
                       </span>
-                      <span className="text-white/60 text-sm font-medium">
+                      <span className="text-black font-black text-xs uppercase tracking-tighter opacity-60">
                         {cards.length - index}/{INITIAL_DECKS.length}
                       </span>
                     </div>
                     
-                    <div className="mb-12 overflow-y-auto max-h-[60%] hide-scrollbar">
-                      <h2 className="text-3xl font-bold mb-6 leading-tight">{card.title}</h2>
-                      <p className="text-lg text-white/90 leading-relaxed">{card.content}</p>
+                    <div className="mb-12 overflow-y-auto max-h-[65%] hide-scrollbar">
+                      <h2 className="text-3xl font-black font-headline mb-8 leading-tight uppercase tracking-tighter border-b-4 border-black pb-4">{card.title}</h2>
+                      <p className="text-lg font-bold text-black leading-tight uppercase tracking-tight">{card.content}</p>
                     </div>
-
+ 
                     <div className="flex justify-between items-center mt-auto">
-                      <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/50">
-                        <X size={24} />
+                      <div className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center text-black neo-brutalism-shadow-sm">
+                        <X size={28} strokeWidth={4} />
                       </div>
-                      <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/50">
-                        <Check size={24} />
+                      <div className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center text-black neo-brutalism-shadow-sm">
+                        <Check size={28} strokeWidth={4} />
                       </div>
                     </div>
                   </div>
@@ -221,9 +223,9 @@ export default function FlexDecks() {
       </div>
       
       {cards.length > 0 && (
-        <div className="shrink-0 text-center mt-8 text-slate-400 text-sm flex items-center justify-center gap-8">
-          <span className="flex items-center gap-2"><X size={16} /> Swipe Left to Skip</span>
-          <span className="flex items-center gap-2">Swipe Right to Save <Check size={16} /></span>
+        <div className="shrink-0 text-center mt-12 text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-12">
+          <span className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-white neo-brutalism-shadow-xs"><X size={16} strokeWidth={3} /> Left to Skip</span>
+          <span className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-gumroad-yellow neo-brutalism-shadow-xs">Right to Save <Check size={16} strokeWidth={3} /></span>
         </div>
       )}
 
@@ -233,22 +235,24 @@ export default function FlexDecks() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl max-w-md w-full shadow-xl overflow-hidden"
+              className="bg-white border-4 border-black max-w-md w-full neo-brutalism-shadow-lg overflow-hidden flex flex-col"
             >
-              <div className="flex justify-between items-center p-5 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-800">New Flashcard</h2>
-                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+              <div className="flex justify-between items-center p-6 border-b-4 border-black bg-gumroad-yellow">
+                <h2 className="text-2xl font-black font-headline uppercase tracking-tighter text-black">New Flashcard</h2>
+                <button onClick={() => setShowAddModal(false)} className="w-10 h-10 border-4 border-black bg-white hover:bg-gumroad-pink flex items-center justify-center text-black cursor-pointer transition-colors">
+                  <X size={24} strokeWidth={3} />
+                </button>
               </div>
-              <form onSubmit={handleAddCard} className="p-6 space-y-4">
+              <form onSubmit={handleAddCard} className="p-8 space-y-6 grid-bg">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Front Text (Title)</label>
-                  <input required type="text" value={newCard.title} onChange={e => setNewCard({...newCard, title: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none" placeholder="e.g. Rule of 72" />
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-2">Front Text (Title)</label>
+                  <input required type="text" value={newCard.title} onChange={e => setNewCard({...newCard, title: e.target.value})} className="w-full px-4 py-3 border-4 border-black bg-white focus:bg-gumroad-pink/10 font-bold outline-none transition-all placeholder:text-black/30" placeholder="e.g. Rule of 72" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Back Text (Content)</label>
-                  <textarea required value={newCard.content} onChange={e => setNewCard({...newCard, content: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none min-h-[100px]" placeholder="e.g. Formula to estimate the number of years required to double your investment." />
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-2">Back Text (Content)</label>
+                  <textarea required value={newCard.content} onChange={e => setNewCard({...newCard, content: e.target.value})} className="w-full px-4 py-3 border-4 border-black bg-white focus:bg-gumroad-pink/10 font-bold outline-none min-h-[120px] transition-all placeholder:text-black/30" placeholder="e.g. Formula to estimate the number of years required to double your investment." />
                 </div>
-                <button type="submit" className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors">Save Flashcard</button>
+                <button type="submit" className="w-full py-4 bg-gumroad-pink text-black font-black uppercase tracking-widest text-xs border-4 border-black neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">Save Flashcard</button>
               </form>
             </motion.div>
           </div>

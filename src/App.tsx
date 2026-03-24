@@ -57,6 +57,11 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Safety timeout to ensure we don't get stuck on the loading screen
+    const timeout = setTimeout(() => {
+      setIsInitializing(false);
+    }, 10000);
+
     if (supabase) {
       supabase.auth.getSession().then(async ({ data: { session } }) => {
         setSession(session);
@@ -67,8 +72,10 @@ export default function App() {
             console.error('Failed to load profile during init:', err);
           }
         }
+        clearTimeout(timeout);
         setIsInitializing(false);
       }).catch(() => {
+        clearTimeout(timeout);
         setIsInitializing(false);
       });
 
@@ -87,8 +94,12 @@ export default function App() {
         }
       });
 
-      return () => subscription.unsubscribe();
+      return () => {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+      };
     } else {
+      clearTimeout(timeout);
       setIsInitializing(false);
     }
   }, []);

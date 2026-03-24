@@ -109,22 +109,23 @@ export default function Portfolio() {
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Portfolio & FIRE</h1>
-        <p className="text-slate-500 text-sm mt-1">Track your assets and plan your early retirement</p>
+        <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Portfolio & FIRE</h1>
+        <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter">Track your assets and plan your early retirement</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Live Portfolio */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:p-8 flex flex-col relative overflow-hidden">
+        <div className="bg-white border-4 border-black p-6 lg:p-8 neo-brutalism-shadow flex flex-col relative overflow-hidden">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-bold text-slate-900">Live Portfolio</h3>
-            <button
+            <h3 className="text-black text-xs font-black uppercase tracking-widest border-b-2 border-black pb-1 inline-block">Live Portfolio</h3>
+            <motion.button
+              whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
               onClick={() => setShowAddAsset(!showAddAsset)}
-              className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors uppercase tracking-wider"
+              className="flex items-center gap-2 text-xs font-black px-4 py-2 border-4 border-black bg-gumroad-pink text-black neo-brutalism-shadow-sm cursor-pointer transition-all uppercase tracking-widest"
             >
-              {showAddAsset ? <X size={14} /> : <Plus size={14} />}
+              {showAddAsset ? <X size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
               {showAddAsset ? 'Cancel' : 'Add Asset'}
-            </button>
+            </motion.button>
           </div>
 
           <AnimatePresence>
@@ -134,69 +135,64 @@ export default function Portfolio() {
                 animate={{ opacity: 1, height: 'auto', scale: 1 }}
                 exit={{ opacity: 0, height: 0, scale: 0.95 }}
                 onSubmit={handleAddAsset}
-                className="mb-8 p-4 bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-inner"
+                className="mb-8 p-6 bg-gumroad-yellow/10 border-4 border-black neo-brutalism-shadow-sm overflow-hidden"
               >
-                <h4 className="text-sm font-semibold text-slate-800 mb-3">Add New Asset</h4>
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Symbol</label>
-                    <input type="text" required value={newAsset.symbol} onChange={e => setNewAsset({ ...newAsset, symbol: e.target.value })} className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="e.g. VOO" />
+                <h4 className="text-sm font-black text-black uppercase tracking-widest mb-4">Add New Asset</h4>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Symbol</label>
+                    <input type="text" required value={newAsset.symbol} onChange={e => setNewAsset({ ...newAsset, symbol: e.target.value })} className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 transition-colors placeholder:text-black/30" placeholder="e.g. VOO" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Name (Optional)</label>
-                    <input type="text" value={newAsset.name} onChange={e => setNewAsset({ ...newAsset, name: e.target.value })} className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="S&P 500 ETF" />
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Name (Optional)</label>
+                    <input type="text" value={newAsset.name} onChange={e => setNewAsset({ ...newAsset, name: e.target.value })} className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 transition-colors placeholder:text-black/30" placeholder="S&P 500 ETF" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Shares</label>
-                    <input type="number" step="any" required value={newAsset.shares} onChange={e => setNewAsset({ ...newAsset, shares: e.target.value })} className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="10.5" />
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Shares</label>
+                    <input type="number" step="any" required value={newAsset.shares} onChange={e => setNewAsset({ ...newAsset, shares: e.target.value })} className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 transition-colors placeholder:text-black/30" placeholder="10.5" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Current Price</label>
-                    <input type="number" step="any" required value={newAsset.current_price} onChange={e => setNewAsset({ ...newAsset, current_price: e.target.value })} className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="400.00" />
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Current Price</label>
+                    <input type="number" step="any" required value={newAsset.current_price} onChange={e => setNewAsset({ ...newAsset, current_price: e.target.value })} className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 transition-colors placeholder:text-black/30" placeholder="400.00" />
                   </div>
                 </div>
-                <button type="submit" className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors">
+                <button type="submit" className="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-xs hover:bg-gumroad-pink hover:text-black transition-colors border-4 border-black neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none">
                   Save Asset
                 </button>
               </motion.form>
             )}
           </AnimatePresence>
 
-          <div className="mb-8 relative z-10">
-            <p className="text-sm text-slate-500 font-medium mb-2">Total Asset Value</p>
-            <div className="flex items-end gap-4">
+          <div className="mb-12 relative z-10">
+            <p className="text-xs text-black font-black uppercase tracking-widest mb-3">Total Asset Value</p>
+            <div className="flex items-center gap-4">
               <motion.h2
                 key={totalValue}
                 initial={{ opacity: 0.8, y: -2 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={cn(
-                  "text-5xl font-bold tracking-tight transition-colors duration-500",
-                  "text-slate-900"
-                )}
+                className="text-6xl font-black font-headline tracking-tighter text-black bg-gumroad-yellow px-4 py-2 border-4 border-black neo-brutalism-shadow-sm inline-block"
               >
                 ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </motion.h2>
-              <span className={cn(
-                "flex items-center text-sm font-bold mb-2 px-2 py-1 rounded-lg",
-                "bg-emerald-100 text-emerald-700"
-              )}>
-                <TrendingUp size={16} className="mr-1" /> +0.00%
+              <span className="flex items-center text-xl font-black text-emerald-600 bg-white border-4 border-black px-3 py-1 neo-brutalism-shadow-xs">
+                <TrendingUp size={18} strokeWidth={3} className="mr-1" /> +0.00%
               </span>
             </div>
           </div>
 
-          <div className="flex-1 min-h-[250px] relative">
+          <div className="flex-1 min-h-[300px] relative grid-bg border-4 border-black neo-brutalism-shadow-sm">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={assets}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
+                  innerRadius={70}
+                  outerRadius={110}
+                  paddingAngle={8}
                   dataKey="value"
-                  stroke="none"
+                  stroke="#000"
+                  strokeWidth={4}
                 >
                   {assets.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -204,17 +200,22 @@ export default function Portfolio() {
                 </Pie>
                 <RechartsTooltip
                   formatter={(value: number) => `$${value.toLocaleString()}`}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '4px solid #000', 
+                    borderRadius: '0',
+                    boxShadow: '4px 4px 0px #000'
+                  }} 
                 />
               </PieChart>
             </ResponsiveContainer>
 
             {/* Custom Legend */}
-            <div className="absolute bottom-0 left-0 right-0 flex flex-wrap justify-center gap-4">
+            <div className="absolute bottom-4 left-0 right-0 flex flex-wrap justify-center gap-4 px-4 pb-2">
               {assets.map((item) => (
-                <div key={item.symbol} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-xs font-medium text-slate-600">{item.symbol}</span>
+                <div key={item.symbol} className="flex items-center gap-2 bg-white border-2 border-black px-2 py-1 neo-brutalism-shadow-xs">
+                  <div className="w-3 h-3 border-2 border-black" style={{ backgroundColor: item.color }}></div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black">{item.symbol}</span>
                 </div>
               ))}
             </div>
@@ -222,92 +223,88 @@ export default function Portfolio() {
         </div>
 
         {/* FIRE Calculator */}
-        <div className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl p-6 lg:p-8 text-white relative overflow-hidden">
-          {/* Decorative background elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-
+        <div className="bg-white border-4 border-black neo-brutalism-shadow p-6 lg:p-8 text-black relative overflow-hidden flex flex-col">
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                <Target size={24} />
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-14 h-14 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-sm">
+                <Target size={28} strokeWidth={3} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">FIRE Calculator</h3>
-                <p className="text-slate-400 text-sm">Financial Independence, Retire Early</p>
+                <h3 className="text-2xl font-black font-headline uppercase tracking-tighter">FIRE Calculator</h3>
+                <p className="text-black font-bold text-xs uppercase tracking-tighter opacity-60">Financial Independence, Retire Early</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6 mb-8">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Current Age</label>
+                <label className="text-[10px] font-black text-black uppercase tracking-widest">Current Age</label>
                 <input
                   type="number"
                   value={currentAge}
                   onChange={(e) => setCurrentAge(Number(e.target.value))}
-                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                  className="w-full bg-white border-4 border-black px-4 py-3 text-black font-bold focus:bg-gumroad-pink/10 outline-none transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Retire Age</label>
+                <label className="text-[10px] font-black text-black uppercase tracking-widest">Retire Age</label>
                 <input
                   type="number"
                   value={retirementAge}
                   onChange={(e) => setRetirementAge(Number(e.target.value))}
-                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                  className="w-full bg-white border-4 border-black px-4 py-3 text-black font-bold focus:bg-gumroad-pink/10 outline-none transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Save</label>
+                <label className="text-[10px] font-black text-black uppercase tracking-widest">Monthly Save</label>
                 <div className="relative">
-                  <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <DollarSign size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
                   <input
                     type="number"
                     value={monthlySavings}
                     onChange={(e) => setMonthlySavings(Number(e.target.value))}
-                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl pl-9 pr-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                    className="w-full bg-white border-4 border-black pl-10 pr-4 py-3 text-black font-bold focus:bg-gumroad-yellow/10 outline-none transition-all"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">FIRE Number</label>
+                <label className="text-[10px] font-black text-black uppercase tracking-widest">FIRE Number</label>
                 <div className="relative">
-                  <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <DollarSign size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
                   <input
                     type="number"
                     value={fireNumber}
                     onChange={(e) => updateFireTarget(Number(e.target.value))}
-                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl pl-9 pr-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                    className="w-full bg-white border-4 border-black pl-10 pr-4 py-3 text-black font-bold focus:bg-gumroad-yellow/10 outline-none transition-all"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
-              <p className="text-sm text-slate-400 mb-2">Projected Savings at Age {retirementAge}</p>
+            <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow-sm flex-1 flex flex-col justify-center">
+              <p className="text-xs font-black text-black uppercase tracking-widest mb-2">Projected Savings at Age {retirementAge}</p>
               <h4 className={cn(
-                "text-4xl font-bold tracking-tight mb-4",
-                isFireOnTrack ? "text-emerald-400" : "text-amber-400"
+                "text-5xl font-black font-headline tracking-tighter mb-6",
+                isFireOnTrack ? "text-emerald-600" : "text-black"
               )}>
                 ${projectedSavings.toLocaleString('en-US', { maximumFractionDigits: 0 })}
               </h4>
 
-              <div className="w-full bg-slate-900 rounded-full h-3 mb-3 overflow-hidden border border-slate-700">
+              <div className="w-full bg-white border-4 border-black h-8 mb-4 overflow-hidden relative">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min((projectedSavings / fireNumber) * 100, 100)}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className={cn(
-                    "h-full rounded-full",
-                    isFireOnTrack ? "bg-emerald-500" : "bg-amber-500"
+                    "h-full border-r-4 border-black",
+                    isFireOnTrack ? "bg-emerald-500" : "bg-gumroad-yellow"
                   )}
                 />
               </div>
 
-              <p className="text-sm font-medium">
+              <p className="text-xs font-black uppercase tracking-widest">
                 {isFireOnTrack
-                  ? <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 size={16} /> You are on track to FIRE!</span>
-                  : <span className="text-amber-400">You will fall short by ${(fireNumber - projectedSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                  ? <span className="text-emerald-600 flex items-center gap-2"><CheckCircle2 size={18} strokeWidth={3} /> You are on track to FIRE!</span>
+                  : <span className="text-rose-600">You will fall short by ${(fireNumber - projectedSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
                 }
               </p>
             </div>
@@ -316,18 +313,21 @@ export default function Portfolio() {
       </div>
 
       {/* Savings Buckets */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:p-8">
+      <div className="bg-white border-4 border-black neo-brutalism-shadow p-6 lg:p-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Savings Buckets</h3>
-            <p className="text-sm text-slate-500 mt-1">Allocate your net savings towards distinct goals</p>
+            <h3 className="text-2xl font-black font-headline uppercase tracking-tighter text-black">Savings Buckets</h3>
+            <p className="text-black font-bold text-xs uppercase tracking-tighter opacity-60 mt-1">Allocate your net savings towards distinct goals</p>
           </div>
-          <button className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors uppercase tracking-wider">
-            <Plus size={14} /> Add Bucket
-          </button>
+          <motion.button 
+            whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
+            className="flex items-center gap-2 text-xs font-black px-4 py-2 border-4 border-black bg-white text-black neo-brutalism-shadow-sm cursor-pointer transition-all uppercase tracking-widest"
+          >
+            <Plus size={14} strokeWidth={3} /> Add Bucket
+          </motion.button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {buckets.map(bucket => {
             const percent = Math.min((bucket.current / bucket.target) * 100, 100);
             const isCompleted = percent === 100;
@@ -335,30 +335,30 @@ export default function Portfolio() {
               <motion.div
                 key={bucket.id}
                 whileHover={{ y: -4 }}
-                className="bg-slate-50 border border-slate-100 rounded-2xl p-5 hover:border-slate-200 transition-colors"
+                className="bg-white border-4 border-black neo-brutalism-shadow-sm p-6 flex flex-col"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-xl">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center text-3xl neo-brutalism-shadow-xs">
                     {bucket.icon}
                   </div>
-                  {isCompleted && <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full flex items-center gap-1"><CheckCircle2 size={12} /> Done</span>}
+                  {isCompleted && <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-white border-2 border-emerald-600 px-2 py-1 flex items-center gap-1"><CheckCircle2 size={12} strokeWidth={3} /> Goal Reached</span>}
                 </div>
 
-                <h4 className="font-bold text-slate-800 mb-1">{bucket.name}</h4>
-                <div className="flex items-end gap-1 mb-4">
-                  <span className="text-2xl font-bold tracking-tight text-slate-900">${bucket.current.toLocaleString()}</span>
-                  <span className="text-sm text-slate-500 mb-1">/ ${bucket.target.toLocaleString()}</span>
+                <h4 className="font-black font-headline text-xl uppercase text-black mb-2">{bucket.name}</h4>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-3xl font-black font-headline text-black">${bucket.current.toLocaleString()}</span>
+                  <span className="text-xs font-bold text-black opacity-40 uppercase tracking-tighter">/ ${bucket.target.toLocaleString()}</span>
                 </div>
 
-                <div className="w-full bg-slate-200 rounded-full h-2 mb-2 overflow-hidden">
+                <div className="w-full bg-white border-4 border-black h-4 mb-2 overflow-hidden relative">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percent}%` }}
                     transition={{ duration: 1, ease: "easeOut" }}
-                    className={cn("h-full rounded-full", bucket.color)}
+                    className={cn("h-full border-r-4 border-black", bucket.color.replace('bg-', 'bg-'))}
                   />
                 </div>
-                <p className="text-xs font-medium text-slate-500 text-right">{percent.toFixed(0)}% Funded</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-black/60 text-right">{percent.toFixed(0)}% Funded</p>
               </motion.div>
             );
           })}

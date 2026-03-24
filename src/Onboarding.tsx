@@ -60,16 +60,16 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white grid-bg flex items-center justify-center p-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white max-w-xl w-full rounded-3xl shadow-xl overflow-hidden border border-slate-100"
+        className="bg-white max-w-xl w-full border-4 border-black neo-brutalism-shadow-lg overflow-hidden flex flex-col"
       >
         {/* Progress Bar */}
-        <div className="w-full h-1.5 bg-slate-100 flex">
+        <div className="w-full h-4 bg-white border-b-4 border-black overflow-hidden relative">
           <motion.div 
-            className="h-full bg-indigo-600"
+            className="h-full bg-gumroad-yellow border-r-4 border-black"
             initial={{ width: '33%' }}
             animate={{ width: `${(step / 3) * 100}%` }}
             transition={{ duration: 0.3 }}
@@ -78,13 +78,13 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
 
         <div className="p-8 md:p-12">
           {/* Header */}
-          <div className="mb-10 text-center">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <div className="mb-12 text-center">
+            <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tighter">
               {step === 1 && "Flex Financial Discipline"}
               {step === 2 && "The Basics"}
               {step === 3 && "Your Safety Net"}
             </h1>
-            <p className="text-slate-500 mt-2 text-sm">
+            <p className="text-black font-bold mt-4 text-xs uppercase tracking-widest opacity-60">
               {step === 1 && "Let's set up your profile and start your journey towards total financial discipline."}
               {step === 2 && "Tell us a bit about your income so we can calculate your potential."}
               {step === 3 && "Let's calculate your exact FIRE number and emergency targets."}
@@ -93,80 +93,80 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
 
           <AnimatePresence mode="wait">
             {step === 1 && (
-              <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+              <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                 <div className="flex justify-center mb-8">
-                  <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 shadow-inner">
-                    <User size={40} />
+                  <div className="w-28 h-28 border-4 border-black bg-gumroad-pink text-black flex items-center justify-center neo-brutalism-shadow-sm">
+                    <User size={48} strokeWidth={3} />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Your Age</label>
-                  <input type="number" value={formData.age} onChange={e => updateForm('age', e.target.value)} placeholder="e.g. 24" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all outline-none" />
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Your Age</label>
+                  <input type="number" value={formData.age} onChange={e => updateForm('age', e.target.value)} placeholder="e.g. 24" className="w-full px-4 py-4 bg-white border-4 border-black font-black text-xl outline-none focus:bg-gumroad-pink/10 transition-all placeholder:text-black/20" />
                 </div>
               </motion.div>
             )}
 
             {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Monthly Income (In-Hand)</label>
+              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Monthly Income (In-Hand)</label>
                   <div className="relative">
-                    <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="number" value={formData.monthly_income} onChange={e => updateForm('monthly_income', e.target.value)} placeholder="e.g. 50000" className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all outline-none" />
+                    <IndianRupee size={20} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                    <input type="number" value={formData.monthly_income} onChange={e => updateForm('monthly_income', e.target.value)} placeholder="e.g. 50000" className="w-full pl-12 pr-4 py-4 bg-white border-4 border-black font-black text-xl outline-none focus:bg-gumroad-yellow/10 transition-all placeholder:text-black/20" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Household Average Income (Optional)</label>
-                  <p className="text-xs text-slate-500 mb-2">If you share expenses with a partner.</p>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Household Average Income (Optional)</label>
+                  <p className="text-[10px] font-black text-black/40 uppercase tracking-widest mb-2 border-l-2 border-black pl-2">If you share expenses with a partner.</p>
                   <div className="relative">
-                    <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="number" value={formData.household_income} onChange={e => updateForm('household_income', e.target.value)} placeholder="e.g. 120000" className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all outline-none" />
+                    <IndianRupee size={20} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                    <input type="number" value={formData.household_income} onChange={e => updateForm('household_income', e.target.value)} placeholder="e.g. 120000" className="w-full pl-12 pr-4 py-4 bg-white border-4 border-black font-black text-xl outline-none focus:bg-gumroad-yellow/10 transition-all placeholder:text-black/20" />
                   </div>
                 </div>
               </motion.div>
             )}
 
             {step === 3 && (
-              <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Current Savings</label>
+              <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Savings</label>
                     <div className="relative">
-                      <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input type="number" value={formData.current_savings} onChange={e => updateForm('current_savings', e.target.value)} placeholder="0" className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 outline-none text-sm" />
+                      <IndianRupee size={16} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
+                      <input type="number" value={formData.current_savings} onChange={e => updateForm('current_savings', e.target.value)} placeholder="0" className="w-full pl-10 pr-4 py-3 bg-white border-4 border-black font-bold outline-none text-sm focus:bg-gumroad-pink/10" />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Monthly Expenses</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Expenses</label>
                     <div className="relative">
-                      <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input type="number" value={formData.monthly_expenses} onChange={e => updateForm('monthly_expenses', e.target.value)} placeholder="30000" className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 outline-none text-sm" />
+                      <IndianRupee size={16} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
+                      <input type="number" value={formData.monthly_expenses} onChange={e => updateForm('monthly_expenses', e.target.value)} placeholder="30000" className="w-full pl-10 pr-4 py-3 bg-white border-4 border-black font-bold outline-none text-sm focus:bg-gumroad-pink/10" />
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">FIRE Target Number</label>
-                  <p className="text-xs text-slate-500 mb-2">Typically 30x your annual expenses.</p>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">FIRE Target Number</label>
+                  <p className="text-[10px] font-black text-black/40 uppercase tracking-widest mb-2 border-l-2 border-black pl-2">Typically 30x your annual expenses.</p>
                   <div className="relative">
-                    <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input type="number" value={formData.fire_target} onChange={e => updateForm('fire_target', e.target.value)} placeholder="10000000" className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 outline-none font-bold text-slate-900" />
+                    <IndianRupee size={20} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                    <input type="number" value={formData.fire_target} onChange={e => updateForm('fire_target', e.target.value)} placeholder="10000000" className="w-full pl-12 pr-4 py-4 bg-gumroad-yellow/10 border-4 border-black font-black text-2xl text-black outline-none focus:bg-gumroad-yellow/20 transition-all" />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Risk Tolerance</label>
-                  <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Risk Tolerance</label>
+                  <div className="grid grid-cols-3 gap-3">
                     {['low', 'medium', 'high'].map((level) => (
                       <button
                         key={level}
                         type="button"
                         onClick={() => updateForm('risk_tolerance', level)}
                         className={cn(
-                          "py-2 px-3 rounded-lg border text-sm font-medium capitalize transition-colors",
+                          "py-3 px-3 border-4 font-black uppercase tracking-widest text-[10px] transition-all",
                           formData.risk_tolerance === level 
-                            ? "border-indigo-600 bg-indigo-50 text-indigo-700" 
-                            : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                            ? "bg-black text-white border-black" 
+                            : "bg-white text-black border-black hover:bg-gumroad-pink"
                         )}
                       >
                         {level}
@@ -179,26 +179,35 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
           </AnimatePresence>
 
           {/* Footer Navigation */}
-          <div className="mt-10 flex items-center justify-between pt-6 border-t border-slate-100">
+          <div className="mt-12 flex items-center justify-between pt-8 border-t-4 border-black">
             {step > 1 ? (
-              <button onClick={prevStep} className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors font-medium text-sm">
-                <ArrowLeft size={16} /> Back
-              </button>
+              <motion.button 
+                whileHover={{ x: -2, y: 2, boxShadow: 'none' }}
+                onClick={prevStep} 
+                className="flex items-center gap-2 px-6 py-3 border-4 border-black bg-white text-black font-black uppercase tracking-widest text-xs neo-brutalism-shadow-xs cursor-pointer transition-all"
+              >
+                <ArrowLeft size={16} strokeWidth={3} /> Back
+              </motion.button>
             ) : <div />}
 
             {step < 3 ? (
-              <button onClick={nextStep} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors font-medium text-sm shadow-sm">
-                Continue <ArrowRight size={16} />
-              </button>
+              <motion.button 
+                whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
+                onClick={nextStep} 
+                className="flex items-center gap-2 px-8 py-3 bg-gumroad-pink text-black border-4 border-black font-black uppercase tracking-widest text-xs neo-brutalism-shadow-sm cursor-pointer transition-all"
+              >
+                Continue <ArrowRight size={16} strokeWidth={3} />
+              </motion.button>
             ) : (
-              <button 
+              <motion.button 
+                whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
                 onClick={handleFinish} 
                 disabled={isLoading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:bg-slate-900 text-white rounded-xl transition-colors font-medium text-sm shadow-sm"
+                className="flex items-center gap-2 px-8 py-3 bg-black text-white border-4 border-black font-black uppercase tracking-widest text-xs neo-brutalism-shadow-sm cursor-pointer transition-all disabled:opacity-50"
               >
-                {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Target size={16} />} 
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Target size={16} strokeWidth={3} />} 
                 {isLoading ? 'Saving...' : 'Finish Setup'}
-              </button>
+              </motion.button>
             )}
           </div>
         </div>

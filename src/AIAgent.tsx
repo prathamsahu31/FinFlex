@@ -30,6 +30,16 @@ const BOT_RESPONSES = [
   "Main character energy: maxing out your Roth IRA this year. Let's go!"
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 }
+};
+
 export default function AIAgent() {
   const [messages, setMessages] = useState<any[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
@@ -115,99 +125,104 @@ Provide a brief, helpful, and stylized response answering their question based o
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
-      <div className="mb-6 shrink-0 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-          <Bot size={24} />
+      <div className="mb-8 shrink-0 flex items-center gap-6">
+        <div className="w-16 h-16 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow">
+          <Bot size={32} strokeWidth={3} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            FinFlex AI <Sparkles size={18} className="text-amber-500" />
+          <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight flex items-center gap-3">
+            FinFlex AI <Sparkles size={24} className="text-gumroad-pink" fill="currentColor" />
           </h1>
-          <p className="text-slate-500 text-sm">Your Gen-Z financial advisor</p>
+          <p className="text-black font-bold text-sm border-l-4 border-black pl-3 uppercase tracking-tighter">Your Gen-Z financial advisor</p>
         </div>
       </div>
 
-      <div className="flex-1 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 bg-white border-4 border-black neo-brutalism-shadow overflow-hidden flex flex-col">
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
-          {messages.map((msg) => (
-            <motion.div 
-              key={msg.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn(
-                "flex gap-4 max-w-[80%]",
-                msg.sender === 'user' ? "ml-auto flex-row-reverse" : ""
-              )}
-            >
-              <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1",
-                msg.sender === 'user' ? "bg-slate-200 text-slate-600" : "bg-indigo-100 text-indigo-600"
-              )}>
-                {msg.sender === 'user' ? <User size={16} /> : <Bot size={16} />}
-              </div>
-              
-              <div className={cn(
-                "flex flex-col",
-                msg.sender === 'user' ? "items-end" : "items-start"
-              )}>
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 grid-bg">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="space-y-8"
+          >
+            {messages.map((msg) => (
+              <motion.div 
+                key={msg.id}
+                variants={itemVariants}
+                className={cn(
+                  "flex gap-4 max-w-[85%]",
+                  msg.sender === 'user' ? "ml-auto flex-row-reverse" : ""
+                )}
+              >
                 <div className={cn(
-                  "px-4 py-3 rounded-2xl",
-                  msg.sender === 'user' 
-                    ? "bg-slate-900 text-white rounded-tr-sm" 
-                    : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm"
+                  "w-10 h-10 border-4 border-black flex items-center justify-center shrink-0 mt-1 neo-brutalism-shadow-sm",
+                  msg.sender === 'user' ? "bg-white text-black" : "bg-gumroad-pink text-black"
                 )}>
-                  <p className="text-[15px] leading-relaxed">{msg.text}</p>
+                  {msg.sender === 'user' ? <User size={20} strokeWidth={3} /> : <Bot size={20} strokeWidth={3} />}
                 </div>
-                <span className="text-xs text-slate-400 mt-1 px-1">{msg.timestamp}</span>
-              </div>
-            </motion.div>
-          ))}
-          
-          {isTyping && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-4 max-w-[80%]"
-            >
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-1">
-                <Bot size={16} />
-              </div>
-              <div className="bg-white border border-slate-200 px-4 py-4 rounded-2xl rounded-tl-sm shadow-sm flex gap-1.5 items-center">
-                <motion.div className="w-2 h-2 bg-indigo-400 rounded-full" animate={{ y: [0, -5, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
-                <motion.div className="w-2 h-2 bg-indigo-400 rounded-full" animate={{ y: [0, -5, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} />
-                <motion.div className="w-2 h-2 bg-indigo-400 rounded-full" animate={{ y: [0, -5, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} />
-              </div>
-            </motion.div>
-          )}
+                
+                <div className={cn(
+                  "flex flex-col",
+                  msg.sender === 'user' ? "items-end" : "items-start"
+                )}>
+                  <div className={cn(
+                    "px-5 py-4 border-4 border-black neo-brutalism-shadow-sm",
+                    msg.sender === 'user' 
+                      ? "bg-gumroad-yellow text-black font-bold" 
+                      : "bg-white text-black font-medium"
+                  )}>
+                    <p className="text-[16px] leading-tight">{msg.text}</p>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black mt-2 px-1">{msg.timestamp}</span>
+                </div>
+              </motion.div>
+            ))}
+            
+            {isTyping && (
+              <motion.div 
+                variants={itemVariants}
+                className="flex gap-4 max-w-[80%]"
+              >
+                <div className="w-10 h-10 border-4 border-black bg-gumroad-pink flex items-center justify-center shrink-0 mt-1 neo-brutalism-shadow-sm">
+                  <Bot size={20} strokeWidth={3} />
+                </div>
+                <div className="bg-white border-4 border-black px-5 py-5 neo-brutalism-shadow-sm flex gap-2 items-center">
+                  <motion.div className="w-3 h-3 bg-black" animate={{ scale: [1, 1.5, 1] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
+                  <motion.div className="w-3 h-3 bg-black" animate={{ scale: [1, 1.5, 1] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} />
+                  <motion.div className="w-3 h-3 bg-black" animate={{ scale: [1, 1.5, 1] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} />
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
           <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white border-t border-slate-200">
+        <div className="p-6 bg-white border-t-4 border-black">
           <form onSubmit={handleSend} className="relative flex items-center">
             <input 
               type="text" 
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about your spending vibes..." 
-              className="w-full bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-2xl pl-4 pr-12 py-4 text-[15px] transition-all outline-none"
+              className="w-full bg-white border-4 border-black focus:bg-gumroad-yellow/10 outline-none pl-4 pr-16 py-5 text-[16px] font-bold placeholder:text-black/40 transition-all"
             />
             <button 
               type="submit"
               disabled={!input.trim() || isTyping}
-              className="absolute right-2 w-10 h-10 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-500 text-white rounded-xl flex items-center justify-center transition-colors"
+              className="absolute right-3 w-12 h-12 bg-gumroad-pink hover:bg-white text-black border-4 border-black flex items-center justify-center transition-all neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none disabled:bg-black/10 disabled:cursor-not-allowed"
             >
-              <Send size={18} className="ml-1" />
+              <Send size={24} strokeWidth={3} className="ml-1" />
             </button>
           </form>
-          <div className="flex gap-2 mt-3 overflow-x-auto pb-1 hide-scrollbar">
+          <div className="flex gap-3 mt-4 overflow-x-auto pb-2 hide-scrollbar">
             {["Am I on track for FIRE?", "Analyze my food spending", "How much did I save this week?"].map((suggestion) => (
               <button 
                 key={suggestion}
                 type="button"
                 onClick={() => setInput(suggestion)}
-                className="shrink-0 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors border border-indigo-100"
+                className="shrink-0 text-xs font-black uppercase tracking-widest text-black bg-white border-2 border-black hover:bg-gumroad-yellow px-4 py-2 transition-all hover:translate-y-[-2px] cursor-pointer"
               >
                 {suggestion}
               </button>

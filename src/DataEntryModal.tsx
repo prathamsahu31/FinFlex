@@ -191,28 +191,32 @@ export default function DataEntryModal({ isOpen, onClose, onSuccess }: DataEntry
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-slate-50 rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-xl relative"
+          className="bg-white border-4 border-black max-w-5xl w-full max-h-[90vh] overflow-y-auto neo-brutalism-shadow-lg relative flex flex-col"
         >
-          <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-10">
+          <div className="sticky top-0 bg-gumroad-yellow border-b-4 border-black px-8 py-5 flex items-center justify-between z-10">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Data Entry & OCR</h2>
-              <p className="text-sm text-slate-500">Upload receipts or enter transactions manually.</p>
+              <h2 className="text-2xl font-black font-headline text-black uppercase tracking-tight">Data Entry & OCR</h2>
+              <p className="text-black font-bold text-xs uppercase tracking-widest opacity-70">Upload receipts or enter transactions manually.</p>
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
-              <X size={20} />
-            </button>
+            <motion.button 
+              whileHover={{ rotate: 90 }}
+              onClick={onClose} 
+              className="text-black bg-white border-4 border-black p-2 neo-brutalism-shadow-xs cursor-pointer"
+            >
+              <X size={20} strokeWidth={3} />
+            </motion.button>
           </div>
 
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-10 grid-bg">
             {/* OCR Section */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <FileText size={20} className="text-indigo-600" />
+            <div className="bg-white border-4 border-black p-8 neo-brutalism-shadow-sm flex flex-col">
+              <h3 className="text-xl font-black font-headline text-black uppercase tracking-tighter mb-6 flex items-center gap-3">
+                <FileText size={24} strokeWidth={3} className="text-black" />
                 Scan Receipt
               </h3>
               
               <div 
-                className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:bg-slate-50 transition-colors cursor-pointer"
+                className="border-4 border-dashed border-black bg-slate-50 p-10 text-center hover:bg-gumroad-pink transition-all cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input 
@@ -222,26 +226,25 @@ export default function DataEntryModal({ isOpen, onClose, onSuccess }: DataEntry
                   accept="image/*,application/pdf"
                   onChange={handleFileChange}
                 />
-                <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
-                  <Upload size={24} />
+                <div className="w-16 h-16 bg-white border-4 border-black flex items-center justify-center mx-auto mb-6 text-black neo-brutalism-shadow-xs group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:shadow-[4px_4px_0px_#000] transition-all">
+                  <Upload size={32} strokeWidth={3} />
                 </div>
-                <p className="font-medium text-slate-700 mb-1">Click to upload or drag and drop</p>
-                <p className="text-xs text-slate-500">SVG, PNG, JPG or PDF (max. 5MB)</p>
+                <p className="text-sm font-black text-black uppercase tracking-widest mb-1">Click to upload or drag and drop</p>
+                <p className="text-[10px] font-bold text-black opacity-50 uppercase tracking-[0.2em]">SVG, PNG, JPG or PDF (max. 5MB)</p>
                 
                 {file && (
-                  <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
-                    <CheckCircle2 size={16} />
+                  <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 border-4 border-black bg-white text-black text-xs font-black uppercase tracking-widest neo-brutalism-shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <CheckCircle2 size={16} strokeWidth={3} />
                     {file.name}
                   </div>
                 )}
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
                 onClick={processReceipt}
                 disabled={!file || isProcessing}
-                className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
+                className="w-full mt-8 py-4 bg-gumroad-yellow text-black border-4 border-black font-black uppercase tracking-widest text-sm neo-brutalism-shadow cursor-pointer transition-all disabled:opacity-50 flex items-center justify-center gap-3"
               >
                 {isProcessing ? (
                   <><Loader2 size={18} className="animate-spin" /> Processing with AI...</>
@@ -251,92 +254,80 @@ export default function DataEntryModal({ isOpen, onClose, onSuccess }: DataEntry
               </motion.button>
 
               {error && (
-                <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm flex items-start gap-2">
-                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                <div className="mt-6 p-4 border-4 border-black bg-red-50 text-black font-bold text-xs uppercase tracking-widest flex items-start gap-3">
+                  <AlertCircle size={20} className="shrink-0 text-red-600" />
                   <p>{error}</p>
                 </div>
               )}
 
               {success && (
-                <div className="mt-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm flex items-start gap-2">
-                  <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+                <div className="mt-6 p-4 border-4 border-black bg-emerald-50 text-black font-bold text-xs uppercase tracking-widest flex items-start gap-3">
+                  <CheckCircle2 size={20} className="shrink-0 text-emerald-600" />
                   <p>{success}</p>
                 </div>
               )}
             </div>
 
             {/* Manual Entry Form */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">Transaction Details</h3>
+            <div className="bg-white border-4 border-black p-8 neo-brutalism-shadow-sm flex flex-col">
+              <h3 className="text-xl font-black font-headline text-black uppercase tracking-tighter mb-8 border-b-4 border-black pb-2 inline-block self-start">Transaction Details</h3>
               
-              <form onSubmit={handleManualSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Vendor / Description</label>
+              <form onSubmit={handleManualSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Vendor / Description</label>
                   <input 
                     type="text" 
                     required
                     value={manualEntry.vendor}
                     onChange={e => setManualEntry({...manualEntry, vendor: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                    className="w-full px-4 py-3 bg-white border-4 border-black font-bold outline-none focus:bg-gumroad-pink/10 transition-all placeholder:text-black/20"
                     placeholder="e.g. Amazon, Starbucks"
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Type</label>
                     <select 
                       value={manualEntry.type}
                       onChange={e => setManualEntry({...manualEntry, type: e.target.value})}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-white border-4 border-black font-bold outline-none appearance-none focus:bg-gumroad-pink/10 transition-all"
                     >
                       <option value="expense">Expense</option>
                       <option value="income">Income</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-black uppercase tracking-widest">Date</label>
                     <input 
                       type="date" 
                       required
                       value={manualEntry.date}
                       onChange={e => setManualEntry({...manualEntry, date: e.target.value})}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-white border-4 border-black font-bold outline-none focus:bg-gumroad-pink/10 transition-all"
                     />
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Amount ($)</label>
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      required
-                      value={manualEntry.amount}
-                      onChange={e => setManualEntry({...manualEntry, amount: e.target.value})}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                    <input 
-                      type="date" 
-                      required
-                      value={manualEntry.date}
-                      onChange={e => setManualEntry({...manualEntry, date: e.target.value})}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Amount (₹)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    required
+                    value={manualEntry.amount}
+                    onChange={e => setManualEntry({...manualEntry, amount: e.target.value})}
+                    className="w-full px-4 py-3 bg-gumroad-yellow/10 border-4 border-black font-black text-2xl text-black outline-none focus:bg-gumroad-yellow/20 transition-all placeholder:text-black/20"
+                    placeholder="0.00"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Category</label>
                   <select 
                     value={manualEntry.category}
                     onChange={e => setManualEntry({...manualEntry, category: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                    className="w-full px-4 py-3 bg-white border-4 border-black font-bold outline-none appearance-none focus:bg-gumroad-pink/10 transition-all"
                   >
                     <option>Shopping</option>
                     <option>Transport</option>
@@ -348,13 +339,13 @@ export default function DataEntryModal({ isOpen, onClose, onSuccess }: DataEntry
                 </div>
 
                 {result?.items && result.items.length > 0 && (
-                  <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Detected Items</h4>
-                    <ul className="space-y-1 text-sm text-slate-600">
+                  <div className="mt-6 p-6 bg-slate-50 border-4 border-black neo-brutalism-shadow-xs">
+                    <h4 className="text-xs font-black text-black uppercase tracking-widest mb-4 border-b-2 border-black pb-1 inline-block">Detected Items</h4>
+                    <ul className="space-y-2 text-xs font-bold text-black uppercase tracking-tighter">
                       {result.items.map((item: any, i: number) => (
-                        <li key={i} className="flex justify-between">
+                        <li key={i} className="flex justify-between border-b border-black/10 pb-1">
                           <span>{item.name}</span>
-                          <span className="font-medium">${item.price}</span>
+                          <span className="font-black">₹{item.price}</span>
                         </li>
                       ))}
                     </ul>
@@ -362,10 +353,9 @@ export default function DataEntryModal({ isOpen, onClose, onSuccess }: DataEntry
                 )}
 
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
                   type="submit"
-                  className="w-full mt-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors"
+                  className="w-full mt-8 py-4 bg-black text-white border-4 border-black font-black uppercase tracking-widest text-sm neo-brutalism-shadow cursor-pointer transition-all"
                 >
                   Save Transaction
                 </motion.button>

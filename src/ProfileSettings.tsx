@@ -82,81 +82,81 @@ export default function ProfileSettings() {
   }
 
   return (
-    <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-8">
+    <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-12">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Profile & Settings</h1>
-        <p className="text-slate-500 text-sm mt-1">Manage your financial baselines and preferences</p>
+        <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Profile & Settings</h1>
+        <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter">Manage your financial baselines and preferences</p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 sm:p-8 border-b border-slate-100 flex items-center gap-6">
-          <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden border-4 border-white shadow-sm shrink-0">
+      <div className="bg-white border-4 border-black neo-brutalism-shadow overflow-hidden flex flex-col">
+        <div className="p-8 sm:p-10 border-b-4 border-black flex items-center gap-8 bg-gumroad-yellow">
+          <div className="w-24 h-24 border-4 border-black bg-white flex items-center justify-center overflow-hidden neo-brutalism-shadow-sm shrink-0">
             {user?.user_metadata?.avatar_url ? (
               <img src={user.user_metadata.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
             ) : (
-              <User size={32} className="text-indigo-600" />
+              <User size={40} strokeWidth={3} className="text-black" />
             )}
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{user?.email}</h2>
-            <span className="inline-block mt-1 px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
+            <h2 className="text-2xl font-black font-headline text-black uppercase tracking-tighter">{user?.email}</h2>
+            <span className="inline-block mt-2 px-4 py-1.5 border-4 border-black bg-white text-black text-xs font-black uppercase tracking-widest neo-brutalism-shadow-xs">
               Onboarding Complete
             </span>
           </div>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 sm:p-8 space-y-8">
+        <form onSubmit={handleSave} className="p-8 sm:p-10 space-y-12 grid-bg">
           <div>
-            <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Financial Baseline</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Age</label>
-                <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none transition-all" />
+            <h3 className="text-xl font-black font-headline text-black uppercase tracking-tighter mb-8 border-b-4 border-black pb-2 inline-block">Financial Baseline</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-black uppercase tracking-widest">Age</label>
+                <input type="number" name="age" value={formData.age} onChange={handleChange} className="w-full px-5 py-4 bg-white border-4 border-black font-bold outline-none focus:bg-gumroad-pink/10 transition-all" />
               </div>
               
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Monthly Income (₹)</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-black uppercase tracking-widest">Monthly Income (₹)</label>
                 <div className="relative">
-                  <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" name="monthly_income" value={formData.monthly_income} onChange={handleChange} className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none transition-all" />
+                  <IndianRupee size={18} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                  <input type="number" name="monthly_income" value={formData.monthly_income} onChange={handleChange} className="w-full pl-10 pr-5 py-4 bg-white border-4 border-black font-bold outline-none focus:bg-gumroad-pink/10 transition-all" />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Household Income (₹)</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-black uppercase tracking-widest">Household Income (₹)</label>
                 <div className="relative">
-                  <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" name="household_income" value={formData.household_income} onChange={handleChange} className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none transition-all" />
+                  <IndianRupee size={18} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                  <input type="number" name="household_income" value={formData.household_income} onChange={handleChange} className="w-full pl-10 pr-5 py-4 bg-white border-4 border-black font-bold outline-none focus:bg-gumroad-pink/10 transition-all" />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Savings (₹)</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-black uppercase tracking-widest">Current Savings (₹)</label>
                 <div className="relative">
-                  <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" name="current_savings" value={formData.current_savings} onChange={handleChange} className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none transition-all" />
+                  <IndianRupee size={18} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                  <input type="number" name="current_savings" value={formData.current_savings} onChange={handleChange} className="w-full pl-10 pr-5 py-4 bg-white border-4 border-black font-bold outline-none focus:bg-gumroad-pink/10 transition-all" />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Monthly Expenses (₹)</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-black uppercase tracking-widest">Monthly Expenses (₹)</label>
                 <div className="relative">
-                  <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" name="monthly_expenses" value={formData.monthly_expenses} onChange={handleChange} className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none transition-all" />
+                  <IndianRupee size={18} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                  <input type="number" name="monthly_expenses" value={formData.monthly_expenses} onChange={handleChange} className="w-full pl-10 pr-5 py-4 bg-white border-4 border-black font-bold outline-none focus:bg-gumroad-pink/10 transition-all" />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">FIRE Target (₹)</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-black uppercase tracking-widest">FIRE Target (₹)</label>
                 <div className="relative">
-                  <IndianRupee size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input type="number" name="fire_target" value={formData.fire_target} onChange={handleChange} className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none transition-all font-bold text-slate-900" />
+                  <IndianRupee size={18} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
+                  <input type="number" name="fire_target" value={formData.fire_target} onChange={handleChange} className="w-full pl-10 pr-5 py-4 bg-gumroad-yellow/10 border-4 border-black font-black text-black outline-none focus:bg-gumroad-yellow/20 transition-all" />
                 </div>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Risk Tolerance</label>
-                <select name="risk_tolerance" value={formData.risk_tolerance} onChange={handleChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 outline-none transition-all">
+              <div className="md:col-span-2 space-y-2">
+                <label className="block text-[10px] font-black text-black uppercase tracking-widest">Risk Tolerance</label>
+                <select name="risk_tolerance" value={formData.risk_tolerance} onChange={handleChange} className="w-full px-5 py-4 bg-white border-4 border-black font-bold outline-none appearance-none focus:bg-gumroad-pink/10 transition-all">
                   <option value="low">Low (Prefer FDs, PPF, Bonds)</option>
                   <option value="medium">Medium (Balanced Mutual Funds, Index Funds)</option>
                   <option value="high">High (Direct Equity, Crypto)</option>
@@ -165,15 +165,25 @@ export default function ProfileSettings() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-6 border-t border-slate-100">
-            <button type="button" onClick={handleLogout} className="flex items-center gap-2 px-4 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl font-medium text-sm transition-colors">
-              <LogOut size={16} /> Sign Out
-            </button>
+          <div className="flex items-center justify-between pt-10 border-t-4 border-black">
+            <motion.button 
+              whileHover={{ x: -2, y: 2, boxShadow: 'none' }}
+              type="button" 
+              onClick={handleLogout} 
+              className="flex items-center gap-2 px-6 py-3 text-black bg-white border-4 border-black font-black uppercase tracking-widest text-xs neo-brutalism-shadow-xs cursor-pointer transition-all hover:bg-gumroad-pink"
+            >
+              <LogOut size={18} strokeWidth={3} /> Sign Out
+            </motion.button>
 
-            <button type="submit" disabled={isSaving} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50">
-              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            <motion.button 
+              whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
+              type="submit" 
+              disabled={isSaving} 
+              className="flex items-center gap-2 px-8 py-3 bg-gumroad-yellow text-black border-4 border-black font-black uppercase tracking-widest text-xs neo-brutalism-shadow-sm cursor-pointer transition-all disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} strokeWidth={3} />}
               {isSaving ? 'Saving...' : 'Save Changes'}
-            </button>
+            </motion.button>
           </div>
         </form>
       </div>

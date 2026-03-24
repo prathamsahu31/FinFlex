@@ -138,75 +138,74 @@ export default function BillSplit() {
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6 h-full flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bill Splitting</h1>
-          <p className="text-slate-500 text-sm mt-1">Split expenses with friends and groups</p>
+          <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Bill Splitting</h1>
+          <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter">Split expenses with friends and groups</p>
         </div>
         
         <motion.button 
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ x: 2, y: 2, boxShadow: 'none' }}
           onClick={() => setIsAddExpenseOpen(true)}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
+          className="flex items-center justify-center gap-2 bg-gumroad-pink text-black px-6 py-3 border-4 border-black neo-brutalism-shadow font-headline font-black uppercase tracking-widest cursor-pointer transition-all"
         >
-          <Plus size={18} />
+          <Plus size={18} strokeWidth={3} />
           Add Expense
         </motion.button>
       </div>
 
       {/* Top Balances */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium mb-1">Total Balance</p>
-            <h2 className={cn("text-2xl font-bold", (totalOwedToYou - totalYouOwe) >= 0 ? "text-emerald-600" : "text-rose-600")}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
+        <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-black text-xs font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">Total Balance</p>
+            <h2 className={cn("text-3xl font-black font-headline mt-2", (totalOwedToYou - totalYouOwe) >= 0 ? "text-emerald-600" : "text-rose-600")}>
               {((totalOwedToYou - totalYouOwe) >= 0 ? '+' : '')}${(totalOwedToYou - totalYouOwe).toFixed(2)}
             </h2>
           </div>
-          <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
-            <DollarSign size={24} />
+          <div className="w-14 h-14 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-sm group-hover:rotate-12 transition-transform">
+            <DollarSign size={28} strokeWidth={3} />
           </div>
         </div>
         
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium mb-1">You are owed</p>
-            <h2 className="text-2xl font-bold text-emerald-600">${totalOwedToYou.toFixed(2)}</h2>
+        <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-black text-xs font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">You are owed</p>
+            <h2 className="text-3xl font-black font-headline mt-2 text-emerald-600">${totalOwedToYou.toFixed(2)}</h2>
           </div>
-          <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
-            <ArrowRight size={24} />
+          <div className="w-14 h-14 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black neo-brutalism-shadow-sm group-hover:rotate-12 transition-transform">
+            <ArrowRight size={28} strokeWidth={3} />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium mb-1">You owe</p>
-            <h2 className="text-2xl font-bold text-rose-600">${totalYouOwe.toFixed(2)}</h2>
+        <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-black text-xs font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">You owe</p>
+            <h2 className="text-3xl font-black font-headline mt-2 text-rose-600">${totalYouOwe.toFixed(2)}</h2>
           </div>
-          <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-500">
-            <ArrowLeft size={24} />
+          <div className="w-14 h-14 border-4 border-black bg-black flex items-center justify-center text-white neo-brutalism-shadow-sm group-hover:-rotate-12 transition-transform">
+            <ArrowLeft size={28} strokeWidth={3} />
           </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-0">
         
         {/* Left Sidebar - Navigation & Lists */}
-        <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-          <div className="flex border-b border-slate-100 p-2 shrink-0 bg-slate-50/50 rounded-t-2xl relative">
+        <div className="lg:col-span-1 bg-white border-4 border-black neo-brutalism-shadow flex flex-col overflow-hidden">
+          <div className="flex border-b-4 border-black p-2 shrink-0 bg-gumroad-yellow/10 relative">
             {['groups', 'friends'].map(tab => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
                 className={cn(
-                  "flex-1 py-2 text-sm font-medium rounded-lg transition-colors relative z-10 capitalize", 
-                  activeTab === tab ? "text-indigo-700" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                  "flex-1 py-3 text-sm font-black uppercase tracking-widest transition-all relative z-10 capitalize", 
+                  activeTab === tab ? "text-black" : "text-black/60 hover:text-black"
                 )}
               >
                 {activeTab === tab && (
                   <motion.div 
                     layoutId="activeTabBillSplit" 
-                    className="absolute inset-0 bg-white shadow-sm border border-slate-200 rounded-lg -z-10" 
+                    className="absolute inset-0 bg-gumroad-pink border-4 border-black translate-x-1 translate-y-1 -z-10" 
                   />
                 )}
                 {tab}
@@ -214,56 +213,56 @@ export default function BillSplit() {
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 grid-bg">
             {activeTab === 'groups' && (
-              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-3">
-                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                    <Plus size={20} />
+              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4">
+                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm">
+                  <div className="w-12 h-12 border-4 border-black bg-white flex items-center justify-center shrink-0">
+                    <Plus size={24} strokeWidth={3} />
                   </div>
-                  <span className="font-medium">Start a new group</span>
+                  <span className="font-black uppercase tracking-widest text-sm">Start a new group</span>
                 </motion.button>
-                {groups.length === 0 && <p className="text-slate-400 text-sm text-center py-4">No groups yet.</p>}
+                {groups.length === 0 && <p className="text-black font-bold text-sm text-center py-6">No groups yet.</p>}
                 {groups.map(group => (
-                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={group.name} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                        <Users size={20} />
+                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={group.name} className="flex items-center justify-between p-4 bg-white border-4 border-black neo-brutalism-shadow-sm cursor-pointer hover:bg-gumroad-pink transition-all group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 border-4 border-black bg-gumroad-yellow text-black flex items-center justify-center shrink-0 group-hover:bg-white transition-colors">
+                        <Users size={24} strokeWidth={3} />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-800">{group.name}</p>
-                        <p className="text-xs text-slate-500">{group.members} members</p>
+                        <p className="font-black font-headline text-lg uppercase text-black">{group.name}</p>
+                        <p className="text-xs font-bold text-black uppercase tracking-tighter">{group.members} members</p>
                       </div>
                     </div>
-                    <ChevronRight size={16} className="text-slate-400" />
+                    <ChevronRight size={20} strokeWidth={3} className="text-black" />
                   </motion.div>
                 ))}
               </motion.div>
             )}
 
             {activeTab === 'friends' && (
-              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-3">
-                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                    <UserPlus size={20} />
+              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4">
+                <motion.button variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm">
+                  <div className="w-12 h-12 border-4 border-black bg-white flex items-center justify-center shrink-0">
+                    <UserPlus size={24} strokeWidth={3} />
                   </div>
-                  <span className="font-medium">Add a friend</span>
+                  <span className="font-black uppercase tracking-widest text-sm">Add a friend</span>
                 </motion.button>
-                {friends.length === 0 && <p className="text-slate-400 text-sm text-center py-4">No friends with balances yet.</p>}
+                {friends.length === 0 && <p className="text-black font-bold text-sm text-center py-6">No friends with balances yet.</p>}
                 {friends.map(friend => (
-                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={friend.name} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold shrink-0">
+                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }} whileHover={{ x: 4 }} key={friend.name} className="flex items-center justify-between p-4 bg-white border-4 border-black neo-brutalism-shadow-sm cursor-pointer hover:bg-gumroad-yellow transition-all group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 border-4 border-black bg-gumroad-pink text-black flex items-center justify-center font-black text-xl shrink-0 group-hover:bg-white transition-colors">
                         {friend.avatar}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-800">{friend.name}</p>
+                        <p className="font-black font-headline text-lg uppercase text-black">{friend.name}</p>
                         {friend.balance > 0 ? (
-                          <p className="text-xs text-emerald-600 font-medium">Owes you ${friend.balance.toFixed(2)}</p>
+                          <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">Owes you ${friend.balance.toFixed(2)}</p>
                         ) : friend.balance < 0 ? (
-                          <p className="text-xs text-rose-600 font-medium">You owe ${Math.abs(friend.balance).toFixed(2)}</p>
+                          <p className="text-xs font-black text-rose-600 uppercase tracking-widest">You owe ${Math.abs(friend.balance).toFixed(2)}</p>
                         ) : (
-                          <p className="text-xs text-slate-400">Settled up</p>
+                          <p className="text-xs font-black text-black/40 uppercase tracking-widest">Settled up</p>
                         )}
                       </div>
                     </div>
@@ -275,38 +274,40 @@ export default function BillSplit() {
         </div>
 
         {/* Right Area - Recent Activity / Expenses */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex justify-between items-center shrink-0">
-            <h3 className="font-bold text-lg text-slate-800">Recent Expenses</h3>
-            <button className="text-sm text-indigo-600 font-medium hover:underline">View All</button>
+        <div className="lg:col-span-2 bg-white border-4 border-black neo-brutalism-shadow flex flex-col overflow-hidden">
+          <div className="p-5 border-b-4 border-black flex justify-between items-center shrink-0 bg-gumroad-pink/10">
+            <h3 className="font-black font-headline text-2xl uppercase tracking-tighter text-black">Recent Expenses</h3>
+            <button className="text-xs font-black uppercase tracking-widest text-black bg-white border-4 border-black px-4 py-2 neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer">View All</button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-2">
-            <div className="space-y-1">
-              {expenses.length === 0 && <p className="text-slate-400 text-sm text-center py-8">No expenses yet. Click 'Add Expense' to get started.</p>}
+          <div className="flex-1 overflow-y-auto p-4 grid-bg">
+            <div className="space-y-4">
+              {expenses.length === 0 && <p className="text-black font-bold text-sm text-center py-8">No expenses yet. Click 'Add Expense' to get started.</p>}
               {expenses.map(expense => (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   key={expense.id} 
-                  className="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
+                  className="flex items-center justify-between p-5 bg-white border-4 border-black neo-brutalism-shadow-sm hover:bg-gumroad-yellow transition-all group cursor-pointer"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
-                      <Receipt size={24} />
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black shrink-0 group-hover:bg-white transition-colors">
+                      <Receipt size={28} strokeWidth={3} />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-800">{expense.description}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        <span className="font-medium text-slate-700">{expense.paidBy}</span> paid ${expense.amount.toFixed(2)}
+                      <p className="font-black font-headline text-xl uppercase text-black">{expense.description}</p>
+                      <p className="text-xs font-bold text-black mt-1 uppercase tracking-tighter">
+                        <span className="font-black border-b-2 border-black bg-gumroad-yellow/30 px-1">{expense.paidBy}</span> paid <span className="font-black">${expense.amount.toFixed(2)}</span>
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-400 mb-1">{expense.date}</p>
-                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-[10px] font-medium text-slate-600">
-                      {expense.group}
-                    </span>
+                    <p className="text-xs font-black text-black uppercase tracking-widest mb-2 pb-1 border-b-2 border-black inline-block">{expense.date}</p>
+                    <div className="block mt-1">
+                      <span className="inline-flex items-center px-3 py-1 border-2 border-black bg-white text-[10px] font-black uppercase tracking-widest text-black">
+                        {expense.group}
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -323,100 +324,100 @@ export default function BillSplit() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl max-w-lg w-full shadow-xl overflow-hidden"
+              className="bg-white border-4 border-black max-w-lg w-full neo-brutalism-shadow-lg overflow-hidden flex flex-col"
             >
-              <div className="flex justify-between items-center p-5 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-800">Add an expense</h2>
-                <button onClick={() => setIsAddExpenseOpen(false)} className="text-slate-400 hover:text-slate-600">
-                  <X size={24} />
+              <div className="flex justify-between items-center p-6 border-b-4 border-black bg-gumroad-yellow">
+                <h2 className="text-2xl font-black font-headline uppercase tracking-tighter text-black">Add an expense</h2>
+                <button onClick={() => setIsAddExpenseOpen(false)} className="w-10 h-10 border-4 border-black bg-white hover:bg-gumroad-pink flex items-center justify-center text-black cursor-pointer transition-colors">
+                  <X size={24} strokeWidth={3} />
                 </button>
               </div>
               
-              <div className="p-6 space-y-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center border border-slate-200 shrink-0">
-                    <Receipt size={28} className="text-slate-400" />
+              <div className="p-8 space-y-6 grid-bg">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 border-4 border-black bg-gumroad-pink flex items-center justify-center shrink-0 neo-brutalism-shadow-sm">
+                    <Receipt size={32} strokeWidth={3} className="text-black" />
                   </div>
                   <div className="flex-1">
                       <input 
                         type="text" 
                         placeholder="Enter a description" 
-                        className="w-full text-lg font-medium bg-transparent border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-2 transition-colors placeholder:text-slate-300"
+                        className="w-full text-xl font-black font-headline uppercase bg-white border-4 border-black outline-none px-4 py-3 focus:bg-gumroad-pink/10 transition-colors placeholder:text-black/30"
                         value={description}
                         onChange={e => setDescription(e.target.value)}
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100 shrink-0">
-                      <DollarSign size={28} className="text-emerald-600" />
+                  <div className="flex items-center gap-5">
+                    <div className="w-16 h-16 border-4 border-black bg-gumroad-yellow flex items-center justify-center shrink-0 neo-brutalism-shadow-sm">
+                      <DollarSign size={32} strokeWidth={3} className="text-black" />
                     </div>
                     <div className="flex-1">
                       <input 
                         type="number" 
                         placeholder="0.00" 
-                        className="w-full text-3xl font-bold bg-transparent border-b-2 border-slate-200 focus:border-emerald-500 outline-none py-2 transition-colors placeholder:text-slate-300 text-emerald-600"
+                        className="w-full text-4xl font-black font-headline bg-white border-4 border-black outline-none px-4 py-3 focus:bg-gumroad-yellow/10 transition-colors placeholder:text-black/30 text-black"
                         value={amount}
                         onChange={e => setAmount(e.target.value)}
                       />
                     </div>
                   </div>
 
-                  <div className="pt-4 space-y-4">
+                  <div className="pt-4 space-y-5">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">Who Paid?</label>
+                      <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Who Paid?</label>
                       <input 
                         type="text" 
                         value={paidBy}
                         onChange={(e) => setPaidBy(e.target.value)}
                         placeholder="You, Alex, Sarah, etc."
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                        className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all placeholder:text-black/30"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">Participants (Comma Separated)</label>
+                      <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Participants (Comma Separated)</label>
                       <input 
                         type="text" 
                         value={participantsInput}
                         onChange={(e) => setParticipantsInput(e.target.value)}
                         placeholder="Alex, Sarah, Mike"
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                        className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all placeholder:text-black/30"
                       />
-                      <p className="text-[10px] text-slate-400 mt-1">You are automatically included.</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-black/60 mt-2">You are automatically included.</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">Group Name</label>
+                      <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Group Name</label>
                       <input 
                         type="text"
                         value={groupName}
                         onChange={(e) => setGroupName(e.target.value)}
                         placeholder="General, Bali Trip, etc."
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                        className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all placeholder:text-black/30"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <div className="flex items-center justify-between p-4 bg-gumroad-yellow border-4 border-black neo-brutalism-shadow-sm">
                       <div className="flex items-center gap-3">
-                        <PieChart size={20} className="text-indigo-600" />
-                        <span className="text-sm font-medium text-indigo-900">Split equally among participants</span>
+                        <PieChart size={24} strokeWidth={3} className="text-black" />
+                        <span className="text-sm font-black uppercase tracking-widest text-black">Split equally among participants</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-              <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <div className="p-6 border-t-4 border-black bg-white flex justify-end gap-4">
                 <button 
                   onClick={() => setIsAddExpenseOpen(false)}
-                  className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors"
+                  className="px-6 py-3 text-sm font-black uppercase tracking-widest text-black bg-white border-4 border-black hover:bg-black hover:text-white transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleSaveExpense}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors shadow-sm"
+                  className="px-6 py-3 text-sm font-black uppercase tracking-widest text-black bg-gumroad-pink border-4 border-black neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer"
                 >
                   Save Expense
                 </button>
