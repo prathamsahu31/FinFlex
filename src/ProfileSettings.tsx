@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { supabase } from './lib/supabase';
-import { User, IndianRupee, Loader2, Save, LogOut } from 'lucide-react';
+import { cn } from './utils';
+import { TabComponentProps } from './constants';
+import { Bell, Camera, CreditCard, IndianRupee, Loader2, LogOut, Mail, Save, Shield, TrendingUp, Trash2, User, Wallet } from 'lucide-react';
 
-export default function ProfileSettings() {
+export default function ProfileSettings({ setActiveTab }: TabComponentProps) {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);

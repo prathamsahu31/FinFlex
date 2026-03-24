@@ -1,14 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Users, Plus, Receipt, DollarSign, ArrowRight, ArrowLeft, 
-  PieChart, UserPlus, Settings, ChevronRight, X, Loader2
-} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users, Plus, IndianRupee, CreditCard, ArrowRight, Check, X, Search, Filter, MessageSquare, Clock, ArrowUpRight, ArrowDownLeft, Receipt, ArrowLeft, ChevronRight, UserPlus, PieChart, Loader2, DollarSign } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
+import { TabComponentProps } from './constants';
 
-export default function BillSplit() {
-  const [activeTab, setActiveTab] = useState<'groups' | 'friends' | 'activity'>('groups');
+export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponentProps) {
+  const [billSplitTab, setBillSplitTab] = useState<'groups' | 'friends' | 'activity'>('groups');
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [billSplits, setBillSplits] = useState<any[]>([]);
@@ -199,30 +197,32 @@ export default function BillSplit() {
         
         {/* Left Sidebar - Navigation & Lists */}
         <div className="lg:col-span-1 bg-white border-4 border-black neo-brutalism-shadow flex flex-col overflow-hidden">
-          <div className="flex border-b-4 border-black p-2 shrink-0 bg-gumroad-yellow/10 relative">
-            {['groups', 'friends'].map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab as any)}
+          <div className="flex bg-black p-1 border-4 border-black neo-brutalism-shadow-sm">
+            {[
+              { id: 'groups', label: 'Groups', icon: Users },
+              { id: 'friends', label: 'Friends', icon: UserPlus },
+              { id: 'activity', label: 'Activity', icon: Clock }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setBillSplitTab(tab.id as any)}
                 className={cn(
-                  "flex-1 py-3 text-sm font-black uppercase tracking-widest transition-all relative z-10 capitalize", 
-                  activeTab === tab ? "text-black" : "text-black/60 hover:text-black"
+                  "flex-1 flex items-center justify-center gap-2 py-2 px-4 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer",
+                  billSplitTab === tab.id 
+                    ? "bg-gumroad-pink text-black" 
+                    : "bg-transparent text-white hover:bg-white/10"
                 )}
               >
-                {activeTab === tab && (
-                  <motion.div 
-                    layoutId="activeTabBillSplit" 
-                    className="absolute inset-0 bg-gumroad-pink border-4 border-black translate-x-1 translate-y-1 -z-10" 
-                  />
-                )}
-                {tab}
+                <tab.icon size={14} strokeWidth={3} />
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 grid-bg">
-            {activeTab === 'groups' && (
-              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4">
+          <div className="flex-1 overflow-hidden">
+          {billSplitTab === 'groups' && (
+            <div className="h-full flex flex-col">
+              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4 p-4 grid-bg overflow-y-auto">
                 <motion.button onClick={() => { setIsAddExpenseOpen(true); setGroupName(''); }} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm cursor-pointer">
                   <div className="w-12 h-12 border-4 border-black bg-white flex items-center justify-center shrink-0">
                     <Plus size={24} strokeWidth={3} />
@@ -245,10 +245,11 @@ export default function BillSplit() {
                   </motion.div>
                 ))}
               </motion.div>
+            </div>
             )}
 
-            {activeTab === 'friends' && (
-              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4">
+            {billSplitTab === 'friends' && (
+              <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4 p-4 grid-bg overflow-y-auto">
                 <motion.button onClick={() => alert('Friends are automatically added when you create expenses. Add an expense with their name to get started!')} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm cursor-pointer">
                   <div className="w-12 h-12 border-4 border-black bg-white flex items-center justify-center shrink-0">
                     <UserPlus size={24} strokeWidth={3} />
@@ -276,6 +277,14 @@ export default function BillSplit() {
                   </motion.div>
                 ))}
               </motion.div>
+            )}
+
+            {billSplitTab === 'activity' && (
+              <div className="h-full p-6 grid-bg overflow-y-auto flex flex-col items-center justify-center text-center space-y-4">
+                <Clock size={48} strokeWidth={2} className="text-black/50" />
+                <p className="text-black font-bold text-lg">Activity feed coming soon!</p>
+                <p className="text-black/70 text-sm">This section will show a detailed history of all your bill splits and payments.</p>
+              </div>
             )}
           </div>
         </div>

@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { TrendingUp, TrendingDown, Target, Calculator, DollarSign, CheckCircle2, Plus, X, Loader2 } from 'lucide-react';
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { TrendingUp, Target, Plus, X, DollarSign, ArrowUpRight, ArrowDownLeft, Wallet, PieChart, Info, Loader2, CheckCircle2, TrendingDown, Calculator } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
+import { TabComponentProps } from './constants';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#64748b', '#ec4899', '#8b5cf6'];
 
-export default function Portfolio() {
+export default function Portfolio({ setActiveTab }: TabComponentProps) {
   const [user, setUser] = useState<any>(null);
   const [assets, setAssets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -201,7 +202,7 @@ export default function Portfolio() {
 
           <div className="flex-1 min-h-[300px] relative grid-bg border-4 border-black neo-brutalism-shadow-sm">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <RechartsPieChart>
                 <Pie
                   data={assets}
                   cx="50%"
@@ -219,14 +220,14 @@ export default function Portfolio() {
                 </Pie>
                 <RechartsTooltip
                   formatter={(value: number) => `$${value.toLocaleString()}`}
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '4px solid #000', 
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '4px solid #000',
                     borderRadius: '0',
                     boxShadow: '4px 4px 0px #000'
-                  }} 
+                  }}
                 />
-              </PieChart>
+              </RechartsPieChart>
             </ResponsiveContainer>
 
             {/* Custom Legend */}

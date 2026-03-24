@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, FileText, Tag, Search, Filter, Loader2, Clock, Trash2 } from 'lucide-react';
+import { Search, Filter, ArrowUpRight, ArrowDownLeft, Trash2, Tag, ShoppingBag, Terminal, Wallet, Banknote, DollarSign, Calendar, Calculator, Plus, X, Loader2, FileText, Clock } from 'lucide-react';
 import { cn } from './utils';
 import { supabase } from './lib/supabase';
+import { TabComponentProps } from './constants';
 import DataEntryModal from './DataEntryModal';
 
-export default function Transactions() {
+export default function Transactions({ setActiveTab }: TabComponentProps) {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);

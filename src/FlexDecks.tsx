@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Check, X, RefreshCcw, Plus, Loader2 } from 'lucide-react';
+import { Search, Plus, Filter, BookOpen, Brain, Sparkles, X, Check, ArrowRight, RotateCcw, Loader2, RefreshCcw } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
+import { TabComponentProps } from './constants';
 
 const COLORS = [
   "bg-gumroad-pink",
@@ -20,7 +21,7 @@ const INITIAL_DECKS = [
   { title: "Index Funds", content: "Picking individual stocks is risky. Index funds let you buy a tiny piece of hundreds of companies at once.", front_text: "Index Funds" }
 ];
 
-export default function FlexDecks() {
+export default function FlexDecks({ setActiveTab }: TabComponentProps) {
   const [cards, setCards] = useState<any[]>([]);
   const [allCards, setAllCards] = useState<any[]>([]);
   const [swiped, setSwiped] = useState<string[]>([]);

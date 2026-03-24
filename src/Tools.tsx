@@ -4,14 +4,7 @@ import { Calculator, Target, Repeat, DollarSign, X, CreditCard, PieChart, Loader
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
-const TOOLS = [
-  { id: 'emi', title: 'EMI Calculator', icon: Calculator, description: 'Calculate your monthly loan EMIs', color: 'bg-gumroad-pink text-black' },
-  { id: 'fire', title: 'FIRE Calculator', icon: Target, description: 'Plan your early retirement', color: 'bg-gumroad-yellow text-black' },
-  { id: 'subs', title: 'Subscriptions', icon: Repeat, description: 'Track your recurring payments', color: 'bg-black text-white' },
-  { id: 'currency', title: 'Currency Converter', icon: DollarSign, description: 'Real-time exchange rates', color: 'bg-white text-black' },
-  { id: 'tax', title: 'Tax Estimator', icon: PieChart, description: 'Estimate your annual taxes', color: 'bg-gumroad-pink text-black' },
-  { id: 'budget', title: 'Budget Planner', icon: CreditCard, description: '50/30/20 rule calculator', color: 'bg-gumroad-yellow text-black' },
-];
+import { TOOLS_METADATA } from './constants';
 
 function EmiCalculator() {
   const [principal, setPrincipal] = useState(10000);
@@ -321,8 +314,23 @@ function BudgetPlanner() {
   );
 }
 
-export default function Tools() {
+interface ToolsProps {
+  pinnedToolIds?: string[];
+  togglePinTool?: (id: string) => void;
+  defaultToolId?: string | null;
+  onToolOpen?: () => void;
+  setActiveTab?: (tab: string) => void;
+}
+
+export default function Tools({ pinnedToolIds = [], togglePinTool, defaultToolId, onToolOpen }: ToolsProps) {
   const [activeTool, setActiveTool] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (defaultToolId) {
+      setActiveTool(defaultToolId);
+      onToolOpen?.();
+    }
+  }, [defaultToolId]);
 
   const renderToolContent = () => {
     switch (activeTool) {
@@ -336,6 +344,8 @@ export default function Tools() {
     }
   };
 
+  const isPinned = (id: string) => pinnedToolIds.includes(id);
+
   return (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8">
       <div>
@@ -344,19 +354,41 @@ export default function Tools() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {TOOLS.map(tool => (
-          <motion.button
+        {TOOLS_METADATA.map(tool => (
+          <motion.div
             key={tool.id}
             whileHover={{ x: 4, y: 4, boxShadow: 'none' }}
-            onClick={() => setActiveTool(tool.id)}
-            className="bg-white p-8 border-4 border-black neo-brutalism-shadow text-left group transition-all"
+            className="bg-white p-8 border-4 border-black neo-brutalism-shadow text-left group transition-all relative flex flex-col"
           >
-            <div className={cn("w-16 h-16 border-4 border-black flex items-center justify-center mb-6 neo-brutalism-shadow-sm", tool.color)}>
-              <tool.icon size={32} strokeWidth={3} />
+            <div className="flex justify-between items-start mb-6">
+              <div className={cn("w-16 h-16 border-4 border-black flex items-center justify-center neo-brutalism-shadow-sm", tool.color)}>
+                <tool.icon size={32} strokeWidth={3} />
+              </div>
+              
+              <div className="flex flex-col items-end gap-2">
+                <span className="text-[8px] font-black uppercase tracking-widest opacity-40">Pin Tool</span>
+                <div 
+                  className={cn("minecraft-switch", isPinned(tool.id) && "active")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePinTool?.(tool.id);
+                  }}
+                >
+                  <div className="minecraft-switch-handle" />
+                </div>
+              </div>
             </div>
+
             <h3 className="text-2xl font-black font-headline text-black mb-2 uppercase">{tool.title}</h3>
-            <p className="text-xs font-bold text-black uppercase tracking-tighter opacity-60">{tool.description}</p>
-          </motion.button>
+            <p className="text-xs font-bold text-black uppercase tracking-tighter opacity-60 mb-8">{tool.description}</p>
+            
+            <button 
+              onClick={() => setActiveTool(tool.id)}
+              className="mt-auto w-full py-3 bg-black text-white font-black uppercase tracking-widest text-xs hover:bg-gumroad-pink hover:text-black transition-colors border-4 border-black neo-brutalism-shadow-xs cursor-pointer"
+            >
+              Open Tool
+            </button>
+          </motion.div>
         ))}
       </div>
 
@@ -378,7 +410,7 @@ export default function Tools() {
             >
               <div className="flex items-center justify-between p-6 border-b-4 border-black bg-gumroad-yellow">
                 <h2 className="text-2xl font-black font-headline text-black uppercase tracking-tighter">
-                  {TOOLS.find(t => t.id === activeTool)?.title}
+                  {TOOLS_METADATA.find(t => t.id === activeTool)?.title}
                 </h2>
                 <button 
                   onClick={() => setActiveTool(null)}

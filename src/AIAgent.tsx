@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { Bot, Send, Sparkles, Trash2, Maximize2, Minimize2, TrendingUp, CreditCard, Target, PieChart, User } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
+import { TabComponentProps } from './constants';
 
 const INITIAL_MESSAGES = [
   {
@@ -40,7 +41,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0 }
 };
 
-export default function AIAgent() {
+export default function AIAgent({ setActiveTab }: TabComponentProps) {
   const [messages, setMessages] = useState<any[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);

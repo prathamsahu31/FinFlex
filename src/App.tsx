@@ -7,33 +7,16 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
-  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon, MoreVertical
+  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon, MoreVertical, Pin, PinOff
 } from 'lucide-react';
 import { cn } from './utils';
-import Dashboard from './Dashboard';
-import Transactions from './Transactions';
-import Portfolio from './Portfolio';
-import FlexDecks from './FlexDecks';
-import AIAgent from './AIAgent';
-import Tools from './Tools';
-import BillSplit from './BillSplit';
 import Login from './Login';
 import Landing from './Landing';
 import Onboarding from './Onboarding';
-import ProfileSettings from './ProfileSettings';
 import PullToRefresh from './PullToRefresh';
 import { supabase } from './lib/supabase';
 
-const TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, component: Dashboard },
-  { id: 'transactions', label: 'Transactions', icon: CreditCard, component: Transactions },
-  { id: 'bill-split', label: 'Bill Split', icon: Users, component: BillSplit },
-  { id: 'portfolio', label: 'Portfolio & FIRE', icon: TrendingUp, component: Portfolio },
-  { id: 'flex-decks', label: 'Flex-Decks', icon: BookOpen, component: FlexDecks },
-  { id: 'ai-agent', label: 'AI Agent', icon: Bot, component: AIAgent },
-  { id: 'tools', label: 'Tools', icon: Wrench, component: Tools },
-  { id: 'settings', label: 'Settings', icon: UserIcon, component: ProfileSettings },
-];
+import { TABS, TOOLS_METADATA } from './constants';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(TABS[0].id);
@@ -43,7 +26,22 @@ export default function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [showLanding, setShowLanding] = useState(true);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [pinnedToolIds, setPinnedToolIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('finflex_pinned_tools');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('finflex_pinned_tools', JSON.stringify(pinnedToolIds));
+  }, [pinnedToolIds]);
+
+  const togglePinTool = (toolId: string) => {
+    setPinnedToolIds(prev => 
+      prev.includes(toolId) ? prev.filter(id => id !== toolId) : [...prev, toolId]
+    );
+  };
 
   // Close profile menu on outside click
   useEffect(() => {
@@ -160,7 +158,7 @@ export default function App() {
     return <Onboarding user={session.user} onComplete={() => loadProfile(session.user.id)} />;
   }
 
-  const ActiveComponent = TABS.find(t => t.id === activeTab)?.component || Dashboard;
+  const ActiveComponent = TABS.find(t => t.id === activeTab)?.component || TABS[0].component;
   const user = session?.user;
 
   return (
@@ -223,6 +221,42 @@ export default function App() {
               </motion.button>
             );
           })}
+
+          {/* Pinned Tools Section */}
+          {pinnedToolIds.length > 0 && (
+            <div className="pt-6 space-y-3">
+              <div className="flex items-center gap-2 px-4 mb-2">
+                <Pin size={14} strokeWidth={3} className="text-black/40" />
+                <span className="text-[10px] font-black font-label text-black/40 uppercase tracking-widest">Pinned Tools</span>
+              </div>
+              {pinnedToolIds.map(toolId => {
+                const toolMetadata = TOOLS_METADATA.find(t => t.id === toolId);
+                if (!toolMetadata) return null;
+                const Icon = toolMetadata.icon;
+
+                return (
+                  <motion.button
+                    key={toolId}
+                    whileHover={{ x: 4 }}
+                    onClick={() => {
+                      setActiveTab('tools');
+                      setSelectedToolId(toolId);
+                      setIsSidebarOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between px-4 py-2 border-2 border-black text-[10px] font-black font-headline uppercase tracking-widest transition-all bg-white hover:bg-gumroad-yellow text-black"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon size={14} strokeWidth={3} />
+                      {toolMetadata.title.split(' ')[0]}
+                    </div>
+                    <Pin size={10} strokeWidth={3} className="text-black/20" />
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
         </nav>
         
         <div className="p-4 border-t-4 border-black bg-white relative" ref={profileMenuRef}>
@@ -307,7 +341,13 @@ export default function App() {
           <PullToRefresh onRefresh={handleRefresh}>
             <div className="p-4 lg:p-8 min-h-full flex flex-col">
               <div className="flex-1">
-                <ActiveComponent setActiveTab={setActiveTab} />
+                <ActiveComponent 
+                  setActiveTab={setActiveTab} 
+                  pinnedToolIds={pinnedToolIds} 
+                  togglePinTool={togglePinTool}
+                  defaultToolId={selectedToolId}
+                  onToolOpen={() => setSelectedToolId(null)}
+                />
               </div>
               
               {/* Footer */}

@@ -30,6 +30,7 @@ import {
 } from 'recharts';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
+import { TabComponentProps } from './constants';
 import CountUp from './CountUp';
 
 const containerVariants = {
@@ -61,7 +62,7 @@ const MOCK_BUDGETS: Record<string, number> = {
   'Other': 100
 };
 
-export default function Dashboard({ setActiveTab }: { setActiveTab?: (tab: string) => void }) {
+export default function Dashboard({ setActiveTab }: TabComponentProps) {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [trendRange, setTrendRange] = useState<'month' | '3months' | 'all'>('month');
