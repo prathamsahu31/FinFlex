@@ -80,12 +80,12 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
           {/* Header */}
           <div className="mb-10 text-center">
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {step === 1 && "Welcome to FinFlex"}
+              {step === 1 && "Flex Financial Discipline"}
               {step === 2 && "The Basics"}
               {step === 3 && "Your Safety Net"}
             </h1>
             <p className="text-slate-500 mt-2 text-sm">
-              {step === 1 && "Let's set up your profile and get you ready for your FIRE journey."}
+              {step === 1 && "Let's set up your profile and start your journey towards total financial discipline."}
               {step === 2 && "Tell us a bit about your income so we can calculate your potential."}
               {step === 3 && "Let's calculate your exact FIRE number and emergency targets."}
             </p>

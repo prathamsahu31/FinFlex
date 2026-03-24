@@ -96,7 +96,7 @@ export default function Login() {
           Sign in to FinFlex
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
-          Manage your wealth, track expenses, and plan for FIRE.
+          Flex Financial Discipline — Manage, track, and reach FIRE.
         </p>
       </motion.div>
 

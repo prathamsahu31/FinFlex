@@ -153,7 +153,10 @@ export default function App() {
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
               <TrendingUp size={20} strokeWidth={3} />
             </div>
-            FinFlex
+            <div className="flex flex-col">
+              <span className="text-xl font-bold tracking-tight text-slate-900 leading-none">FinFlex</span>
+              <span className="text-[10px] font-medium text-indigo-500 uppercase tracking-widest mt-0.5">Flex Financial Discipline</span>
+            </div>
           </div>
           <button className="lg:hidden text-slate-400 hover:text-slate-600" onClick={() => setIsSidebarOpen(false)}>
             <X size={20} />
