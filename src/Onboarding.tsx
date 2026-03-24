@@ -95,8 +95,12 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                 <div className="flex justify-center mb-8">
-                  <div className="w-28 h-28 border-4 border-black bg-gumroad-pink text-black flex items-center justify-center neo-brutalism-shadow-sm">
-                    <User size={48} strokeWidth={3} />
+                  <div className="w-28 h-28 border-4 border-black bg-gumroad-pink text-black flex items-center justify-center neo-brutalism-shadow-sm overflow-hidden p-3">
+                    <img 
+                      src="https://lh3.googleusercontent.com/aida/ADBb0ugmnrvLWzVOL6D08TQZVGQwliZk63CMaFypWY-WxxTMWZ4-bzrWw1S4P7qkyTrz6RpiXTS46gK5MgU7YzanAebC1edYRelKK0nyCHFDc0TpfrsO8N7TOGFk5OnBXPzBQXmO0iH-E9HQeJT1wHvO0YYDGixNGo1zGe77jEXizUXG9PbhllqOF3xgikndex24TJPa6A1YBOVUN1p1_MGsjTM691oSq7zkN60lZGzmN0uwDNgb603t6Ux-fNGe" 
+                      alt="FinFlex Logo" 
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
