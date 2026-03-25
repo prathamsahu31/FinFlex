@@ -13,7 +13,6 @@ import { cn } from './utils';
 import Login from './Login';
 import Landing from './Landing';
 import Onboarding from './Onboarding';
-import PullToRefresh from './PullToRefresh';
 import ProfileSettings from './ProfileSettings';
 import { supabase } from './lib/supabase';
 import logoImg from './logo.png';
@@ -362,53 +361,51 @@ export default function App() {
             </div>
         </header>
 
-        {/* Scrollable Content Area with Pull to Refresh */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <PullToRefresh onRefresh={handleRefresh}>
-            <div className="p-4 lg:p-8 min-h-full flex flex-col">
-              <div className="flex-1">
-                <ActiveComponent 
-                  setActiveTab={setActiveTab} 
-                  pinnedToolIds={pinnedToolIds} 
-                  togglePinTool={togglePinTool}
-                  defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
-                  onToolOpen={() => setSelectedToolId(null)}
-                  user={user}
-                  profile={profile}
-                />
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col bg-background">
+          <div className="p-4 lg:p-8 min-h-full flex flex-col">
+            <div className="flex-1">
+              <ActiveComponent 
+                setActiveTab={setActiveTab} 
+                pinnedToolIds={pinnedToolIds} 
+                togglePinTool={togglePinTool}
+                defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
+                onToolOpen={() => setSelectedToolId(null)}
+                user={user}
+                profile={profile}
+              />
+            </div>
+            
+            {/* Footer */}
+            <footer className="mt-12 py-8 border-t-4 border-black/10 flex flex-col items-center gap-4">
+              <div className="flex items-center gap-2 font-black font-headline text-black/20 uppercase tracking-tighter text-xl">
+                <TrendingUp size={20} strokeWidth={3} />
+                <span>FinFlex</span>
               </div>
               
-              {/* Footer */}
-              <footer className="mt-12 py-8 border-t-4 border-black/10 flex flex-col items-center gap-4">
-                <div className="flex items-center gap-2 font-black font-headline text-black/20 uppercase tracking-tighter text-xl">
-                  <TrendingUp size={20} strokeWidth={3} />
-                  <span>FinFlex</span>
+              <div className="flex flex-col gap-2 items-center">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black neo-brutalism-shadow-xs group cursor-default">
+                  <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">Made with</span>
+                  <span className="text-lg animate-bounce inline-block">❤️</span>
+                  <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">in India</span>
                 </div>
-                
-                <div className="flex flex-col gap-2 items-center">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black neo-brutalism-shadow-xs group cursor-default">
-                    <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">Made with</span>
-                    <span className="text-lg animate-bounce inline-block">❤️</span>
-                    <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">in India</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-gumroad-pink border-2 border-black neo-brutalism-shadow-xs group cursor-default">
-                    <span className="text-[10px] font-black font-label uppercase tracking-widest text-black italic">Visitor #{localStorage.getItem('finflex_visit_count') || '1'}</span>
-                  </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-gumroad-pink border-2 border-black neo-brutalism-shadow-xs group cursor-default">
+                  <span className="text-[10px] font-black font-label uppercase tracking-widest text-black italic">Visitor #{localStorage.getItem('finflex_visit_count') || '1'}</span>
                 </div>
+              </div>
 
-                <p className="text-[10px] font-black font-label uppercase tracking-[0.2em] text-black/30 text-center max-w-md leading-relaxed px-4">
-                  © {new Date().getFullYear()} FinFlex Financial Revolution. All Rights Reserved. 
-                  <br className="sm:hidden" /> 
-                  Built for the Provocateur. No Jargon. No Limits.
-                </p>
-                <div className="flex gap-6 mt-2 opacity-20 hover:opacity-100 transition-opacity">
-                  {['Security', 'Privacy', 'Legal'].map(item => (
-                    <button key={item} onClick={() => alert(`${item} page coming soon!`)} className="text-[9px] font-black font-label uppercase tracking-widest text-black hover:text-gumroad-pink transition-colors cursor-pointer bg-transparent">{item}</button>
-                  ))}
-                </div>
-              </footer>
-            </div>
-          </PullToRefresh>
+              <p className="text-[10px] font-black font-label uppercase tracking-[0.2em] text-black/30 text-center max-w-md leading-relaxed px-4">
+                © {new Date().getFullYear()} FinFlex Financial Revolution. All Rights Reserved. 
+                <br className="sm:hidden" /> 
+                Built for the Provocateur. No Jargon. No Limits.
+              </p>
+              <div className="flex gap-6 mt-2 opacity-20 hover:opacity-100 transition-opacity">
+                {['Security', 'Privacy', 'Legal'].map(item => (
+                  <button key={item} onClick={() => alert(`${item} page coming soon!`)} className="text-[9px] font-black font-label uppercase tracking-widest text-black hover:text-gumroad-pink transition-colors cursor-pointer bg-transparent">{item}</button>
+                ))}
+              </div>
+            </footer>
+          </div>
         </div>
       </main>
     </div>

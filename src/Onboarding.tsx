@@ -29,15 +29,9 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
     console.log('Finishing onboarding...', formData);
     setIsLoading(true);
     try {
-      // Create user avatar using initial of email
-      const initial = user?.email?.charAt(0).toUpperCase() || 'U';
-      const dicebearUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${initial}&backgroundColor=4f46e5&textColor=ffffff`;
-      
-      console.log('Updating auth metadata...');
-      // Update Auth Metadata (Avatar) - Don't await this to prevent hang
-      supabase.auth.updateUser({
-        data: { avatar_url: dicebearUrl }
-      }).catch(err => console.error('Auth update failed (ignoring):', err));
+      // Removed auth.updateUser as it causes an infinite lock queue in Supabase JS client when fired synchronously with the upsert.
+      // DiceBear avatar is generated dynamically in App.tsx as a fallback anyway.
+
 
       console.log('Upserting profile data...');
       // Upsert into public.profiles table
