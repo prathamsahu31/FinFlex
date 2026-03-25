@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, IndianRupee, CreditCard, ArrowRight, Check, X, Search, Filter, MessageSquare, Clock, ArrowUpRight, ArrowDownLeft, Receipt, ArrowLeft, ChevronRight, UserPlus, PieChart, Loader2, DollarSign } from 'lucide-react';
+import { Users, Plus, IndianRupee, CreditCard, ArrowRight, Check, X, Search, Filter, MessageSquare, Clock, ArrowUpRight, ArrowDownLeft, Receipt, ArrowLeft, ChevronRight, UserPlus, PieChart, Loader2, DollarSign, Camera } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { TabComponentProps } from './constants';
+import { GoogleGenAI } from '@google/genai';
 
 export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabComponentProps & { user: any }) {
   const [billSplitTab, setBillSplitTab] = useState<'groups' | 'friends' | 'activity'>('groups');
@@ -18,7 +19,13 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('You');
   const [groupName, setGroupName] = useState('General');
-  const [participantsInput, setParticipantsInput] = useState('Alex, Sarah');
+  
+  // OCR & Granular Split State
+  const [isScanning, setIsScanning] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(['You']);
+  const [newParticipantName, setNewParticipantName] = useState('');
+  const [customPeople, setCustomPeople] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchSplits = async () => {
@@ -51,7 +58,8 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
         amount: Number(bs.total_amount),
         paidBy: d.paidBy,
         date: new Date(bs.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        group: bs.group_name
+        group: bs.group_name,
+        receiptUrl: d.receiptUrl
       });
 
       if (!groupsMap.has(bs.group_name)) groupsMap.set(bs.group_name, { members: new Set(), total: 0 });
@@ -67,7 +75,6 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
             friendsMap.set(p.name, friendsMap.get(p.name)! + p.owes);
           } else if (d.paidBy === p.name) {
             const myShare = d.participants.find((x: any) => x.name === 'You')?.owes || 0;
-            // Only subtract once per bill, handled by assuming 1 payer
             friendsMap.set(p.name, friendsMap.get(p.name)! - myShare);
           }
         }
@@ -80,7 +87,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
 
     const friendsList = Array.from(friendsMap.entries()).map(([name, balance], i) => ({
       id: i, name, avatar: name.charAt(0).toUpperCase(), balance
-    })).filter(f => Math.abs(f.balance) > 0.01); // Filter out zero balance
+    })).filter(f => Math.abs(f.balance) > 0.01); 
 
     const owed = friendsList.filter(f => f.balance > 0).reduce((acc, f) => acc + f.balance, 0);
     const owe = Math.abs(friendsList.filter(f => f.balance < 0).reduce((acc, f) => acc + f.balance, 0));
@@ -88,26 +95,97 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
     return { groups: groupsList, friends: friendsList, expenses: expensesList, totalOwedToYou: owed, totalYouOwe: owe };
   }, [billSplits]);
 
+  const availablePeople = useMemo(() => {
+    return Array.from(new Set(['You', ...friends.map(f => f.name), ...customPeople]));
+  }, [friends, customPeople]);
+
   const filteredExpenses = useMemo(() => {
     if (!selectedGroup) return expenses;
     return expenses.filter((e: any) => e.group === selectedGroup);
   }, [expenses, selectedGroup]);
 
+  const handleScanReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      alert("Gemini API key is missing! Please set VITE_GEMINI_API_KEY.");
+      return;
+    }
+
+    setIsScanning(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Data = (reader.result as string).split(',')[1];
+        
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const response = await ai.models.generateContent({
+             model: 'gemini-2.5-flash',
+             contents: [
+                {
+                   role: 'user',
+                   parts: [
+                      { text: 'Analyze this receipt image and extract the following details in JSON format.\nJSON structure:\n{\n  "amount": number,\n  "description": string\n}\nRequirements:\n- Amount should be the numeric total.\n- Description should be short (max 5 words) indicating what the receipt is for.\nReply ONLY with the raw JSON, no markdown formatting.' },
+                      { inlineData: { data: base64Data, mimeType: file.type } }
+                   ]
+                }
+             ]
+          });
+
+          const text = response.text || "";
+          const cleanedJson = text.replace(/```json|```/g, "").trim();
+          const parsed = JSON.parse(cleanedJson);
+
+          if (parsed.amount) setAmount(parsed.amount.toString());
+          if (parsed.description) setDescription(parsed.description);
+
+          if (supabase && user) {
+            const fileName = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+            const { error: uploadError } = await supabase.storage
+              .from('receipts')
+              .upload(fileName, file);
+              
+            if (!uploadError) {
+              const { data: { publicUrl } } = supabase.storage
+                 .from('receipts')
+                 .getPublicUrl(fileName);
+              setReceiptUrl(publicUrl);
+            }
+          }
+        } catch (err) {
+           console.error("AI/Upload Error:", err);
+           alert("Failed to process receipt automatically. Notice: Check if a 'receipts' bucket exists in Supabase.");
+        } finally {
+          setIsScanning(false);
+        }
+      };
+      reader.onerror = () => setIsScanning(false);
+      reader.readAsDataURL(file);
+    } catch (e) {
+      setIsScanning(false);
+      console.error(e);
+    }
+    e.target.value = "";
+  };
+
   const handleSaveExpense = async () => {
-    if (!supabase || !user || !description || !amount) return;
+    if (!supabase || !user || !description || !amount || selectedParticipants.length === 0) {
+      alert("Please fill all fields and select at least one participant.");
+      return;
+    }
 
     const total = Number(amount);
-    let partsSet = new Set(participantsInput.split(',').map(p => p.trim()).filter(Boolean));
-    if (paidBy !== 'You') partsSet.add(paidBy);
-    partsSet.add('You'); // 'You' is always involved automatically
-
-    const allPeople = Array.from(partsSet);
-    const splitAmount = total / allPeople.length;
+    const finalParticipants = Array.from(new Set([...selectedParticipants, paidBy]));
+    const splitAmount = total / finalParticipants.length;
 
     const split_details = {
       description,
       paidBy,
-      participants: allPeople.map(p => ({
+      receiptUrl,
+      participants: finalParticipants.map(p => ({
         name: p,
         owes: splitAmount,
         paid: p === paidBy ? total : 0
@@ -127,8 +205,9 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
       setIsAddExpenseOpen(false);
       setDescription('');
       setAmount('');
-      setParticipantsInput('Alex, Sarah');
+      setSelectedParticipants(['You']);
       setPaidBy('You');
+      setReceiptUrl(null);
       alert('Expense added successfully!');
     } else {
       console.error(error);
@@ -136,8 +215,18 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
     }
   };
 
+  const resetForm = () => {
+    setIsAddExpenseOpen(false);
+    setDescription('');
+    setAmount('');
+    setSelectedParticipants(['You']);
+    setPaidBy('You');
+    setReceiptUrl(null);
+    setGroupName('General');
+  };
+
   if (isLoading) {
-    return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+    return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-black" size={48} /></div>;
   }
 
   return (
@@ -158,7 +247,6 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
         </motion.button>
       </div>
 
-      {/* Top Balances */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
         <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
           <div className="relative z-10">
@@ -193,10 +281,8 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-0">
         
-        {/* Left Sidebar - Navigation & Lists */}
         <div className="lg:col-span-1 bg-white border-4 border-black neo-brutalism-shadow flex flex-col overflow-hidden">
           <div className="flex bg-black p-1 border-4 border-black neo-brutalism-shadow-sm">
             {[
@@ -251,11 +337,11 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
 
             {billSplitTab === 'friends' && (
               <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} className="space-y-4 p-4 grid-bg overflow-y-auto">
-                <motion.button onClick={() => alert('Friends are automatically added when you create expenses. Add an expense with their name to get started!')} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm cursor-pointer">
+                <motion.button onClick={() => { setIsAddExpenseOpen(true); }} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="w-full flex items-center gap-4 p-4 bg-white border-4 border-black border-dashed text-black hover:bg-gumroad-pink/10 transition-colors neo-brutalism-shadow-sm cursor-pointer">
                   <div className="w-12 h-12 border-4 border-black bg-white flex items-center justify-center shrink-0">
                     <UserPlus size={24} strokeWidth={3} />
                   </div>
-                  <span className="font-black uppercase tracking-widest text-sm">Add a friend</span>
+                  <span className="font-black uppercase tracking-widest text-sm">Split an expense</span>
                 </motion.button>
                 {friends.length === 0 && <p className="text-black font-bold text-sm text-center py-6">No friends with balances yet.</p>}
                 {friends.map(friend => (
@@ -267,9 +353,9 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
                       <div>
                         <p className="font-black font-headline text-lg uppercase text-black">{friend.name}</p>
                         {friend.balance > 0 ? (
-                          <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">Owes you ${friend.balance.toFixed(2)}</p>
+                          <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">Owes you ₹{friend.balance.toFixed(2)}</p>
                         ) : friend.balance < 0 ? (
-                          <p className="text-xs font-black text-rose-600 uppercase tracking-widest">You owe ${Math.abs(friend.balance).toFixed(2)}</p>
+                          <p className="text-xs font-black text-rose-600 uppercase tracking-widest">You owe ₹{Math.abs(friend.balance).toFixed(2)}</p>
                         ) : (
                           <p className="text-xs font-black text-black/40 uppercase tracking-widest">Settled up</p>
                         )}
@@ -290,7 +376,6 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
           </div>
         </div>
 
-        {/* Right Area - Recent Activity / Expenses */}
         <div className="lg:col-span-2 bg-white border-4 border-black neo-brutalism-shadow flex flex-col overflow-hidden">
           <div className="p-5 border-b-4 border-black flex justify-between items-center shrink-0 bg-gumroad-pink/10">
             <h3 className="font-black font-headline text-2xl uppercase tracking-tighter text-black">Recent Expenses</h3>
@@ -308,8 +393,12 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
                   className="flex items-center justify-between p-5 bg-white border-4 border-black neo-brutalism-shadow-sm hover:bg-gumroad-yellow transition-all group cursor-pointer"
                 >
                   <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black shrink-0 group-hover:bg-white transition-colors">
-                      <Receipt size={28} strokeWidth={3} />
+                    <div className="w-14 h-14 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black shrink-0 group-hover:bg-white transition-colors overflow-hidden">
+                      {expense.receiptUrl ? (
+                         <img src={expense.receiptUrl} alt="Receipt" className="w-full h-full object-cover opacity-80" />
+                      ) : (
+                         <Receipt size={28} strokeWidth={3} />
+                      )}
                     </div>
                     <div>
                       <p className="font-black font-headline text-xl uppercase text-black">{expense.description}</p>
@@ -333,7 +422,6 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
         </div>
       </div>
 
-      {/* Add Expense Modal */}
       <AnimatePresence>
         {isAddExpenseOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -341,16 +429,26 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white border-4 border-black max-w-lg w-full neo-brutalism-shadow-lg overflow-hidden flex flex-col"
+              className="bg-white border-4 border-black max-w-lg w-full max-h-[90vh] flex flex-col neo-brutalism-shadow-lg"
             >
-              <div className="flex justify-between items-center p-6 border-b-4 border-black bg-gumroad-yellow">
-                <h2 className="text-2xl font-black font-headline uppercase tracking-tighter text-black">Add an expense</h2>
-                <button onClick={() => setIsAddExpenseOpen(false)} className="w-10 h-10 border-4 border-black bg-white hover:bg-gumroad-pink flex items-center justify-center text-black cursor-pointer transition-colors">
+              <div className="flex justify-between items-center p-6 border-b-4 border-black bg-gumroad-yellow shrink-0">
+                <h2 className="text-2xl font-black font-headline uppercase tracking-tighter text-black">New Expense</h2>
+                <button onClick={resetForm} className="w-10 h-10 border-4 border-black bg-white hover:bg-gumroad-pink flex items-center justify-center text-black cursor-pointer transition-colors">
                   <X size={24} strokeWidth={3} />
                 </button>
               </div>
               
-              <div className="p-8 space-y-6 grid-bg">
+              <div className="flex-1 overflow-y-auto p-8 space-y-6 grid-bg">
+                <div className="flex gap-4">
+                  <label htmlFor="receipt-upload" className="flex-1 w-full">
+                    <div className={cn("w-full h-16 border-4 border-black border-dashed flex items-center justify-center gap-3 cursor-pointer transition-colors bg-white hover:bg-gumroad-pink/20", receiptUrl ? "bg-emerald-100" : "")}>
+                       {isScanning ? <Loader2 className="animate-spin text-black" size={20} strokeWidth={3} /> : <Camera size={20} strokeWidth={3} className="text-black" />}
+                       <span className="font-black uppercase tracking-widest text-xs text-black">{isScanning ? 'Scanning (AI)...' : receiptUrl ? 'Receipt Attached ✓' : 'Scan Receipt'}</span>
+                    </div>
+                    <input id="receipt-upload" type="file" accept="image/*" className="hidden" onChange={handleScanReceipt} disabled={isScanning} />
+                  </label>
+                </div>
+
                 <div className="flex items-center gap-5">
                   <div className="w-16 h-16 border-4 border-black bg-gumroad-pink flex items-center justify-center shrink-0 neo-brutalism-shadow-sm">
                     <Receipt size={32} strokeWidth={3} className="text-black" />
@@ -358,76 +456,108 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
                   <div className="flex-1">
                       <input 
                         type="text" 
-                        placeholder="Enter a description" 
+                        placeholder="Description (e.g. Dinner)" 
                         className="w-full text-xl font-black font-headline uppercase bg-white border-4 border-black outline-none px-4 py-3 focus:bg-gumroad-pink/10 transition-colors placeholder:text-black/30"
                         value={description}
                         onChange={e => setDescription(e.target.value)}
                       />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 border-4 border-black bg-gumroad-yellow flex items-center justify-center shrink-0 neo-brutalism-shadow-sm">
-                      <IndianRupee size={32} strokeWidth={3} className="text-black" />
-                    </div>
-                    <div className="flex-1">
-                      <input 
-                        type="number" 
-                        placeholder="0.00" 
-                        className="w-full text-4xl font-black font-headline bg-white border-4 border-black outline-none px-4 py-3 focus:bg-gumroad-yellow/10 transition-colors placeholder:text-black/30 text-black"
-                        value={amount}
-                        onChange={e => setAmount(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 space-y-5">
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Who Paid?</label>
-                      <input 
-                        type="text" 
-                        value={paidBy}
-                        onChange={(e) => setPaidBy(e.target.value)}
-                        placeholder="You, Alex, Sarah, etc."
-                        className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all placeholder:text-black/30"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Participants (Comma Separated)</label>
-                      <input 
-                        type="text" 
-                        value={participantsInput}
-                        onChange={(e) => setParticipantsInput(e.target.value)}
-                        placeholder="Alex, Sarah, Mike"
-                        className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all placeholder:text-black/30"
-                      />
-                      <p className="text-[10px] font-black uppercase tracking-widest text-black/60 mt-2">You are automatically included.</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Group Name</label>
-                      <input 
-                        type="text"
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
-                        placeholder="General, Bali Trip, etc."
-                        className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all placeholder:text-black/30"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-gumroad-yellow border-4 border-black neo-brutalism-shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <PieChart size={24} strokeWidth={3} className="text-black" />
-                        <span className="text-sm font-black uppercase tracking-widest text-black">Split equally among participants</span>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
-              <div className="p-6 border-t-4 border-black bg-white flex justify-end gap-4">
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 border-4 border-black bg-gumroad-yellow flex items-center justify-center shrink-0 neo-brutalism-shadow-sm">
+                    <IndianRupee size={32} strokeWidth={3} className="text-black" />
+                  </div>
+                  <div className="flex-1">
+                    <input 
+                      type="number" 
+                      placeholder="0.00" 
+                      className="w-full text-4xl font-black font-headline bg-white border-4 border-black outline-none px-4 py-3 focus:bg-gumroad-yellow/10 transition-colors placeholder:text-black/30 text-black"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-5 bg-white border-4 border-black p-5 neo-brutalism-shadow-sm">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Paid By</label>
+                    <select value={paidBy} onChange={e => setPaidBy(e.target.value)} className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all appearance-none cursor-pointer">
+                      {availablePeople.map(person => (
+                         <option key={person} value={person}>{person}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                     <div className="flex justify-between items-center mb-2">
+                       <label className="block text-xs font-black uppercase tracking-widest text-black">Split With</label>
+                       <div className="flex gap-2">
+                         <button onClick={() => setSelectedParticipants(availablePeople)} className="text-[10px] font-black uppercase text-black bg-gumroad-yellow px-2 py-1 border-2 border-black hover:bg-black hover:text-white transition-colors">All</button>
+                         <button onClick={() => setSelectedParticipants(['You'])} className="text-[10px] font-black uppercase text-black bg-white px-2 py-1 border-2 border-black hover:bg-black hover:text-white transition-colors">Clear</button>
+                       </div>
+                     </div>
+                     <div className="max-h-32 overflow-y-auto border-4 border-black p-3 bg-white grid grid-cols-2 gap-3 mb-3 custom-scrollbar">
+                       {availablePeople.map(person => (
+                         <label key={person} className="flex items-center gap-3 cursor-pointer group hover:bg-black hover:text-white p-1 transition-colors">
+                           <input 
+                             type="checkbox" 
+                             checked={selectedParticipants.includes(person)} 
+                             onChange={(e) => {
+                               if (e.target.checked) setSelectedParticipants([...selectedParticipants, person]);
+                               else setSelectedParticipants(selectedParticipants.filter(p => p !== person));
+                             }} 
+                             className="w-4 h-4 accent-black border-2 border-black" 
+                           />
+                           <span className="font-bold text-xs uppercase truncate">{person}</span>
+                         </label>
+                       ))}
+                     </div>
+                     
+                     <div className="flex gap-2">
+                       <input 
+                         type="text" 
+                         value={newParticipantName} 
+                         onChange={e => setNewParticipantName(e.target.value)} 
+                         placeholder="Add friend..." 
+                         className="flex-1 border-4 border-black px-3 py-2 text-xs font-bold uppercase focus:bg-gumroad-pink/10 outline-none" 
+                       />
+                       <button onClick={() => {
+                         const name = newParticipantName.trim();
+                         if (name && !availablePeople.includes(name)) {
+                           setCustomPeople([...customPeople, name]);
+                           setSelectedParticipants([...selectedParticipants, name]);
+                           setNewParticipantName('');
+                         }
+                       }} className="bg-black text-white px-4 border-4 border-black font-black uppercase text-xs hover:bg-gumroad-pink hover:text-black transition-colors">
+                         Add
+                       </button>
+                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-black mb-2">Group (Optional)</label>
+                    <input 
+                      type="text"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      placeholder="e.g. Goa Trip"
+                      className="w-full px-4 py-3 bg-white border-4 border-black outline-none font-bold focus:bg-gumroad-pink/10 transition-all placeholder:text-black/30"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gumroad-yellow border-4 border-black neo-brutalism-shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <PieChart size={24} strokeWidth={3} className="text-black" />
+                      <span className="text-xs font-black uppercase text-black">Split equally among {selectedParticipants.length || 1} people</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t-4 border-black bg-white flex justify-end gap-4 shrink-0">
                 <button 
-                  onClick={() => setIsAddExpenseOpen(false)}
+                  onClick={resetForm}
                   className="px-6 py-3 text-sm font-black uppercase tracking-widest text-black bg-white border-4 border-black hover:bg-black hover:text-white transition-all cursor-pointer"
                 >
                   Cancel
@@ -436,7 +566,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
                   onClick={handleSaveExpense}
                   className="px-6 py-3 text-sm font-black uppercase tracking-widest text-black bg-gumroad-pink border-4 border-black neo-brutalism-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer"
                 >
-                  Save Expense
+                  Save
                 </button>
               </div>
             </motion.div>
