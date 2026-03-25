@@ -5,10 +5,10 @@ import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import { Bell, Camera, CreditCard, IndianRupee, Loader2, LogOut, Mail, Save, Shield, TrendingUp, Trash2, User, Wallet } from 'lucide-react';
 
-export default function ProfileSettings({ setActiveTab }: TabComponentProps) {
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function ProfileSettings({ setActiveTab, user: initialUser, profile: initialProfile }: TabComponentProps & { user: any, profile: any }) {
+  const [user, setUser] = useState<any>(initialUser);
+  const [profile, setProfile] = useState<any>(initialProfile);
+  const [isLoading, setIsLoading] = useState(!initialUser || !initialProfile);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     age: '',
@@ -22,28 +22,44 @@ export default function ProfileSettings({ setActiveTab }: TabComponentProps) {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUser(user);
-
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if (data) {
-        setProfile(data);
+      if (initialUser && initialProfile) {
+        setUser(initialUser);
+        setProfile(initialProfile);
         setFormData({
-          age: data.age?.toString() || '',
-          monthly_income: data.monthly_income?.toString() || '',
-          household_income: data.household_income?.toString() || '',
-          current_savings: data.current_savings?.toString() || '',
-          monthly_expenses: data.monthly_expenses?.toString() || '',
-          fire_target: data.fire_target?.toString() || '',
-          risk_tolerance: data.risk_tolerance || 'medium'
+          age: initialProfile.age?.toString() || '',
+          monthly_income: initialProfile.monthly_income?.toString() || '',
+          household_income: initialProfile.household_income?.toString() || '',
+          current_savings: initialProfile.current_savings?.toString() || '',
+          monthly_expenses: initialProfile.monthly_expenses?.toString() || '',
+          fire_target: initialProfile.fire_target?.toString() || '',
+          risk_tolerance: initialProfile.risk_tolerance || 'medium'
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!supabase) return;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+      setUser(currentUser);
+
+      const { data: currentProfile } = await supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+      if (currentProfile) {
+        setProfile(currentProfile);
+        setFormData({
+          age: currentProfile.age?.toString() || '',
+          monthly_income: currentProfile.monthly_income?.toString() || '',
+          household_income: currentProfile.household_income?.toString() || '',
+          current_savings: currentProfile.current_savings?.toString() || '',
+          monthly_expenses: currentProfile.monthly_expenses?.toString() || '',
+          fire_target: currentProfile.fire_target?.toString() || '',
+          risk_tolerance: currentProfile.risk_tolerance || 'medium'
         });
       }
       setIsLoading(false);
     };
     fetchData();
-  }, []);
+  }, [initialUser, initialProfile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

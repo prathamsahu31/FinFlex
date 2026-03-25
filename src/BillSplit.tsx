@@ -5,12 +5,11 @@ import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { TabComponentProps } from './constants';
 
-export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponentProps) {
+export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabComponentProps & { user: any }) {
   const [billSplitTab, setBillSplitTab] = useState<'groups' | 'friends' | 'activity'>('groups');
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!user);
   const [billSplits, setBillSplits] = useState<any[]>([]);
-  const [user, setUser] = useState<any>(null);
   const [showAllExpenses, setShowAllExpenses] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
@@ -23,10 +22,10 @@ export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponen
 
   useEffect(() => {
     const fetchSplits = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUser(user);
+      if (!supabase || !user) {
+        setIsLoading(!user);
+        return;
+      }
 
       const { data } = await supabase.from('bill_splits').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
       if (data) {
@@ -35,7 +34,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponen
       setIsLoading(false);
     };
     fetchSplits();
-  }, []);
+  }, [user]);
 
   const { groups, friends, expenses, totalOwedToYou, totalYouOwe } = useMemo(() => {
     let friendsMap = new Map<string, number>();
@@ -130,8 +129,10 @@ export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponen
       setAmount('');
       setParticipantsInput('Alex, Sarah');
       setPaidBy('You');
+      alert('Expense added successfully!');
     } else {
       console.error(error);
+      alert('Error adding expense: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -163,18 +164,18 @@ export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponen
           <div className="relative z-10">
             <p className="text-black text-xs font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">Total Balance</p>
             <h2 className={cn("text-3xl font-black font-headline mt-2", (totalOwedToYou - totalYouOwe) >= 0 ? "text-emerald-600" : "text-rose-600")}>
-              {((totalOwedToYou - totalYouOwe) >= 0 ? '+' : '')}${(totalOwedToYou - totalYouOwe).toFixed(2)}
+              {((totalOwedToYou - totalYouOwe) >= 0 ? '+' : '')}₹{(totalOwedToYou - totalYouOwe).toFixed(2)}
             </h2>
           </div>
           <div className="w-14 h-14 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-sm group-hover:rotate-12 transition-transform">
-            <DollarSign size={28} strokeWidth={3} />
+            <IndianRupee size={28} strokeWidth={3} />
           </div>
         </div>
         
         <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
           <div className="relative z-10">
             <p className="text-black text-xs font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">You are owed</p>
-            <h2 className="text-3xl font-black font-headline mt-2 text-emerald-600">${totalOwedToYou.toFixed(2)}</h2>
+            <h2 className="text-3xl font-black font-headline mt-2 text-emerald-600">₹{totalOwedToYou.toFixed(2)}</h2>
           </div>
           <div className="w-14 h-14 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black neo-brutalism-shadow-sm group-hover:rotate-12 transition-transform">
             <ArrowRight size={28} strokeWidth={3} />
@@ -184,7 +185,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponen
         <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
           <div className="relative z-10">
             <p className="text-black text-xs font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">You owe</p>
-            <h2 className="text-3xl font-black font-headline mt-2 text-rose-600">${totalYouOwe.toFixed(2)}</h2>
+            <h2 className="text-3xl font-black font-headline mt-2 text-rose-600">₹{totalYouOwe.toFixed(2)}</h2>
           </div>
           <div className="w-14 h-14 border-4 border-black bg-black flex items-center justify-center text-white neo-brutalism-shadow-sm group-hover:-rotate-12 transition-transform">
             <ArrowLeft size={28} strokeWidth={3} />
@@ -313,7 +314,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponen
                     <div>
                       <p className="font-black font-headline text-xl uppercase text-black">{expense.description}</p>
                       <p className="text-xs font-bold text-black mt-1 uppercase tracking-tighter">
-                        <span className="font-black border-b-2 border-black bg-gumroad-yellow/30 px-1">{expense.paidBy}</span> paid <span className="font-black">${expense.amount.toFixed(2)}</span>
+                        <span className="font-black border-b-2 border-black bg-gumroad-yellow/30 px-1">{expense.paidBy}</span> paid <span className="font-black">₹{expense.amount.toFixed(2)}</span>
                       </p>
                     </div>
                   </div>
@@ -367,7 +368,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab }: TabComponen
 
                   <div className="flex items-center gap-5">
                     <div className="w-16 h-16 border-4 border-black bg-gumroad-yellow flex items-center justify-center shrink-0 neo-brutalism-shadow-sm">
-                      <DollarSign size={32} strokeWidth={3} className="text-black" />
+                      <IndianRupee size={32} strokeWidth={3} className="text-black" />
                     </div>
                     <div className="flex-1">
                       <input 

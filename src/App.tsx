@@ -125,6 +125,7 @@ export default function App() {
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
+      window.location.href = '/'; // Hard redirect to clear all states
     }
   };
 
@@ -352,7 +353,7 @@ export default function App() {
               <Menu size={28} strokeWidth={3} />
             </button>
             <div className="hidden md:flex items-center gap-2 text-3xl font-black font-headline uppercase text-black tracking-tight">
-              {TABS.find(t => t.id === activeTab)?.label}
+              {activeTab === 'settings' ? 'Profile & Settings' : (TABS.find(t => t.id === activeTab)?.label || TOOLS_METADATA.find(t => t.id === activeTab)?.title)}
             </div>
           </div>
 
