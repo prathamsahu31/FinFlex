@@ -8,10 +8,9 @@ import { TabComponentProps } from './constants';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#64748b', '#ec4899', '#8b5cf6'];
 
-export default function Portfolio({ setActiveTab }: TabComponentProps) {
-  const [user, setUser] = useState<any>(null);
+export default function Portfolio({ setActiveTab, user, profile }: TabComponentProps & { user: any, profile: any }) {
   const [assets, setAssets] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!user);
   const [showAddAsset, setShowAddAsset] = useState(false);
   const [newAsset, setNewAsset] = useState({ symbol: '', name: '', shares: '', current_price: '' });
 
@@ -49,10 +48,10 @@ export default function Portfolio({ setActiveTab }: TabComponentProps) {
 
   useEffect(() => {
     const initData = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUser(user);
+      if (!supabase || !user) {
+        setIsLoading(!user);
+        return;
+      }
 
       const { data: assetData } = await supabase.from('portfolio_assets').select('*').eq('user_id', user.id);
       if (assetData) {
@@ -64,7 +63,6 @@ export default function Portfolio({ setActiveTab }: TabComponentProps) {
       }
       setIsLoading(false);
 
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
       if (profile) {
         if (profile.fire_target) setFireNumber(Number(profile.fire_target));
         if (profile.age) setCurrentAge(Number(profile.age));
@@ -75,7 +73,7 @@ export default function Portfolio({ setActiveTab }: TabComponentProps) {
       }
     };
     initData();
-  }, []);
+  }, [user, profile]);
 
   const totalValue = useMemo(() => assets.reduce((sum, a) => sum + a.value, 0), [assets]);
   const currentSavings = totalValue;

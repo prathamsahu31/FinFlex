@@ -21,16 +21,15 @@ export interface TabComponentProps {
 
 export const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, component: Dashboard },
-  { id: 'transactions', label: 'Transactions', icon: CreditCard, component: Transactions },
-  { id: 'bill-split', label: 'Bill Split', icon: Users, component: BillSplit },
-  { id: 'portfolio', label: 'Portfolio & FIRE', icon: TrendingUp, component: Portfolio },
-  { id: 'flex-decks', label: 'Flex-Decks', icon: BookOpen, component: FlexDecks },
-  { id: 'ai-agent', label: 'AI Agent', icon: Bot, component: AIAgent },
-  { id: 'tools', label: 'Tools', icon: Wrench, component: Tools },
-  { id: 'settings', label: 'Settings', icon: UserIcon, component: ProfileSettings },
+  { id: 'tools', label: 'Explore Tools', icon: Wrench, component: Tools },
 ];
 
-export const TOOLS_METADATA = [
+export const TOOLS_METADATA: any[] = [
+  { id: 'transactions', title: 'Transactions', icon: CreditCard, description: 'Manage your income and expenses', color: 'bg-gumroad-pink text-black', component: Transactions },
+  { id: 'bill-split', title: 'Bill Split', icon: Users, description: 'Split bills with friends', color: 'bg-gumroad-yellow text-black', component: BillSplit },
+  { id: 'portfolio', title: 'Portfolio & FIRE', icon: TrendingUp, description: 'Track your assets and retirement', color: 'bg-white text-black', component: Portfolio },
+  { id: 'flex-decks', title: 'Flex-Decks', icon: BookOpen, description: 'Learn finance with flashcards', color: 'bg-gumroad-pink text-black', component: FlexDecks },
+  { id: 'ai-agent', title: 'FinFlex AI', icon: Bot, description: 'Your personal financial AI', color: 'bg-gumroad-yellow text-black', component: AIAgent },
   { id: 'emi', title: 'EMI Calculator', icon: Calculator, description: 'Calculate your monthly loan EMIs', color: 'bg-gumroad-pink text-black' },
   { id: 'fire', title: 'FIRE Calculator', icon: Target, description: 'Plan your early retirement', color: 'bg-gumroad-yellow text-black' },
   { id: 'subs', title: 'Subscriptions', icon: Repeat, description: 'Track your recurring payments', color: 'bg-black text-white' },

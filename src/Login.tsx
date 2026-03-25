@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { TrendingUp, Mail, Lock, AlertCircle } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import logoImg from './logo.png';
 
 interface LoginProps {
   onBack?: () => void;
@@ -38,9 +39,8 @@ export default function Login({ onBack }: LoginProps) {
     if (!supabase) return;
     setLoading(true);
     setErrorText('');
-    
     try {
-      const credentials = { email: 'prathamsahu03@gmail.com', password: '1234qwerty@' };
+      const credentials = { email: 'guest@finflex.com', password: '1234qwerty@' };
       const { error } = await supabase.auth.signInWithPassword(credentials);
       
       if (error) {
@@ -102,7 +102,7 @@ export default function Login({ onBack }: LoginProps) {
         <div className="flex justify-center mb-8">
           <div className="w-20 h-20 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black neo-brutalism-shadow-lg overflow-hidden p-2">
             <img 
-              src="https://lh3.googleusercontent.com/aida/ADBb0ugmnrvLWzVOL6D08TQZVGQwliZk63CMaFypWY-WxxTMWZ4-bzrWw1S4P7qkyTrz6RpiXTS46gK5MgU7YzanAebC1edYRelKK0nyCHFDc0TpfrsO8N7TOGFk5OnBXPzBQXmO0iH-E9HQeJT1wHvO0YYDGixNGo1zGe77jEXizUXG9PbhllqOF3xgikndex24TJPa6A1YBOVUN1p1_MGsjTM691oSq7zkN60lZGzmN0uwDNgb603t6Ux-fNGe" 
+              src={logoImg} 
               alt="FinFlex Logo" 
               className="w-full h-full object-contain"
             />

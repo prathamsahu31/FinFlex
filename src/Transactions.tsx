@@ -6,29 +6,23 @@ import { supabase } from './lib/supabase';
 import { TabComponentProps } from './constants';
 import DataEntryModal from './DataEntryModal';
 
-export default function Transactions({ setActiveTab }: TabComponentProps) {
+export default function Transactions({ setActiveTab, user }: TabComponentProps & { user: any }) {
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(!user);
   const [isDataEntryOpen, setIsDataEntryOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   useEffect(() => {
-    if (supabase) {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        setUser(user);
-        if (user) {
-          fetchTransactions(user.id);
-        } else {
-          setIsLoading(false);
-        }
-      });
+    if (user) {
+      fetchTransactions(user.id);
+    } else if (supabase) {
+      setIsLoading(true);
     } else {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchTransactions = async (userId?: string) => {
     if (!supabase) return;

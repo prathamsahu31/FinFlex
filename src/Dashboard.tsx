@@ -33,6 +33,11 @@ import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import CountUp from './CountUp';
 
+interface DashboardProps extends TabComponentProps {
+  user: any;
+  profile: any;
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.15 } }
@@ -62,18 +67,15 @@ const MOCK_BUDGETS: Record<string, number> = {
   'Other': 100
 };
 
-export default function Dashboard({ setActiveTab }: TabComponentProps) {
+export default function Dashboard({ setActiveTab, user }: DashboardProps) {
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!user);
   const [trendRange, setTrendRange] = useState<'month' | '3months' | 'all'>('month');
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (!supabase) return;
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
+      if (!supabase || !user) {
+        if (!user) setIsLoading(false);
         return;
       }
 

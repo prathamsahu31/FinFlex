@@ -21,22 +21,21 @@ const INITIAL_DECKS = [
   { title: "Index Funds", content: "Picking individual stocks is risky. Index funds let you buy a tiny piece of hundreds of companies at once.", front_text: "Index Funds" }
 ];
 
-export default function FlexDecks({ setActiveTab }: TabComponentProps) {
+export default function FlexDecks({ setActiveTab, user }: TabComponentProps & { user: any }) {
   const [cards, setCards] = useState<any[]>([]);
   const [allCards, setAllCards] = useState<any[]>([]);
   const [swiped, setSwiped] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(!user);
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCard, setNewCard] = useState({ title: '', content: '' });
 
   useEffect(() => {
     const initCards = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUser(user);
+      if (!supabase || !user) {
+        setIsLoading(!user);
+        return;
+      }
 
       // fetch decks
       let { data: decks } = await supabase.from('flex_decks').select('*').eq('user_id', user.id);

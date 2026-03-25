@@ -14,7 +14,9 @@ import Login from './Login';
 import Landing from './Landing';
 import Onboarding from './Onboarding';
 import PullToRefresh from './PullToRefresh';
+import ProfileSettings from './ProfileSettings';
 import { supabase } from './lib/supabase';
+import logoImg from './logo.png';
 
 import { TABS, TOOLS_METADATA } from './constants';
 
@@ -59,12 +61,14 @@ export default function App() {
   const loadProfile = async (userId: string) => {
     if (!supabase) return;
     try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
       if (error) {
         console.error('Error loading profile:', error.message);
         return;
       }
-      if (data) setProfile(data);
+      // If no profile found, we'll set an empty object with onboarding_completed: false
+      // This will trigger the onboarding flow
+      setProfile(data || { onboarding_completed: false });
     } catch (err) {
       console.error('Profile fetch failed:', err);
     }
@@ -135,14 +139,23 @@ export default function App() {
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center grid-bg">
-        <div className="w-20 h-20 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg">
+        <motion.div 
+          animate={{ y: [0, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className="w-24 h-24 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg p-2"
+        >
           <img 
-            src="https://lh3.googleusercontent.com/aida/ADBb0ugmnrvLWzVOL6D08TQZVGQwliZk63CMaFypWY-WxxTMWZ4-bzrWw1S4P7qkyTrz6RpiXTS46gK5MgU7YzanAebC1edYRelKK0nyCHFDc0TpfrsO8N7TOGFk5OnBXPzBQXmO0iH-E9HQeJT1wHvO0YYDGixNGo1zGe77jEXizUXG9PbhllqOF3xgikndex24TJPa6A1YBOVUN1p1_MGsjTM691oSq7zkN60lZGzmN0uwDNgb603t6Ux-fNGe" 
+            src={logoImg}
             alt="FinFlex" 
-            className="w-14 h-14"
+            className="w-full h-full object-contain"
           />
+        </motion.div>
+        <div className="mt-8 flex items-center gap-2">
+           <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+           <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+           <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
-        <p className="mt-6 font-headline font-black uppercase text-xl text-black">Loading FinFlex...</p>
+        <p className="mt-4 font-headline font-black uppercase text-xl text-black tracking-widest">Loading</p>
       </div>
     );
   }
@@ -154,11 +167,26 @@ export default function App() {
     return <Login onBack={() => setShowLanding(true)} />;
   }
 
-  if (profile && profile.onboarding_completed === false) {
+  if (profile?.onboarding_completed === false) {
     return <Onboarding user={session.user} onComplete={() => loadProfile(session.user.id)} />;
   }
 
-  const ActiveComponent = TABS.find(t => t.id === activeTab)?.component || TABS[0].component;
+  let ActiveComponent: any = TABS.find(t => t.id === activeTab)?.component;
+  if (!ActiveComponent) {
+    if (activeTab === 'settings') {
+      ActiveComponent = ProfileSettings;
+    } else {
+      const toolMeta = TOOLS_METADATA.find(t => t.id === activeTab);
+      if (toolMeta?.component) {
+        ActiveComponent = toolMeta.component;
+      } else if (toolMeta) {
+        ActiveComponent = TABS.find(t => t.id === 'tools')?.component; // Fallback to tools directory viewer
+      } else {
+        ActiveComponent = TABS[0].component;
+      }
+    }
+  }
+
   const user = session?.user;
 
   return (
@@ -183,8 +211,8 @@ export default function App() {
           <div className="flex items-center gap-3 font-black text-xl tracking-tight text-black">
             <div className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center overflow-hidden neo-brutalism-shadow">
               <img 
-                src="https://lh3.googleusercontent.com/aida/ADBb0ugmnrvLWzVOL6D08TQZVGQwliZk63CMaFypWY-WxxTMWZ4-bzrWw1S4P7qkyTrz6RpiXTS46gK5MgU7YzanAebC1edYRelKK0nyCHFDc0TpfrsO8N7TOGFk5OnBXPzBQXmO0iH-E9HQeJT1wHvO0YYDGixNGe77jEXizUXG9PbhllqOF3xgikndex24TJPa6A1YBOVUN1p1_MGsjTM691oSq7zkN60lZGzmN0uwDNgb603t6Ux-fNGe" 
-                alt="Logo"
+                src={logoImg}
+                alt="FinFlex Logo"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -222,41 +250,35 @@ export default function App() {
             );
           })}
 
-          {/* Pinned Tools Section */}
-          {pinnedToolIds.length > 0 && (
-            <div className="pt-6 space-y-3">
-              <div className="flex items-center gap-2 px-4 mb-2">
-                <Pin size={14} strokeWidth={3} className="text-black/40" />
-                <span className="text-[10px] font-black font-label text-black/40 uppercase tracking-widest">Pinned Tools</span>
-              </div>
-              {pinnedToolIds.map(toolId => {
-                const toolMetadata = TOOLS_METADATA.find(t => t.id === toolId);
-                if (!toolMetadata) return null;
-                const Icon = toolMetadata.icon;
+          {/* Pinned Tools merged into Main Navigation */}
+          {pinnedToolIds.map(toolId => {
+            const toolMetadata = TOOLS_METADATA.find(t => t.id === toolId);
+            if (!toolMetadata) return null;
+            const Icon = toolMetadata.icon;
+            const isActive = activeTab === toolId;
 
-                return (
-                  <motion.button
-                    key={toolId}
-                    whileHover={{ x: 4 }}
-                    onClick={() => {
-                      setActiveTab('tools');
-                      setSelectedToolId(toolId);
-                      setIsSidebarOpen(false);
-                    }}
-                    className={cn(
-                      "w-full flex items-center justify-between px-4 py-2 border-2 border-black text-[10px] font-black font-headline uppercase tracking-widest transition-all bg-white hover:bg-gumroad-yellow text-black"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon size={14} strokeWidth={3} />
-                      {toolMetadata.title.split(' ')[0]}
-                    </div>
-                    <Pin size={10} strokeWidth={3} className="text-black/20" />
-                  </motion.button>
-                );
-              })}
-            </div>
-          )}
+            return (
+              <motion.button
+                key={toolId}
+                onClick={() => {
+                  setActiveTab(toolId);
+                  setIsSidebarOpen(false);
+                }}
+                className={cn(
+                  "w-full flex items-center gap-4 px-4 py-3 border-4 text-sm font-black font-headline uppercase tracking-widest transition-all cursor-pointer",
+                  isActive 
+                    ? "bg-gumroad-pink border-black neo-brutalism-shadow text-black translate-x-1 translate-y-1" 
+                    : "bg-white border-black text-black hover:bg-gumroad-yellow hover:neo-brutalism-shadow hover:-translate-y-1 hover:-translate-x-1"
+                )}
+              >
+                <div className="flex-1 flex items-center gap-4 text-left">
+                  <Icon size={20} strokeWidth={isActive ? 3 : 2} className="text-black" />
+                  {toolMetadata.title}
+                </div>
+                <PinOff size={14} strokeWidth={2} className="text-black/30 hover:text-black transition-colors" onClick={(e) => { e.stopPropagation(); togglePinTool(toolId); }} />
+              </motion.button>
+            );
+          })}
         </nav>
         
         <div className="p-4 border-t-4 border-black bg-white relative" ref={profileMenuRef}>
@@ -279,8 +301,11 @@ export default function App() {
                 View Profile
               </button>
               <button 
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-error hover:text-white transition-colors font-black font-headline uppercase text-xs text-left"
+                onClick={async () => {
+                  await handleLogout();
+                  setIsProfileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-red-500 hover:text-white transition-colors font-black font-headline uppercase text-xs text-left"
               >
                 <LogOut size={18} strokeWidth={3} />
                 Sign Out
@@ -345,8 +370,10 @@ export default function App() {
                   setActiveTab={setActiveTab} 
                   pinnedToolIds={pinnedToolIds} 
                   togglePinTool={togglePinTool}
-                  defaultToolId={selectedToolId}
+                  defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
                   onToolOpen={() => setSelectedToolId(null)}
+                  user={user}
+                  profile={profile}
                 />
               </div>
               

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import logoImg from './logo.png';
 
 interface LandingProps {
   onGetStarted: () => void;
@@ -41,7 +42,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
             <img 
               alt="Finflex Logo" 
               className="h-16"
-              src="https://lh3.googleusercontent.com/aida/ADBb0ugmnrvLWzVOL6D08TQZVGQwliZk63CMaFypWY-WxxTMWZ4-bzrWw1S4P7qkyTrz6RpiXTS46gK5MgU7YzanAebC1edYRelKK0nyCHFDc0TpfrsO8N7TOGFk5OnBXPzBQXmO0iH-E9HQeJT1wHvO0YYDGixNGo1zGe77jEXizUXG9PbhllqOF3xgikndex24TJPa6A1YBOVUN1p1_MGsjTM691oSq7zkN60lZGzmN0uwDNgb603t6Ux-fNGe" 
+              src={logoImg} 
             />
           </div>
           <div className="hidden md:flex items-center space-x-0 border-x-4 border-black h-full">

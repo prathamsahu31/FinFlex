@@ -41,7 +41,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0 }
 };
 
-export default function AIAgent({ setActiveTab }: TabComponentProps) {
+export default function AIAgent({ setActiveTab, user }: TabComponentProps & { user: any }) {
   const [messages, setMessages] = useState<any[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -58,9 +58,7 @@ export default function AIAgent({ setActiveTab }: TabComponentProps) {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!supabase || !user) return;
 
       const { data } = await supabase.from('transactions').select('category, amount, vendor, date, type').eq('user_id', user.id).order('date', { ascending: false });
       if (data) setTransactions(data);
