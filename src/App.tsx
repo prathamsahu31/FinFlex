@@ -14,6 +14,7 @@ import Login from './Login';
 import Landing from './Landing';
 import Onboarding from './Onboarding';
 import ProfileSettings from './ProfileSettings';
+import FloatingAIChat from './FloatingAIChat';
 import { supabase } from './lib/supabase';
 import logoImg from './logo.png';
 
@@ -408,6 +409,7 @@ export default function App() {
           </div>
         </div>
       </main>
+      <FloatingAIChat user={user} profile={profile} />
     </div>
   );
 }

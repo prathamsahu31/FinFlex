@@ -155,9 +155,14 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
               setReceiptUrl(publicUrl);
             }
           }
-        } catch (err) {
+        } catch (err: any) {
            console.error("AI/Upload Error:", err);
-           alert("Failed to process receipt automatically. Notice: Check if a 'receipts' bucket exists in Supabase.");
+           const msg = err.message || "";
+           if (msg.includes('quota') || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+             alert("AI limit reached (Free Tier). Please try again in 30 seconds or enter details manually.");
+           } else {
+             alert("AI scanning failed. Please enter details manually.");
+           }
         } finally {
           setIsScanning(false);
         }

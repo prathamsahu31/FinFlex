@@ -118,7 +118,11 @@ export default function DataEntryModal({ isOpen, onClose, onSuccess }: DataEntry
           }
         } catch (err: any) {
           console.error(err);
-          setError(err.message || 'Failed to process receipt');
+          let friendlyError = err.message || 'Failed to process receipt';
+          if (friendlyError.includes('quota') || friendlyError.includes('429') || friendlyError.includes('RESOURCE_EXHAUSTED')) {
+            friendlyError = "AI limit reached (Free Tier). Please try again in 30 seconds or enter the details manually below.";
+          }
+          setError(friendlyError);
         } finally {
           setIsProcessing(false);
         }
