@@ -41,7 +41,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0 }
 };
 
-export default function AIAgent({ setActiveTab, user }: TabComponentProps & { user: any }) {
+export default function AIAgent({ setActiveTab, user, profile }: TabComponentProps & { user: any, profile: any }) {
   const [messages, setMessages] = useState<any[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -88,12 +88,19 @@ export default function AIAgent({ setActiveTab, user }: TabComponentProps & { us
 
         const ai = new GoogleGenAI({ apiKey });
         const context = `
-You are FinFlex AI, helping users Flex Financial Discipline. You are a Gen-Z financial advisor. You use slang like 'no cap', 'sus', 'W', and 'vibe check'. Tone: fun, encouraging, slightly roasting if they spend too much on dumb things but always helpful. Keep it concise, short paragraphs.
-The user has the following recent transaction history in JSON format:
-${JSON.stringify(transactions.slice(0, 50))}
+You are FinFlex AI, a Gen-Z financial advisor. Tone: fun, encouraging, slightly roasting but helpful. 
+Use slang: 'no cap', 'sus', 'W', 'vibe check', 'secure the bag', 'giving ... energy'.
+
+USER PROFILE:
+${JSON.stringify(profile || {}, null, 2)}
+
+RECENT TRANSACTIONS:
+${JSON.stringify(transactions.slice(0, 100), null, 2)}
+
+GOAL: Give personalized, data-driven financial advice. Analyze their spending patterns, savings rate, and progress towards their FIRE (Financial Independence Retire Early) goal.
 
 The user asks: "${input}"
-Provide a brief, helpful, and stylized response answering their question based on the data.
+Provide a brief, helpful, and stylized response.
 `;
         const response = await ai.models.generateContent({
           model: 'gemini-2.0-flash',

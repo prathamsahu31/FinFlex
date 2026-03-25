@@ -26,19 +26,22 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
   };
 
   const handleFinish = async () => {
+    console.log('Finishing onboarding...', formData);
     setIsLoading(true);
     try {
       // Create user avatar using initial of email
       const initial = user?.email?.charAt(0).toUpperCase() || 'U';
       const dicebearUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${initial}&backgroundColor=4f46e5&textColor=ffffff`;
       
-      // Update Auth Metadata (Avatar)
-      await supabase.auth.updateUser({
+      console.log('Updating auth metadata...');
+      // Update Auth Metadata (Avatar) - Don't await this to prevent hang
+      supabase.auth.updateUser({
         data: { avatar_url: dicebearUrl }
-      });
+      }).catch(err => console.error('Auth update failed (ignoring):', err));
 
+      console.log('Upserting profile data...');
       // Upsert into public.profiles table
-      const { error } = await supabase.from('profiles').upsert({
+      const profileData = {
         id: user.id,
         age: parseInt(formData.age) || null,
         monthly_income: parseFloat(formData.monthly_income) || 0,
@@ -49,14 +52,21 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
         fire_target: parseFloat(formData.fire_target) || 10000000,
         onboarding_completed: true,
         updated_at: new Date().toISOString()
-      });
-
-      if (error) throw error;
+      };
       
+      console.log('Profile data to save:', profileData);
+      const { error } = await supabase.from('profiles').upsert(profileData);
+
+      if (error) {
+        console.error('Supabase upsert error:', error);
+        throw error;
+      }
+      
+      console.log('Onboarding complete, calling onComplete...');
       onComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving onboarding data:', error);
-      alert('Failed to save profile data. Please try again.');
+      alert(`Failed to save profile data: ${error.message || 'Unknown error'}. Please check your Supabase connection and try again.`);
     } finally {
       setIsLoading(false);
     }
