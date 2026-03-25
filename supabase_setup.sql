@@ -140,3 +140,16 @@ create policy "Users can manage own cards via deck ownership"
       and flex_decks.user_id = auth.uid()
     )
   );
+
+-- Storage Buckets Setup
+insert into storage.buckets (id, name, public) 
+values ('receipts', 'receipts', true)
+on conflict (id) do nothing;
+
+create policy "Users can upload their own receipts"
+on storage.objects for insert
+with check ( bucket_id = 'receipts' and auth.uid()::text = (storage.foldername(name))[1] );
+
+create policy "Receipts are publicly accessible"
+on storage.objects for select
+using ( bucket_id = 'receipts' );
