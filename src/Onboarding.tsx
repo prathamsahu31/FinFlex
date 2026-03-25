@@ -44,8 +44,7 @@ export default function Onboarding({ user, onComplete }: { user: any, onComplete
         monthly_expenses: parseFloat(formData.monthly_expenses) || 0,
         risk_tolerance: formData.risk_tolerance,
         fire_target: parseFloat(formData.fire_target) || 10000000,
-        onboarding_completed: true,
-        updated_at: new Date().toISOString()
+        onboarding_completed: true
       };
       
       console.log('Profile data to save:', profileData);

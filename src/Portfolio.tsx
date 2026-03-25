@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { TrendingUp, Target, Plus, X, DollarSign, ArrowUpRight, ArrowDownLeft, Wallet, PieChart, Info, Loader2, CheckCircle2, TrendingDown, Calculator } from 'lucide-react';
+import { TrendingUp, Target, Plus, X, IndianRupee, ArrowUpRight, ArrowDownLeft, Wallet, PieChart, Info, Loader2, CheckCircle2, TrendingDown, Calculator } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { TabComponentProps } from './constants';
@@ -190,7 +190,7 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
                 animate={{ opacity: 1, y: 0 }}
                 className="text-6xl font-black font-headline tracking-tighter text-black bg-gumroad-yellow px-4 py-2 border-4 border-black neo-brutalism-shadow-sm inline-block"
               >
-                ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₹{totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </motion.h2>
               <span className="flex items-center text-xl font-black text-emerald-600 bg-white border-4 border-black px-3 py-1 neo-brutalism-shadow-xs">
                 <TrendingUp size={18} strokeWidth={3} className="mr-1" /> +0.00%
@@ -217,7 +217,7 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
                   ))}
                 </Pie>
                 <RechartsTooltip
-                  formatter={(value: number) => `$${value.toLocaleString()}`}
+                  formatter={(value: number) => `₹${value.toLocaleString('en-IN')}`}
                   contentStyle={{
                     backgroundColor: '#fff',
                     border: '4px solid #000',
@@ -275,7 +275,7 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-black uppercase tracking-widest">Monthly Save</label>
                 <div className="relative">
-                  <DollarSign size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
+                  <IndianRupee size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
                   <input
                     type="number"
                     value={monthlySavings}
@@ -287,7 +287,7 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-black uppercase tracking-widest">FIRE Number</label>
                 <div className="relative">
-                  <DollarSign size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
+                  <IndianRupee size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
                   <input
                     type="number"
                     value={fireNumber}
@@ -302,9 +302,9 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
               <p className="text-xs font-black text-black uppercase tracking-widest mb-2">Projected Savings at Age {retirementAge}</p>
               <h4 className={cn(
                 "text-5xl font-black font-headline tracking-tighter mb-6",
-                isFireOnTrack ? "text-emerald-600" : "text-black"
+                projectedSavings >= fireNumber ? "text-emerald-600" : "text-black"
               )}>
-                ${projectedSavings.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                ₹{projectedSavings.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
               </h4>
 
               <div className="w-full bg-white border-4 border-black h-8 mb-4 overflow-hidden relative">
@@ -322,7 +322,7 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
               <p className="text-xs font-black uppercase tracking-widest">
                 {isFireOnTrack
                   ? <span className="text-emerald-600 flex items-center gap-2"><CheckCircle2 size={18} strokeWidth={3} /> You are on track to FIRE!</span>
-                  : <span className="text-rose-600">You will fall short by ${(fireNumber - projectedSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+                  : <span className="text-rose-600">You will fall short by ₹{(fireNumber - projectedSavings).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
                 }
               </p>
             </div>
@@ -362,11 +362,11 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
                   <input type="text" value={newBucket.name} onChange={e => setNewBucket({...newBucket, name: e.target.value})} placeholder="e.g. Vacation" className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 placeholder:text-black/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Target ($)</label>
-                  <input type="number" value={newBucket.target} onChange={e => setNewBucket({...newBucket, target: e.target.value})} placeholder="10000" className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 placeholder:text-black/30" />
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Target (₹)</label>
+                  <input type="number" value={newBucket.target} onChange={e => setNewBucket({...newBucket, target: e.target.value})} placeholder="100000" className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 placeholder:text-black/30" />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Current ($)</label>
+                  <label className="block text-[10px] font-black text-black uppercase tracking-widest">Current (₹)</label>
                   <input type="number" value={newBucket.current} onChange={e => setNewBucket({...newBucket, current: e.target.value})} placeholder="0" className="w-full px-4 py-2 bg-white border-4 border-black text-sm font-bold outline-none focus:bg-gumroad-pink/10 placeholder:text-black/30" />
                 </div>
                 <div className="space-y-1">
@@ -400,8 +400,8 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
 
                 <h4 className="font-black font-headline text-xl uppercase text-black mb-2">{bucket.name}</h4>
                 <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-3xl font-black font-headline text-black">${bucket.current.toLocaleString()}</span>
-                  <span className="text-xs font-bold text-black opacity-40 uppercase tracking-tighter">/ ${bucket.target.toLocaleString()}</span>
+                  <span className="text-3xl font-black font-headline text-black">₹{bucket.current.toLocaleString('en-IN')}</span>
+                  <span className="text-xs font-bold text-black opacity-40 uppercase tracking-tighter">/ ₹{bucket.target.toLocaleString('en-IN')}</span>
                 </div>
 
                 <div className="w-full bg-white border-4 border-black h-4 mb-2 overflow-hidden relative">

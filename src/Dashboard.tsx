@@ -186,7 +186,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-gumroad-pink border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
           <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Total Balance</p>
           <h2 className="text-4xl font-black font-headline mb-2 mt-2">
-            <CountUp value={stats.balance} prefix="$" decimals={2} />
+            <CountUp value={stats.balance} prefix="₹" decimals={2} />
           </h2>
           <span className="flex items-center text-black text-xs font-bold bg-white border-2 border-black px-2 py-1 w-max neo-brutalism-shadow">
             <TrendingUp size={16} className="mr-2" strokeWidth={3}/> ALL TIME
@@ -196,7 +196,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
           <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Income</p>
           <h2 className="text-4xl font-black font-headline mb-2 mt-2">
-            <CountUp value={stats.income} prefix="$" decimals={2} />
+            <CountUp value={stats.income} prefix="₹" decimals={2} />
           </h2>
           <p className="text-black font-bold text-xs">All incoming transfers</p>
         </motion.div>
@@ -204,7 +204,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
           <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Expenses</p>
           <h2 className="text-4xl font-black font-headline mb-2 mt-2">
-            <CountUp value={stats.expenses} prefix="$" decimals={2} />
+            <CountUp value={stats.expenses} prefix="₹" decimals={2} />
           </h2>
           <p className="text-black font-bold text-xs">Bills & daily spend</p>
         </motion.div>
@@ -241,7 +241,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                   <span className="text-xs font-black text-black bg-gumroad-yellow px-2 py-1 border-2 border-white">+8.4% YTD</span>
                 </div>
                 <div>
-                  <h4 className="text-3xl font-black font-headline tracking-tight mt-2">$84,500.00</h4>
+                  <h4 className="text-3xl font-black font-headline tracking-tight mt-2">₹84,500.00</h4>
                   <div className="flex justify-between items-end mt-4">
                     <span className="text-xs font-bold uppercase tracking-widest">S&P 500 ETF (VOO)</span>
                     <span className="text-xs font-black">65%</span>
@@ -265,7 +265,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                 <BarChart data={cashTrackingData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} dy={5} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} tickFormatter={val => `$${val}`} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} tickFormatter={val => `₹${val}`} />
                   <Tooltip 
                     contentStyle={{ borderRadius: '0px', border: '4px solid black', boxShadow: '4px 4px 0px 0px #000', fontSize: '12px', fontWeight: 'bold' }}
                     cursor={{ fill: '#fcd400' }}
@@ -288,7 +288,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                 <div key={b.name}>
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-xs font-black font-label uppercase tracking-widest text-black">{b.name}</span>
-                    <span className="text-xs font-bold text-black border-b-2 border-black">${b.value.toFixed(0)} / ${b.target}</span>
+                    <span className="text-xs font-bold text-black border-b-2 border-black">₹{b.value.toFixed(0)} / ₹{b.target}</span>
                   </div>
                   <div className="w-full bg-white border-4 border-black h-4 rounded-none overflow-hidden">
                     <motion.div 
@@ -327,10 +327,10 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                 <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="0" vertical={true} stroke="#e5e5e5" strokeWidth={2} />
                   <XAxis dataKey="name" axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} dy={10} />
-                  <YAxis axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} tickFormatter={val => `$${val/1000}k`} />
+                  <YAxis axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} tickFormatter={val => `₹${val/1000}k`} />
                   <Tooltip 
                     contentStyle={{ borderRadius: '0px', border: '4px solid black', boxShadow: '4px 4px 0px 0px #000', fontWeight: 'bold' }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                    formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, '']}
                   />
                   <Line 
                     type="step" 
@@ -387,7 +387,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                         "text-xl font-black w-28 text-right font-headline",
                         t.type === 'income' ? 'text-emerald-500' : 'text-black'
                       )}>
-                        {t.type === 'income' ? '+' : '-'}{Number(t.amount).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                        {t.type === 'income' ? '+' : '-'}{Number(t.amount).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                       </span>
                       <CreditCard size={24} strokeWidth={3} className="text-transparent group-hover:text-black transition-colors" />
                     </div>

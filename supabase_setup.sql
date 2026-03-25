@@ -1,155 +1,161 @@
--- User Profiles (Automatically created after signup)
-create table if not exists profiles (
-  id uuid references auth.users on delete cascade primary key,
-  fire_target numeric default 10000000,
+-- ==========================================
+-- FINFLEX ULTIMATE SUPABASE SETUP
+-- ==========================================
+-- This script will set up all tables, triggers, storage, and RLS policies.
+
+-- OPTIONAL: Clean Up Obsolete/Old Tables
+-- DROP TABLE IF EXISTS public.flare_decks CASCADE;
+-- DROP TABLE IF EXISTS public.flashcards CASCADE;
+-- DROP TABLE IF EXISTS public.flex_decks CASCADE;
+-- DROP TABLE IF EXISTS public.bill_splits CASCADE;
+-- DROP TABLE IF EXISTS public.portfolio_assets CASCADE;
+-- DROP TABLE IF EXISTS public.transactions CASCADE;
+-- DROP TABLE IF EXISTS public.profiles CASCADE;
+
+-- 1. User Profiles (Automatically created after signup)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  fire_target numeric DEFAULT 10000000,
   age integer,
-  monthly_income numeric(12, 2) default 0,
-  household_income numeric(12, 2) default 0,
-  current_savings numeric(12, 2) default 0,
-  monthly_expenses numeric(12, 2) default 0,
-  risk_tolerance text default 'medium',
-  onboarding_completed boolean default false,
-  updated_at timestamp with time zone default timezone('utc'::text, now()),
-  created_at timestamp with time zone default timezone('utc'::text, now())
+  monthly_income numeric(12, 2) DEFAULT 0,
+  household_income numeric(12, 2) DEFAULT 0,
+  current_savings numeric(12, 2) DEFAULT 0,
+  monthly_expenses numeric(12, 2) DEFAULT 0,
+  risk_tolerance text DEFAULT 'medium',
+  onboarding_completed boolean DEFAULT false,
+  updated_at timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now()
 );
 
--- Automate profile creation on new user signup
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql security definer set search_path = public
-as $$
-begin
-  insert into public.profiles (id)
-  values (new.id)
-  on conflict (id) do nothing;
-  return new;
-end;
+-- 2. Automate profile creation on new user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id)
+  VALUES (new.id)
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
 $$;
 
--- Note: Trigger creation might fail if it already exists. 
--- You may need to DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users; first.
-do $$
-begin
-  if not exists (select 1 from pg_trigger where tgname = 'on_auth_user_created') then
-    create trigger on_auth_user_created
-      after insert on auth.users
-      for each row execute procedure public.handle_new_user();
-  end if;
-end $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') THEN
+    CREATE TRIGGER on_auth_user_created
+      AFTER INSERT ON auth.users
+      FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+  END IF;
+END $$;
 
--- Transactions Table
-create table if not exists transactions (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade not null,
-  amount numeric not null,
-  vendor text not null,
-  category text not null,
-  type text not null check (type in ('income', 'expense')),
-  date timestamp with time zone default timezone('utc'::text, now()),
-  is_gig boolean default false,
+-- 3. Transactions Table
+CREATE TABLE IF NOT EXISTS public.transactions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  amount numeric NOT NULL,
+  vendor text NOT NULL,
+  category text NOT NULL,
+  type text NOT NULL CHECK (type IN ('income', 'expense')),
+  date timestamp with time zone DEFAULT now(),
+  is_gig boolean DEFAULT false,
   custom_tag text,
-  created_at timestamp with time zone default timezone('utc'::text, now())
+  created_at timestamp with time zone DEFAULT now()
 );
 
--- Portfolio Assets Table
-create table if not exists portfolio_assets (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade not null,
-  symbol text not null,
+-- 4. Portfolio Assets Table
+CREATE TABLE IF NOT EXISTS public.portfolio_assets (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  symbol text NOT NULL,
   name text,
-  shares numeric not null,
+  shares numeric NOT NULL,
   average_price numeric,
   current_price numeric,
-  created_at timestamp with time zone default timezone('utc'::text, now())
+  created_at timestamp with time zone DEFAULT now()
 );
 
--- Bill Splits Table
-create table if not exists bill_splits (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade not null,
-  group_name text not null,
-  total_amount numeric not null,
-  split_details jsonb not null default '{}'::jsonb,
-  created_at timestamp with time zone default timezone('utc'::text, now())
+-- 5. Bill Splits Table
+CREATE TABLE IF NOT EXISTS public.bill_splits (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  group_name text NOT NULL,
+  total_amount numeric NOT NULL,
+  split_details jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now()
 );
 
--- Flex Decks Table
-create table if not exists flex_decks (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade not null,
-  title text not null,
+-- 6. Flex Decks Table
+CREATE TABLE IF NOT EXISTS public.flex_decks (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  title text NOT NULL,
   description text,
-  created_at timestamp with time zone default timezone('utc'::text, now())
+  created_at timestamp with time zone DEFAULT now()
 );
 
--- Flashcards Table
-create table if not exists flashcards (
-  id uuid default gen_random_uuid() primary key,
-  deck_id uuid references flex_decks on delete cascade not null,
-  front_text text not null,
-  back_text text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now())
+-- 7. Flashcards Table
+CREATE TABLE IF NOT EXISTS public.flashcards (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  deck_id uuid REFERENCES public.flex_decks ON DELETE CASCADE NOT NULL,
+  front_text text NOT NULL,
+  back_text text NOT NULL,
+  created_at timestamp with time zone DEFAULT now()
 );
 
--- Set up Row Level Security (RLS)
+-- ==========================================
+-- ROW LEVEL SECURITY (RLS)
+-- ==========================================
 
--- Enable RLS on all tables
-alter table profiles enable row level security;
-alter table transactions enable row level security;
-alter table portfolio_assets enable row level security;
-alter table bill_splits enable row level security;
-alter table flex_decks enable row level security;
-alter table flashcards enable row level security;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.portfolio_assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bill_splits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.flex_decks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.flashcards ENABLE ROW LEVEL SECURITY;
 
--- Create Policies
+-- Profiles Policies
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 
-drop policy if exists "Users can view own profile" on profiles;
-create policy "Users can view own profile" 
-  on profiles for select using (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
-drop policy if exists "Users can update own profile" on profiles;
-create policy "Users can update own profile" 
-  on profiles for update using (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
-drop policy if exists "Users can insert own profile" on profiles;
-create policy "Users can insert own profile" 
-  on profiles for insert with check (auth.uid() = id);
+-- Transactions Policies
+DROP POLICY IF EXISTS "Users can manage own transactions" ON public.transactions;
+CREATE POLICY "Users can manage own transactions" ON public.transactions FOR ALL USING (auth.uid() = user_id);
 
-drop policy if exists "Users can sync own transactions" on transactions;
-create policy "Users can sync own transactions" 
-  on transactions for all using (auth.uid() = user_id);
+-- Portfolio Policies
+DROP POLICY IF EXISTS "Users can manage own assets" ON public.portfolio_assets;
+CREATE POLICY "Users can manage own assets" ON public.portfolio_assets FOR ALL USING (auth.uid() = user_id);
 
-drop policy if exists "Users can manage own assets" on portfolio_assets;
-create policy "Users can manage own assets" 
-  on portfolio_assets for all using (auth.uid() = user_id);
+-- Bill Splits Policies
+DROP POLICY IF EXISTS "Users can manage own bill splits" ON public.bill_splits;
+CREATE POLICY "Users can manage own bill splits" ON public.bill_splits FOR ALL USING (auth.uid() = user_id);
 
-drop policy if exists "Users can manage own bill splits" on bill_splits;
-create policy "Users can manage own bill splits" 
-  on bill_splits for all using (auth.uid() = user_id);
+-- Decks & Flashcards Policies
+DROP POLICY IF EXISTS "Users can manage own decks" ON public.flex_decks;
+CREATE POLICY "Users can manage own decks" ON public.flex_decks FOR ALL USING (auth.uid() = user_id);
 
-drop policy if exists "Users can manage own decks" on flex_decks;
-create policy "Users can manage own decks" 
-  on flex_decks for all using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can manage own cards" ON public.flashcards;
+CREATE POLICY "Users can manage own cards" ON public.flashcards FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.flex_decks WHERE flex_decks.id = flashcards.deck_id AND flex_decks.user_id = auth.uid())
+);
 
-drop policy if exists "Users can manage own cards via deck ownership" on flashcards;
-create policy "Users can manage own cards via deck ownership" 
-  on flashcards for all using (
-    exists (
-      select 1 from flex_decks 
-      where flex_decks.id = flashcards.deck_id 
-      and flex_decks.user_id = auth.uid()
-    )
-  );
+-- ==========================================
+-- STORAGE SETUP (FOR RECEIPTS)
+-- ==========================================
 
--- Storage Buckets Setup
-insert into storage.buckets (id, name, public) 
-values ('receipts', 'receipts', true)
-on conflict (id) do nothing;
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('receipts', 'receipts', true)
+ON CONFLICT (id) DO NOTHING;
 
-create policy "Users can upload their own receipts"
-on storage.objects for insert
-with check ( bucket_id = 'receipts' and auth.uid()::text = (storage.foldername(name))[1] );
+DROP POLICY IF EXISTS "Users can upload own receipts" ON storage.objects;
+CREATE POLICY "Users can upload own receipts" ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'receipts' AND (storage.foldername(name))[1] = auth.uid()::text );
 
-create policy "Receipts are publicly accessible"
-on storage.objects for select
-using ( bucket_id = 'receipts' );
+DROP POLICY IF EXISTS "Receipts are public" ON storage.objects;
+CREATE POLICY "Receipts are public" ON storage.objects FOR SELECT USING ( bucket_id = 'receipts' );
