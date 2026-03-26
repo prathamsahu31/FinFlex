@@ -138,25 +138,64 @@ export default function App() {
   };
 
   if (isInitializing) {
+    const SPLASH_VIDEO_URL = ""; // User will provide this URL
+
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center grid-bg">
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center overflow-hidden relative">
+        {/* Background Video Splash */}
+        {SPLASH_VIDEO_URL ? (
+          <video 
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover opacity-60 z-0"
+          >
+            <source src={SPLASH_VIDEO_URL} type="video/mp4" />
+          </video>
+        ) : (
+          <div className="absolute inset-0 grid-bg opacity-20 z-0" />
+        )}
+
         <motion.div 
-          animate={{ y: [0, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="w-24 h-24 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg p-2"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative z-10 flex flex-col items-center"
         >
-          <img 
-            src={logoImg}
-            alt="FinFlex" 
-            className="w-full h-full object-contain"
-          />
+          {/* Central Logo Box with Video-mask vibe */}
+          <div className="w-32 h-32 border-4 border-white bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg p-3 group overflow-hidden">
+             <motion.img 
+                src={logoImg}
+                alt="FinFlex" 
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ repeat: Infinity, duration: 4 }}
+                className="w-full h-full object-contain"
+              />
+          </div>
+          
+          <div className="mt-10 flex flex-col items-center gap-4">
+             <div className="flex items-center gap-3">
+               <div className="w-3 h-3 bg-gumroad-pink animate-bounce" style={{ animationDelay: '0ms' }} />
+               <div className="w-3 h-3 bg-gumroad-yellow animate-bounce" style={{ animationDelay: '150ms' }} />
+               <div className="w-3 h-3 bg-white animate-bounce" style={{ animationDelay: '300ms' }} />
+             </div>
+             <p className="font-headline font-black uppercase text-3xl text-white tracking-[0.2em] drop-shadow-[4px_4px_0px_#000]">
+               FinFlex <span className="text-gumroad-pink">Loading</span>
+             </p>
+             <p className="text-white/50 font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">
+               Synchronizing your vibes...
+             </p>
+          </div>
         </motion.div>
-        <div className="mt-8 flex items-center gap-2">
-           <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-           <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-           <div className="w-2 h-2 bg-black rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        
+        {/* Bottom Corner Label */}
+        <div className="absolute bottom-10 right-10 z-20">
+           <div className="bg-gumroad-pink border-4 border-black px-4 py-2 neo-brutalism-shadow-sm font-black text-xs uppercase tracking-widest text-black flex items-center gap-2">
+              <div className="w-2 h-2 bg-black rounded-full animate-ping" />
+              Establishing Revolution
+           </div>
         </div>
-        <p className="mt-4 font-headline font-black uppercase text-xl text-black tracking-widest">Loading</p>
       </div>
     );
   }
@@ -389,9 +428,6 @@ export default function App() {
                   <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">Made with</span>
                   <span className="text-lg animate-bounce inline-block">❤️</span>
                   <span className="text-[10px] font-black font-label uppercase tracking-widest text-black/60">in India</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-gumroad-pink border-2 border-black neo-brutalism-shadow-xs group cursor-default">
-                  <span className="text-[10px] font-black font-label uppercase tracking-widest text-black italic">Visitor #{localStorage.getItem('finflex_visit_count') || '1'}</span>
                 </div>
               </div>
 

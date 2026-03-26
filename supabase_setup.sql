@@ -145,6 +145,40 @@ CREATE POLICY "Users can manage own cards" ON public.flashcards FOR ALL USING (
   EXISTS (SELECT 1 FROM public.flex_decks WHERE flex_decks.id = flashcards.deck_id AND flex_decks.user_id = auth.uid())
 );
 
+-- 8. Site Stats Table (Global Stats)
+CREATE TABLE IF NOT EXISTS public.site_stats (
+  id text PRIMARY KEY,
+  count numeric DEFAULT 0,
+  updated_at timestamp with time zone DEFAULT now()
+);
+
+-- Initialize global visitor count
+INSERT INTO public.site_stats (id, count)
+VALUES ('visitor_count', 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- Function to increment visitor count atomically
+CREATE OR REPLACE FUNCTION public.increment_visitor_count()
+RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  new_count numeric;
+BEGIN
+  UPDATE public.site_stats
+  SET count = count + 1
+  WHERE id = 'visitor_count'
+  RETURNING count INTO new_count;
+  RETURN new_count;
+END;
+$$;
+
+-- RLS for site_stats (Allow public read, but restricted write)
+ALTER TABLE public.site_stats ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public can view site stats" ON public.site_stats;
+CREATE POLICY "Public can view site stats" ON public.site_stats FOR SELECT USING (true);
+
 -- ==========================================
 -- STORAGE SETUP (FOR RECEIPTS)
 -- ==========================================

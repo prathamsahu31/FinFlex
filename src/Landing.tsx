@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import logoImg from './logo.png';
 
 interface LandingProps {
@@ -15,22 +16,38 @@ export default function Landing({ onGetStarted }: LandingProps) {
   });
 
   useEffect(() => {
-    // Get and increment visit count from localStorage
-    const savedVisits = localStorage.getItem('finflex_visit_count');
-    const visitCount = savedVisits ? parseInt(savedVisits, 10) + 1 : 1;
-    localStorage.setItem('finflex_visit_count', visitCount.toString());
+    const initStats = async () => {
+      let visitCount = 0;
+      
+      if (supabase) {
+        try {
+          const { data, error } = await supabase.rpc('increment_visitor_count');
+          if (!error && data) {
+            visitCount = Number(data);
+          } else {
+            // Fallback if RPC fails or not yet set up
+            const { data: fetchEntry } = await supabase.from('site_stats').select('count').eq('id', 'visitor_count').maybeSingle();
+            visitCount = Number(fetchEntry?.count || 0);
+          }
+        } catch (err) {
+          console.error("Stats fetch error:", err);
+        }
+      }
 
-    // Calculate dynamic stats based on visit count
-    const rebelsBase = 40000;
-    const moneyBase = 2.0;
-    
-    setStats({
-      rebels: (rebelsBase + visitCount).toLocaleString() + '+',
-      money: '$' + (moneyBase + (visitCount * 0.01)).toFixed(2) + 'M+',
-      rating: '4.9/5',
-      support: '24/7',
-      visits: visitCount
-    });
+      // Calculate dynamic stats based on visit count
+      const rebelsBase = 40000;
+      const moneyBase = 2.0;
+      
+      setStats({
+        rebels: (rebelsBase + visitCount).toLocaleString() + '+',
+        money: '$' + (moneyBase + (visitCount * 0.01)).toFixed(2) + 'M+',
+        rating: '4.9/5',
+        support: visitCount > 0 ? `${visitCount.toLocaleString()} VISITS` : '24/7',
+        visits: visitCount
+      });
+    };
+
+    initStats();
   }, []);
 
   return (
@@ -200,9 +217,6 @@ export default function Landing({ onGetStarted }: LandingProps) {
                 <span className="text-[10px] font-black font-label uppercase tracking-widest text-black">Made with</span>
                 <span className="text-lg animate-bounce inline-block">❤️</span>
                 <span className="text-[10px] font-black font-label uppercase tracking-widest text-black">in India</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-gumroad-pink border-2 border-black neo-brutalism-shadow-xs group cursor-default">
-                <span className="text-[10px] font-black font-label uppercase tracking-widest text-black italic">Visitor #{stats.visits}</span>
               </div>
             </div>
           </div>
