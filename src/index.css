@@ -33,6 +33,18 @@
   --color-gumroad-pink: #ff90e8;
   --color-gumroad-yellow: #ffbd03;
   --color-gumroad-black: #000000;
+  --color-gumroad-black: #000000;
+}
+
+@layer base {
+  .dark {
+    --color-white: #121212;   /* Main container bg */
+    --color-black: #fdfdfd;   /* Borders, Text, Shadows */
+    --color-background: #000000; /* Deep backdrop */
+    --color-on-background: #fdfdfd; /* Text on background */
+    --color-surface: #121212;
+    --color-on-surface: #fdfdfd;
+  }
 }
 
 @layer utilities {
@@ -48,14 +60,21 @@
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   }
   .neo-brutalism-shadow {
-    box-shadow: 4px 4px 0px 0px #000000;
+    box-shadow: 4px 4px 0px 0px var(--color-black, #000000);
   }
   .neo-brutalism-shadow-lg {
-    box-shadow: 8px 8px 0px 0px #000000;
+    box-shadow: 8px 8px 0px 0px var(--color-black, #000000);
+  }
+  .neo-brutalism-shadow-sm {
+    box-shadow: 2px 2px 0px 0px var(--color-black, #000000);
+  }
+  .neo-brutalism-shadow-xs {
+    box-shadow: 1px 1px 0px 0px var(--color-black, #000000);
   }
   .grid-bg {
-    background-image: radial-gradient(#000 1px, transparent 1px);
+    background-image: radial-gradient(var(--color-black, #000000) 1px, transparent 1px);
     background-size: 20px 20px;
+    opacity: 0.15; /* slightly dimmed to look better in both modes */
   }
 
   /* Minecraft Style Switch */

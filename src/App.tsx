@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
-  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon, MoreVertical, Pin, PinOff
+  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon, MoreVertical, Pin, PinOff, Sun, Moon
 } from 'lucide-react';
 import { cn } from './utils';
 import Login from './Login';
@@ -34,6 +34,20 @@ export default function App() {
   });
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('finflex_theme');
+    return (saved as 'light' | 'dark') || 'light';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('finflex_theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   useEffect(() => {
     localStorage.setItem('finflex_pinned_tools', JSON.stringify(pinnedToolIds));
@@ -124,8 +138,20 @@ export default function App() {
 
   const handleLogout = async () => {
     if (supabase) {
-      await supabase.auth.signOut();
-      window.location.href = '/'; // Hard redirect to clear all states
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) console.error("Sign out error:", error.message);
+        
+        // Clear all persistent storage to be safe
+        localStorage.clear(); 
+        sessionStorage.clear();
+        
+        // Force reload to landing page
+        window.location.replace('/'); 
+      } catch (err) {
+        console.error("Critical logout failure:", err);
+        window.location.replace('/');
+      }
     }
   };
 
@@ -138,7 +164,7 @@ export default function App() {
   };
 
   if (isInitializing) {
-    const SPLASH_VIDEO_URL = ""; // User will provide this URL
+    const SPLASH_VIDEO_URL = "https://github.com/prathamsahu31/FinFlex/raw/main/src/Splash%20Screen%20FinFlex%20(1).mp4";
 
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center overflow-hidden relative">
@@ -396,8 +422,21 @@ export default function App() {
             </div>
           </div>
 
-            <div className="flex items-center h-full">
-              {/* Profile button removed from topbar as it's now in sidebar */}
+            <div className="flex items-center h-full gap-4">
+              <button 
+                onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+                title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+                className={cn(
+                  "w-12 h-12 border-4 border-black flex items-center justify-center neo-brutalism-shadow cursor-pointer transition-transform hover:-translate-y-1 hover:translate-x-1 group",
+                  theme === 'light' ? "bg-black text-white hover:bg-gumroad-yellow hover:text-black" : "bg-white text-black hover:bg-gumroad-pink"
+                )}
+              >
+                {theme === 'light' ? (
+                  <Moon size={24} strokeWidth={3} className="group-hover:-rotate-12 transition-transform" />
+                ) : (
+                  <Sun size={24} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />
+                )}
+              </button>
             </div>
         </header>
 
