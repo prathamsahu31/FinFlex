@@ -138,7 +138,7 @@ export default function App() {
   };
 
   if (isInitializing) {
-    const SPLASH_VIDEO_URL = ""; // User will provide this URL
+    const SPLASH_VIDEO_URL = "https://github.com/prathamsahu31/FinFlex/blob/main/src/Splash%20Screen%20FinFlex%20(1).mp4"; // User will provide this URL
 
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center overflow-hidden relative">
