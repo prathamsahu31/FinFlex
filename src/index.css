@@ -38,12 +38,12 @@
 
 @layer base {
   .dark {
-    --color-white: #121212;   /* Main container bg */
-    --color-black: #fdfdfd;   /* Borders, Text, Shadows */
-    --color-background: #000000; /* Deep backdrop */
-    --color-on-background: #fdfdfd; /* Text on background */
-    --color-surface: #121212;
-    --color-on-surface: #fdfdfd;
+    --color-white: #0a0a0a;   /* Slightly deeper black for better contrast */
+    --color-black: #ffffff;   /* Pure white for bold borders */
+    --color-background: #000000;
+    --color-on-background: #ffffff;
+    --color-surface: #0a0a0a;
+    --color-on-surface: #ffffff;
   }
 }
 
@@ -72,9 +72,12 @@
     box-shadow: 1px 1px 0px 0px var(--color-black, #000000);
   }
   .grid-bg {
-    background-image: radial-gradient(var(--color-black, #000000) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
-    opacity: 0.15; /* slightly dimmed to look better in both modes */
+  }
+
+  .dark .grid-bg {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   }
 
   /* Minecraft Style Switch */

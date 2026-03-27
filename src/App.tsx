@@ -175,12 +175,12 @@ export default function App() {
             muted 
             loop 
             playsInline
-            className="absolute inset-0 w-full h-full object-cover opacity-60 z-0"
+            className="absolute inset-0 w-full h-full object-cover opacity-80 z-0 bg-black"
           >
             <source src={SPLASH_VIDEO_URL} type="video/mp4" />
           </video>
         ) : (
-          <div className="absolute inset-0 grid-bg opacity-20 z-0" />
+          <div className="absolute inset-0 grid-bg opacity-30 z-0 bg-zinc-950" />
         )}
 
         <motion.div 
@@ -200,18 +200,21 @@ export default function App() {
               />
           </div>
           
-          <div className="mt-10 flex flex-col items-center gap-4">
+          <div className="mt-10 flex flex-col items-center gap-4 text-center">
              <div className="flex items-center gap-3">
-               <div className="w-3 h-3 bg-gumroad-pink animate-bounce" style={{ animationDelay: '0ms' }} />
-               <div className="w-3 h-3 bg-gumroad-yellow animate-bounce" style={{ animationDelay: '150ms' }} />
-               <div className="w-3 h-3 bg-white animate-bounce" style={{ animationDelay: '300ms' }} />
+               <div className="w-3 h-3 bg-gumroad-pink animate-bounce shadow-[0_0_15px_rgba(255,144,232,0.5)]" style={{ animationDelay: '0ms' }} />
+               <div className="w-3 h-3 bg-gumroad-yellow animate-bounce shadow-[0_0_15px_rgba(255,189,3,0.5)]" style={{ animationDelay: '150ms' }} />
+               <div className="w-3 h-3 bg-white animate-bounce shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ animationDelay: '300ms' }} />
              </div>
-             <p className="font-headline font-black uppercase text-3xl text-white tracking-[0.2em] drop-shadow-[4px_4px_0px_#000]">
-               FinFlex <span className="text-gumroad-pink">Loading</span>
-             </p>
-             <p className="text-white/50 font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">
-               Synchronizing your vibes...
-             </p>
+             <div className="flex flex-col items-center">
+               <h2 className="font-headline font-black uppercase text-4xl text-white tracking-[0.2em] relative">
+                 FINFLEX
+                 <span className="absolute -right-12 -top-4 text-[10px] bg-gumroad-pink text-black px-2 py-1 border-2 border-white neo-brutalism-shadow-xs rotate-12">LOADING</span>
+               </h2>
+               <p className="mt-2 text-white/70 font-black text-xs uppercase tracking-[0.5em] animate-pulse">
+                 Synchronizing Revolution
+               </p>
+             </div>
           </div>
         </motion.div>
         
