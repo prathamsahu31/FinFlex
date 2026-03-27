@@ -5,7 +5,7 @@ import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import { Bell, Camera, CreditCard, IndianRupee, Loader2, LogOut, Mail, Save, Shield, TrendingUp, Trash2, User, Wallet } from 'lucide-react';
 
-export default function ProfileSettings({ setActiveTab, user: initialUser, profile: initialProfile }: TabComponentProps & { user: any, profile: any }) {
+export default function ProfileSettings({ setActiveTab, user: initialUser, profile: initialProfile, onLogout }: TabComponentProps & { user: any, profile: any }) {
   const [user, setUser] = useState<any>(initialUser);
   const [profile, setProfile] = useState<any>(initialProfile);
   const [isLoading, setIsLoading] = useState(!initialUser || !initialProfile);
@@ -91,19 +91,6 @@ export default function ProfileSettings({ setActiveTab, user: initialUser, profi
     }
   };
 
-  const handleLogout = async () => {
-    if (supabase) {
-      try {
-        await supabase.auth.signOut();
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = window.location.origin;
-      } catch (err) {
-        console.error("Signout error:", err);
-        window.location.href = window.location.origin;
-      }
-    }
-  };
 
   if (isLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
@@ -197,7 +184,7 @@ export default function ProfileSettings({ setActiveTab, user: initialUser, profi
             <motion.button 
               whileHover={{ x: -2, y: 2, boxShadow: 'none' }}
               type="button" 
-              onClick={handleLogout} 
+              onClick={onLogout} 
               className="flex items-center gap-2 px-6 py-3 text-black bg-white border-4 border-black font-black uppercase tracking-widest text-xs neo-brutalism-shadow-xs cursor-pointer transition-all hover:bg-gumroad-pink"
             >
               <LogOut size={18} strokeWidth={3} /> Sign Out

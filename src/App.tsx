@@ -159,18 +159,24 @@ export default function App() {
   const handleLogout = async () => {
     if (supabase) {
       try {
-        const { error } = await supabase.auth.signOut();
-        if (error) console.error("Sign out error:", error.message);
+        // Optimistically clear local state
+        setSession(null);
+        setProfile(null);
         
-        // Clear all persistent storage to be safe
+        await supabase.auth.signOut();
+        
+        // Clear all persistent storage
         localStorage.clear(); 
         sessionStorage.clear();
         
-        // Force reload to clean origin
-        window.location.href = window.location.origin; 
+        // Force a hard reload to the home page to ensure all state is wiped
+        window.location.replace(window.location.origin);
       } catch (err) {
         console.error("Critical logout failure:", err);
-        window.location.href = window.location.origin;
+        // Fallback: still attempt to clear and redirect
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace(window.location.origin);
       }
     }
   };
@@ -489,6 +495,7 @@ export default function App() {
                 togglePinTool={togglePinTool}
                 defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
                 onToolOpen={() => setSelectedToolId(null)}
+                onLogout={handleLogout}
                 user={user}
                 profile={profile}
               />

@@ -25,6 +25,7 @@ export interface TabComponentProps {
   togglePinTool?: (id: string) => void;
   defaultToolId?: string | null;
   onToolOpen?: () => void;
+  onLogout?: () => void;
 }
 
 export const TABS = [
