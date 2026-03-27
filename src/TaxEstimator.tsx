@@ -18,8 +18,8 @@ export default function TaxEstimator() {
       else if (income <= 1500000) tax = 90000 + (income - 1200000) * 0.20;
       else tax = 150000 + (income - 1500000) * 0.30;
       
-      // Rebate up to 7L
-      if (income <= 700000) tax = 0;
+      // Rebate up to 12L (Latest Updates)
+      if (income <= 1200000) tax = 0;
     } else {
       // Old Tax Regime (Simplified)
       tax = income * 0.20; // Average assumption

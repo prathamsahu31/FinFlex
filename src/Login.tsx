@@ -175,7 +175,7 @@ export default function Login({ onBack }: LoginProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-4 px-4 border-4 border-black text-xl font-headline font-black uppercase text-black bg-gumroad-yellow neo-brutalism-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full neo-stacked-hover flex justify-center py-4 px-4 border-4 border-black text-xl font-headline font-black uppercase text-black bg-gumroad-yellow transition-all disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Processing...' : (isSignUp ? 'Create an account' : 'Sign In')}
             </button>

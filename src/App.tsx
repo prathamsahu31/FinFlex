@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
-  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon, MoreVertical, Pin, PinOff, Sun, Moon
+  Search, Bell, Menu, X, Wrench, Calendar, LogOut, Users, User as UserIcon, MoreVertical, Pin, PinOff, Sun, Moon, ChevronLeft
 } from 'lucide-react';
 import { cn } from './utils';
 import Login from './Login';
@@ -21,7 +21,27 @@ import logoImg from './logo.png';
 import { TABS, TOOLS_METADATA } from './constants';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(TABS[0].id);
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash || TABS[0].id;
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash !== activeTab) {
+        setActiveTab(hash || TABS[0].id);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [activeTab]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    window.location.hash = tabId;
+  };
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -146,11 +166,11 @@ export default function App() {
         localStorage.clear(); 
         sessionStorage.clear();
         
-        // Force reload to landing page
-        window.location.replace('/'); 
+        // Force reload to clean origin
+        window.location.href = window.location.origin; 
       } catch (err) {
         console.error("Critical logout failure:", err);
-        window.location.replace('/');
+        window.location.href = window.location.origin;
       }
     }
   };
@@ -277,8 +297,11 @@ export default function App() {
         isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         <div className="flex items-center justify-between h-20 px-6 border-b-4 border-black bg-gumroad-yellow">
-          <div className="flex items-center gap-3 font-black text-xl tracking-tight text-black">
-            <div className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center overflow-hidden neo-brutalism-shadow">
+          <div 
+            className="flex items-center gap-3 font-black text-xl tracking-tight text-black cursor-pointer group"
+            onClick={() => handleTabChange(TABS[0].id)}
+          >
+            <div className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center overflow-hidden neo-brutalism-shadow group-hover:-translate-y-1 group-hover:-translate-x-1 group-hover:neo-brutalism-shadow-lg transition-all">
               <img 
                 src={logoImg}
                 alt="FinFlex Logo"
@@ -303,7 +326,7 @@ export default function App() {
               <motion.button
                 key={tab.id}
                 onClick={() => {
-                  setActiveTab(tab.id);
+                  handleTabChange(tab.id);
                   setIsSidebarOpen(false);
                 }}
                 className={cn(
@@ -330,7 +353,7 @@ export default function App() {
               <motion.button
                 key={toolId}
                 onClick={() => {
-                  setActiveTab(toolId);
+                  handleTabChange(toolId);
                   setIsSidebarOpen(false);
                 }}
                 className={cn(
@@ -361,7 +384,7 @@ export default function App() {
             >
               <button 
                 onClick={() => {
-                  setActiveTab('settings');
+                  handleTabChange('settings');
                   setIsProfileMenuOpen(false);
                 }}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gumroad-pink transition-colors font-black font-headline uppercase text-xs border-b-4 border-black text-left"
@@ -444,11 +467,22 @@ export default function App() {
         </header>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col bg-background">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col bg-background relative">
           <div className="p-4 lg:p-8 min-h-full flex flex-col">
+            {/* Tool Back Button */}
+            {!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' && (
+              <button 
+                onClick={() => handleTabChange('tools')}
+                className="mb-8 flex items-center gap-2 font-black font-headline uppercase tracking-widest text-black/50 hover:text-gumroad-pink transition-colors w-fit group"
+              >
+                <ChevronLeft size={20} strokeWidth={3} className="group-hover:-translate-x-1 transition-transform" />
+                Back to Tools
+              </button>
+            )}
+            
             <div className="flex-1">
               <ActiveComponent 
-                setActiveTab={setActiveTab} 
+                setActiveTab={handleTabChange} 
                 pinnedToolIds={pinnedToolIds} 
                 togglePinTool={togglePinTool}
                 defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}

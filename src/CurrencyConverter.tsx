@@ -1,21 +1,35 @@
-import { useState } from 'react';
-import { IndianRupee, Repeat } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { IndianRupee, Repeat, Loader2, AlertCircle } from 'lucide-react';
 
 export default function CurrencyConverter() {
   const [amount, setAmount] = useState(1000);
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('INR');
 
-  // Mock exchange rates relative to USD
-  const rates: Record<string, number> = {
-    USD: 1,
-    EUR: 0.92,
-    GBP: 0.79,
-    JPY: 150.4,
-    INR: 83.2,
-    AUD: 1.53,
-    CAD: 1.35,
-  };
+  const [rates, setRates] = useState<Record<string, number>>({
+    USD: 1, EUR: 0.92, GBP: 0.79, JPY: 150.4, INR: 83.2, AUD: 1.53, CAD: 1.35
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        const data = await res.json();
+        if (data && data.rates) {
+          setRates(data.rates);
+          setError(null);
+        }
+      } catch (err) {
+        setError('Failed to fetch live rates. Using defaults.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRates();
+  }, []);
 
   const convertedAmount = (amount / rates[fromCurrency]) * rates[toCurrency];
 
@@ -46,7 +60,20 @@ export default function CurrencyConverter() {
               </select>
             </div>
           </div>
-          <div className="bg-white border-4 border-black p-8 neo-brutalism-shadow-xs text-center">
+          
+          {isLoading && (
+            <div className="flex items-center justify-center gap-2 text-gumroad-pink font-black font-label tracking-widest uppercase text-xs pt-4">
+              <Loader2 size={16} className="animate-spin" strokeWidth={3} /> Fetching Live Rates...
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center justify-center gap-2 text-red-500 font-black font-label tracking-widest uppercase text-xs pt-4">
+              <AlertCircle size={16} strokeWidth={3} /> {error}
+            </div>
+          )}
+
+          <div className="bg-white border-4 border-black p-8 neo-brutalism-shadow-xs text-center relative overflow-hidden">
             <p className="text-xs font-black text-black uppercase tracking-widest mb-2 border-b-2 border-black pb-1 inline-block">Converted Value</p>
             <h3 className="text-4xl font-black font-headline text-black tracking-tighter">
               {convertedAmount.toLocaleString('en-US', { maximumFractionDigits: 2 })} {toCurrency}

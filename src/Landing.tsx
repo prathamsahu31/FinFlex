@@ -95,12 +95,12 @@ export default function Landing({ onGetStarted }: LandingProps) {
               <div className="flex flex-col sm:flex-row gap-6">
                 <button
                   onClick={onGetStarted}
-                  className="bg-gumroad-pink text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase neo-brutalism-shadow-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer">
-                  Join the Movement
+                  className="neo-stacked-hover bg-gumroad-pink text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase transition-all cursor-pointer">
+                  Get Started
                 </button>
                 <button
                   onClick={onGetStarted}
-                  className="bg-white text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase neo-brutalism-shadow-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer">
+                  className="neo-stacked-hover bg-white text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase transition-all cursor-pointer">
                   Watch Manifesto
                 </button>
               </div>

@@ -92,7 +92,17 @@ export default function ProfileSettings({ setActiveTab, user: initialUser, profi
   };
 
   const handleLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = window.location.origin;
+      } catch (err) {
+        console.error("Signout error:", err);
+        window.location.href = window.location.origin;
+      }
+    }
   };
 
   if (isLoading) {
