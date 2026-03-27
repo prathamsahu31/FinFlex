@@ -9,7 +9,8 @@ interface LandingProps {
 export default function Landing({ onGetStarted }: LandingProps) {
   const [stats, setStats] = useState({
     rebels: '40k+',
-    money: '$2M+',
+    money: '₹15Cr+',
+    stats: '150% APY',
     rating: '4.9/5',
     support: '24/7',
     visits: 0
@@ -40,8 +41,9 @@ export default function Landing({ onGetStarted }: LandingProps) {
       
       setStats({
         rebels: (rebelsBase + visitCount).toLocaleString() + '+',
-        money: '$' + (moneyBase + (visitCount * 0.01)).toFixed(2) + 'M+',
+        money: '₹' + (moneyBase + (visitCount * 0.1)).toFixed(2) + 'Cr+',
         rating: '4.9/5',
+        stats: '150% APY', // Keep this static as per initial state, or calculate dynamically if needed
         support: visitCount > 0 ? `${visitCount.toLocaleString()} VISITS` : '24/7',
         visits: visitCount
       });
@@ -95,12 +97,12 @@ export default function Landing({ onGetStarted }: LandingProps) {
               <div className="flex flex-col sm:flex-row gap-6">
                 <button
                   onClick={onGetStarted}
-                  className="neo-stacked-hover bg-gumroad-pink text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase transition-all cursor-pointer">
+                  className="neo-stacked-hover btn-rounded bg-gumroad-pink text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase transition-all cursor-pointer">
                   Get Started
                 </button>
                 <button
                   onClick={onGetStarted}
-                  className="neo-stacked-hover bg-white text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase transition-all cursor-pointer">
+                  className="neo-stacked-hover btn-rounded bg-white text-black border-4 border-black px-10 py-6 text-xl font-headline font-black uppercase transition-all cursor-pointer">
                   Watch Manifesto
                 </button>
               </div>
@@ -127,7 +129,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
                     <span className="material-symbols-outlined text-black text-5xl font-black" data-icon="account_balance_wallet">account_balance_wallet</span>
                     <span className="font-black text-xs bg-gumroad-yellow border-2 border-black px-3 py-1 neo-brutalism-shadow">TOTAL BALANCE</span>
                   </div>
-                  <h2 className="font-headline font-black text-5xl mb-2">$14,582.00</h2>
+                    <h2 className="font-headline font-black text-5xl mb-2">₹14,582.00</h2>
                   <p className="text-black bg-gumroad-pink border-2 border-black inline-flex items-center gap-2 px-3 py-1 font-black text-sm">
                     <span className="material-symbols-outlined font-black" data-icon="trending_up">trending_up</span> +12.4% THIS MONTH
                   </p>

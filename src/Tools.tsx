@@ -23,6 +23,7 @@ export default function Tools({ pinnedToolIds = [], togglePinTool, setActiveTab 
           <motion.div
             key={tool.id}
             whileHover={{ x: 4, y: 4, boxShadow: 'none' }}
+            transition={{ duration: 0.1 }}
             className="bg-white p-8 border-4 border-black neo-brutalism-shadow text-left group transition-all relative flex flex-col min-h-[320px]"
           >
             <div className="flex justify-between items-start mb-6">

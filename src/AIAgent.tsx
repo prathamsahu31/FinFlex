@@ -15,10 +15,10 @@ const INITIAL_MESSAGES = [
   },
   {
     id: 2,
-    sender: 'bot',
-    text: "Vibe check: you spent $15 on coffee today. Swept $1.50 into your Flex-Save. That's giving future millionaire energy. â¨",
-    timestamp: '10:01 AM'
-  }
+    text: "Vibe check: you spent ₹1,200 on items today. Swept ₹120 into your Flex-Save. That's giving future crorepati energy. ✨",
+    sender: 'ai',
+    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+  },
 ];
 
 const BOT_RESPONSES = [

@@ -329,6 +329,7 @@ export default function App() {
                   handleTabChange(tab.id);
                   setIsSidebarOpen(false);
                 }}
+                transition={{ duration: 0.1 }}
                 className={cn(
                   "w-full flex items-center gap-4 px-4 py-3 border-4 text-sm font-black font-headline uppercase tracking-widest transition-all cursor-pointer",
                   isActive 
@@ -356,6 +357,7 @@ export default function App() {
                   handleTabChange(toolId);
                   setIsSidebarOpen(false);
                 }}
+                transition={{ duration: 0.1 }}
                 className={cn(
                   "w-full flex items-center gap-4 px-4 py-3 border-4 text-sm font-black font-headline uppercase tracking-widest transition-all cursor-pointer",
                   isActive 

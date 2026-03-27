@@ -38,12 +38,16 @@
 
 @layer base {
   .dark {
-    --color-white: #0a0a0a;   /* Slightly deeper black for better contrast */
-    --color-black: #ffffff;   /* Pure white for bold borders */
-    --color-background: #000000;
-    --color-on-background: #ffffff;
-    --color-surface: #0a0a0a;
+    --color-white: #111111;   /* Surface Charcoal */
+    --color-black: #ffffff;   /* Pure White Borders */
+    --color-background: #000000; /* Deep Black Base */
+    --color-on-background: #fcfcfc;
+    --color-surface: #141414;
     --color-on-surface: #ffffff;
+    
+    /* Neon Dark Accents Override */
+    --color-gumroad-pink: #ff00c8; /* Brighter Neon Pink */
+    --color-gumroad-yellow: #ffff00; /* Kinetic Neon Yellow */
   }
 }
 
@@ -112,54 +116,62 @@
     transform: translateX(18px);
   }
 
-  /* Premium Stacked Hover Effect (Gumroad Style) */
+  /* Premium Stacked Hover Effect (Gumroad Style) - Refined */
   .neo-stacked-hover {
     position: relative;
-    transition: all 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transition: transform 0.1s cubic-bezier(0, 0, 0.2, 1);
+    border-radius: 12px;
+    z-index: 1;
   }
 
   .neo-stacked-hover::before,
   .neo-stacked-hover::after {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 4px solid var(--color-black, #000);
+    inset: -4px; /* match border width offset to align perfectly */
+    width: calc(100% + 8px);
+    height: calc(100% + 8px);
+    border: 4px solid #000;
+    border-radius: 12px;
     z-index: -1;
-    transition: all 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transition: transform 0.15s cubic-bezier(0, 0, 0.2, 1);
   }
 
   .neo-stacked-hover::after {
-    background-color: var(--color-gumroad-yellow, #ffbd03);
-    transform: translate(4px, 4px);
+    background-color: #ffbd03; /* Gumroad Yellow */
+    transform: translate(6px, 6px);
   }
 
   .neo-stacked-hover::before {
-    background-color: #ff4d00; /* Vibrant Orange/Red */
-    transform: translate(8px, 8px);
+    background-color: #ff4d00; /* Gumroad Orange/Red */
+    transform: translate(12px, 12px);
   }
 
+  /* When hovering, the top layer moves slightly up-left, others move more down-right */
   .neo-stacked-hover:hover {
-    transform: translate(-2px, -2px);
+    transform: translate(-3px, -3px);
   }
 
   .neo-stacked-hover:hover::after {
-    transform: translate(8px, 8px);
+    transform: translate(9px, 9px);
   }
 
   .neo-stacked-hover:hover::before {
-    transform: translate(16px, 16px);
+    transform: translate(18px, 18px);
   }
 
   .neo-stacked-hover:active {
-    transform: translate(4px, 4px);
+    transform: translate(6px, 6px);
   }
   
   .neo-stacked-hover:active::after,
   .neo-stacked-hover:active::before {
     transform: translate(0, 0);
+  }
+
+  /* Custom Rounding for standard buttons to match the layers */
+  .btn-rounded {
+    border-radius: 12px !important;
   }
 
   /* Global Speed Override */

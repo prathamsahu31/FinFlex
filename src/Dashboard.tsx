@@ -40,12 +40,12 @@ interface DashboardProps extends TabComponentProps {
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.15 } }
+  show: { opacity: 1, transition: { staggerChildren: 0.1, duration: 0.15 } }
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
+  show: { opacity: 1, y: 0, transition: { duration: 0.15 } }
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -173,6 +173,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15 }}
       className="max-w-[1400px] mx-auto space-y-8"
     >
       
@@ -224,7 +225,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         {/* Left Column */}
         <div className="lg:col-span-4 space-y-8">
           {/* Investment Portfolio */}
-          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Portfolio</h3>
               <div className="flex gap-3 text-black">
@@ -255,7 +256,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
           </motion.div>
 
           {/* Cash Tracking */}
-          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Cashflow</h3>
               <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} onClick={() => alert('Cashflow details coming soon!')} />
@@ -278,7 +279,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
           </motion.div>
 
           {/* Category Budgets */}
-          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Budgets</h3>
               <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} onClick={() => alert('Budget customization coming soon!')} />
@@ -310,12 +311,13 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         <div className="lg:col-span-8 space-y-8">
           
           {/* Monthly Trend */}
-          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Monthly Trend</h3>
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.1 }}
                 onClick={() => setTrendRange(prev => prev === 'month' ? '3months' : prev === '3months' ? 'all' : 'month')}
                 className="flex items-center gap-2 text-xs font-black font-label uppercase tracking-widest text-black bg-gumroad-yellow hover:bg-gumroad-pink px-4 py-2 border-4 border-black neo-brutalism-shadow transition-colors cursor-pointer"
               >
@@ -354,7 +356,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
           </motion.div>
 
           {/* Recent Transactions */}
-          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Recent Transactions</h3>
               <div className="flex gap-4 text-black">
@@ -367,7 +369,12 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
               <h4 className="text-xs font-black font-label uppercase tracking-widest text-black bg-gumroad-yellow inline-block px-2 py-1 border-2 border-black mb-2">History</h4>
               <div className="space-y-4">
                 {transactions.slice(0, 5).map(t => (
-                  <motion.div key={t.id} whileHover={{ x: 4 }} className="flex items-center justify-between p-4 border-4 border-black hover:bg-gumroad-pink transition-colors group cursor-pointer neo-brutalism-shadow-sm bg-white">
+                  <motion.div 
+                    key={t.id} 
+                    whileHover={{ x: 4 }} 
+                    transition={{ duration: 0.1 }}
+                    className="flex items-center justify-between p-4 border-4 border-black hover:bg-gumroad-pink transition-colors group cursor-pointer neo-brutalism-shadow-sm bg-white"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center text-2xl font-black font-headline text-black">
                         {t.vendor.charAt(0).toUpperCase()}

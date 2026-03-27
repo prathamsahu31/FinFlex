@@ -6,23 +6,35 @@ export default function TaxEstimator() {
   const [income, setIncome] = useState(1200000);
   const [regime, setRegime] = useState('new');
 
-  // Simplified Indian Income Tax Estimation (FY 2024-25)
+  // Official Indian Income Tax Estimation (FY 2025-26 / Budget 2025)
   const calculateTax = () => {
     let tax = 0;
     if (regime === 'new') {
-      // New Tax Regime Slabs
-      if (income <= 300000) tax = 0;
-      else if (income <= 600000) tax = (income - 300000) * 0.05;
-      else if (income <= 900000) tax = 15000 + (income - 600000) * 0.10;
-      else if (income <= 1200000) tax = 45000 + (income - 900000) * 0.15;
-      else if (income <= 1500000) tax = 90000 + (income - 1200000) * 0.20;
-      else tax = 150000 + (income - 1500000) * 0.30;
+      // 1. Standard Deduction
+      const standardDeduction = 75000;
+      const netTaxableIncome = Math.max(0, income - standardDeduction);
       
-      // Rebate up to 12L (Latest Updates)
-      if (income <= 1200000) tax = 0;
+      // 2. Progressive Slabs (FY 2025-26)
+      if (netTaxableIncome <= 400000) tax = 0;
+      else if (netTaxableIncome <= 800000) tax = (netTaxableIncome - 400000) * 0.05;
+      else if (netTaxableIncome <= 1200000) tax = 20000 + (netTaxableIncome - 800000) * 0.10;
+      else if (netTaxableIncome <= 1500000) tax = 60000 + (netTaxableIncome - 1200000) * 0.15;
+      else if (netTaxableIncome <= 2000000) tax = 105000 + (netTaxableIncome - 1500000) * 0.20;
+      else if (netTaxableIncome <= 2400000) tax = 205000 + (netTaxableIncome - 2000000) * 0.25;
+      else tax = 305000 + (netTaxableIncome - 2400000) * 0.30;
+      
+      // 3. Rebate under Section 87A (New Regime)
+      // If net taxable income <= 12,00,000, tax is Nil
+      if (netTaxableIncome <= 1200000) tax = 0;
+      
     } else {
-      // Old Tax Regime (Simplified)
-      tax = income * 0.20; // Average assumption
+      // Old Tax Regime (Approximate FY 25-26)
+      const standardDeduction = 50000;
+      const taxable = Math.max(0, income - standardDeduction - 150000); // 1.5L 80C assumption
+      if (taxable <= 250000) tax = 0;
+      else if (taxable <= 500000) tax = (taxable - 250000) * 0.05;
+      else if (taxable <= 1000000) tax = 12500 + (taxable - 500000) * 0.20;
+      else tax = 112500 + (taxable - 1000000) * 0.30;
     }
     return tax + (tax * 0.04); // Including 4% Cess
   };

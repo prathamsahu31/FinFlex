@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react';
 import { IndianRupee, Repeat, Loader2, AlertCircle } from 'lucide-react';
 
+const CURRENCY_NAMES: Record<string, string> = {
+  USD: 'US Dollar',
+  EUR: 'Euro',
+  GBP: 'British Pound',
+  JPY: 'Japanese Yen',
+  INR: 'Indian Rupee',
+  AUD: 'Australian Dollar',
+  CAD: 'Canadian Dollar',
+  CHF: 'Swiss Franc',
+  CNY: 'Chinese Yuan',
+  SGD: 'Singapore Dollar',
+  HKD: 'Hong Kong Dollar',
+  AED: 'Dirham',
+  SAR: 'Saudi Riyal',
+  BTC: 'Bitcoin',
+  ETH: 'Ethereum'
+};
+
 export default function CurrencyConverter() {
   const [amount, setAmount] = useState(1000);
   const [fromCurrency, setFromCurrency] = useState('USD');
@@ -49,15 +67,15 @@ export default function CurrencyConverter() {
             </div>
             <div>
               <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">From</label>
-              <select value={fromCurrency} onChange={e => setFromCurrency(e.target.value)} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors appearance-none">
-                {Object.keys(rates).map(c => <option key={c} value={c}>{c}</option>)}
+              <select value={fromCurrency} onChange={e => setFromCurrency(e.target.value)} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors appearance-none text-sm">
+                {Object.keys(rates).map(c => <option key={c} value={c}>{c} - {CURRENCY_NAMES[c] || 'Other'}</option>)}
               </select>
             </div>
             <div className="relative">
                <label className="block text-[10px] font-black text-black uppercase tracking-widest mb-1">To</label>
-               <select value={toCurrency} onChange={e => setToCurrency(e.target.value)} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors appearance-none">
-                {Object.keys(rates).map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+                <select value={toCurrency} onChange={e => setToCurrency(e.target.value)} className="w-full bg-white border-4 border-black px-4 py-3 font-bold outline-none focus:bg-gumroad-pink/10 transition-colors appearance-none text-sm">
+                 {Object.keys(rates).map(c => <option key={c} value={c}>{c} - {CURRENCY_NAMES[c] || 'Other'}</option>)}
+               </select>
             </div>
           </div>
           

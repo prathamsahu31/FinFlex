@@ -16,7 +16,7 @@ const COLORS = [
 
 const INITIAL_DECKS = [
   { title: "The 50/30/20 Rule", content: "A simple budgeting framework: 50% for needs, 30% for wants, and 20% for savings.", front_text: "The 50/30/20 Rule" },
-  { title: "Compound Interest", content: "It's the interest you earn on interest. Start early! $100/mo at 7% return over 30 years grows to over $120,000.", front_text: "Compound Interest" },
+  { title: "Compound Interest", content: "It's the interest you earn on interest. Start early! ₹10,000/mo at 12% return over 20 years grows to over ₹1 Crore.", front_text: "Compound Interest" },
   { title: "Emergency Fund", content: "Aim to save 3-6 months of living expenses in a high-yield savings account.", front_text: "Emergency Fund" },
   { title: "Index Funds", content: "Picking individual stocks is risky. Index funds let you buy a tiny piece of hundreds of companies at once.", front_text: "Index Funds" }
 ];
