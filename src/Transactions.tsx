@@ -273,7 +273,7 @@ export default function Transactions({ setActiveTab, user }: TabComponentProps &
                           "font-black font-headline text-2xl",
                           t.type === 'income' ? "text-emerald-600" : "text-black"
                         )}>
-                          {t.type === 'income' ? '+' : '-'}{Number(t.amount).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                          {t.type === 'income' ? '+' : '-'}{Number(t.amount).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                         </div>
                         <button 
                           onClick={() => handleDelete(t.id)}

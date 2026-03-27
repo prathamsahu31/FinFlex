@@ -97,16 +97,28 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
   const stats = useMemo(() => {
     let income = 0;
     let expenses = 0;
+    let flexPoints = 1250; // Base score for a Flex Warrior
     
     transactions.forEach(t => {
-      if (t.type === 'income') income += Number(t.amount);
-      if (t.type === 'expense') expenses += Number(t.amount);
+      const amt = Number(t.amount);
+      if (t.type === 'income') {
+        income += amt;
+        flexPoints += 15;
+      } else {
+        expenses += amt;
+        // Gamified logic: Penalize high-frequency roast categories
+        if (['Food & Dining', 'Shopping', 'Entertainment'].includes(t.category)) {
+          flexPoints -= 10;
+        } else {
+          flexPoints += 5;
+        }
+      }
     });
 
     const balance = income - expenses;
     const netSavingsRate = income > 0 ? (balance / income) * 100 : 0;
 
-    return { income, expenses, balance, netSavingsRate };
+    return { income, expenses, balance, netSavingsRate, flexPoints };
   }, [transactions]);
 
   const categoryData = useMemo(() => {
@@ -177,6 +189,31 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
       className="max-w-[1400px] mx-auto space-y-8"
     >
       
+      {/* Header with Flex Score */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-5xl font-black font-headline text-black uppercase tracking-tight mb-2">
+            Dashboard
+          </h1>
+          <p className="text-black font-bold text-sm border-l-4 border-black pl-3 uppercase tracking-tighter">
+            Real-time financial warfare
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="bg-gumroad-pink border-4 border-black px-6 py-3 neo-brutalism-shadow transition-transform hover:-translate-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">FLEX SCORE</p>
+            <p className="text-3xl font-black font-headline text-white italic">
+              <CountUp value={stats.flexPoints} duration={2} />
+            </p>
+          </div>
+          <div className="bg-gumroad-yellow border-4 border-black px-4 py-3 neo-brutalism-shadow hidden sm:block">
+            <p className="text-[8px] font-black uppercase tracking-widest text-black">RANK</p>
+            <p className="text-xl font-black font-headline text-black italic">#42/4.2k</p>
+          </div>
+        </div>
+      </div>
+
       {/* Top Cards */}
       <motion.div 
         variants={containerVariants}
@@ -255,6 +292,43 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
             </div>
           </motion.div>
 
+          {/* Gamified Leaderboard Card */}
+          <motion.div variants={itemVariants} className="md:col-span-1 lg:col-span-4">
+            <div className="bg-white border-4 border-black neo-brutalism-shadow h-full flex flex-col group">
+              <div className="p-4 border-b-4 border-black bg-gumroad-yellow flex items-center justify-between">
+                <h3 className="font-black font-headline text-lg uppercase flex items-center gap-2">
+                  <TrendingUp size={20} strokeWidth={3} /> Global Leaderboard
+                </h3>
+              </div>
+              <div className="p-4 space-y-3 flex-1 overflow-y-auto max-h-[300px]">
+                {[
+                  { name: 'Pratham (You)', score: stats.flexPoints, rank: 42, color: 'bg-gumroad-pink' },
+                  { name: 'CryptoWhale', score: 15420, rank: 1, color: 'bg-emerald-400' },
+                  { name: 'NavalRavikant_Bot', score: 14200, rank: 2, color: 'bg-blue-400' },
+                  { name: 'BrokeBoy99', score: 120, rank: 4200, color: 'bg-red-400' },
+                ].sort((a, b) => b.score - a.score).map((user, i) => (
+                  <div key={user.name} className={cn(
+                    "flex items-center justify-between p-3 border-2 border-black neo-brutalism-shadow-sm transition-all hover:-translate-x-1",
+                    user.name.includes('(You)') ? "bg-gumroad-pink/10 border-gumroad-pink" : "bg-white"
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-8 h-8 border-2 border-black flex items-center justify-center font-black text-xs", user.color)}>
+                        {user.rank === 1 ? '👑' : user.rank}
+                      </div>
+                      <span className="font-black text-sm">{user.name}</span>
+                    </div>
+                    <span className="font-black font-headline text-sm">{user.score.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 bg-black">
+                <p className="text-[9px] font-black text-white italic text-center uppercase tracking-widest">
+                  BEAT CRYPTOWHALE TO UNLOCK "ELITE" ARCADE THEME
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Cash Tracking */}
           <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
@@ -263,7 +337,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
             </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={cashTrackingData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+                <BarChart data={cashTrackingData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} dy={5} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} tickFormatter={val => `₹${val}`} />
@@ -401,13 +475,28 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                   </motion.div>
                 ))}
                 {transactions.length === 0 && (
-                  <p className="text-sm font-bold text-black p-4 text-center border-4 border-black border-dashed">No transactions yet.</p>
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <p className="text-sm font-black text-black text-center mb-4 uppercase tracking-widest">No history found. Are you even trying?</p>
+                    <button 
+                      onClick={() => setActiveTab?.('transactions')}
+                      className="neo-stacked-hover btn-rounded bg-gumroad-yellow text-black border-4 border-black px-6 py-3 text-sm font-headline font-black uppercase transition-all cursor-pointer inline-flex items-center gap-2"
+                    >
+                      <Plus size={18} strokeWidth={3} /> Log First Expense
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
           </motion.div>
 
         </div>
+      </div>
+      
+      {/* Dashboard Footer */}
+      <div className="pt-8 border-t-4 border-black flex flex-col items-center gap-2">
+        <p className="font-black text-[10px] uppercase tracking-widest text-black/40 italic">
+          MADE WITH ❤️ IN INDIA • FINFLEX ARCADE v2.0
+        </p>
       </div>
     </motion.div>
   );

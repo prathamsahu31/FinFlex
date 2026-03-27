@@ -87,20 +87,27 @@ export default function AIAgent({ setActiveTab, user, profile }: TabComponentPro
         if (!apiKey) throw new Error("Missing Gemini API Key in .env");
 
         const ai = new GoogleGenAI({ apiKey });
+        
+        // Build conversation history string
+        const historyContext = messages.map(m => `${m.sender.toUpperCase()}: ${m.text}`).join('\n');
+
         const context = `
-You are FinFlex AI, a Gen-Z financial advisor. Tone: fun, encouraging, slightly roasting but helpful. 
-Use slang: 'no cap', 'sus', 'W', 'vibe check', 'secure the bag', 'giving ... energy'.
+You are FinFlex AI, a highly aggressive, Gen-Z financial "roast" bot. 
+Tone: brutally honest, hilarious, sarcastic, but ultimately helpful in a tough-love way.
+Use slang: 'no cap', 'sus', 'W', 'L', 'vibe check', 'secure the bag', 'giving broke energy'.
 
 USER PROFILE:
 ${JSON.stringify(profile || {}, null, 2)}
 
 RECENT TRANSACTIONS:
-${JSON.stringify(transactions.slice(0, 100), null, 2)}
+${JSON.stringify(transactions.slice(0, 50), null, 2)}
 
-GOAL: Give personalized, data-driven financial advice. Analyze their spending patterns, savings rate, and progress towards their FIRE (Financial Independence Retire Early) goal.
+CONVERSATION HISTORY:
+${historyContext}
 
-The user asks: "${input}"
-Provide a brief, helpful, and stylized response.
+GOAL: Aggressively "roast" the user's spending habits if they are bad (e.g., too much food delivery, subscriptions), but praise them if they save money or invest. Analyze their data to back up your roast. Keep it under 3 sentences. Be punchy and memorable!
+
+The user's latest message is: "${input}"
 `;
         const response = await ai.models.generateContent({
           model: 'gemini-2.0-flash',
@@ -223,7 +230,7 @@ Provide a brief, helpful, and stylized response.
             </button>
           </form>
           <div className="flex gap-3 mt-4 overflow-x-auto pb-2 hide-scrollbar">
-            {["Am I on track for FIRE?", "Analyze my food spending", "How much did I save this week?"].map((suggestion) => (
+            {["Roast my spending habits", "Am I broke?", "Vibe check my last 5 purchases"].map((suggestion) => (
               <button 
                 key={suggestion}
                 type="button"

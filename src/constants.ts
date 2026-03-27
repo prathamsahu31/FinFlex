@@ -1,6 +1,6 @@
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
-  Wrench, Users, User as UserIcon, Calculator, Target, Repeat, DollarSign, PieChart
+  Wrench, Users, User as UserIcon, Calculator, Target, Repeat, DollarSign, PieChart, ShieldAlert, Gavel
 } from 'lucide-react';
 import Dashboard from './Dashboard';
 import Transactions from './Transactions';
@@ -17,6 +17,7 @@ import CurrencyConverter from './CurrencyConverter';
 import TaxEstimator from './TaxEstimator';
 import BudgetPlanner from './BudgetPlanner';
 import CompoundInterest from './CompoundInterest';
+import PunishmentContract from './PunishmentContract';
 
 export interface TabComponentProps {
   setActiveTab?: (tab: string) => void;
@@ -49,4 +50,5 @@ export const TOOLS_METADATA: any[] = [
   { id: 'subs', title: 'Subscriptions', icon: Repeat, description: 'Track your recurring payments', color: 'bg-white text-black', component: SubscriptionTracker },
   { id: 'flex-decks', title: 'Flex-Decks', icon: BookOpen, description: 'Learn finance with flashcards', color: 'bg-gumroad-pink text-black', component: FlexDecks },
   { id: 'ai-agent', title: 'FinFlex AI', icon: Bot, description: 'Your personal financial AI', color: 'bg-black text-white hover:text-black', component: AIAgent },
+  { id: 'punishment', title: 'Punishment', icon: ShieldAlert, description: 'Pay for your financial sins', color: 'bg-gumroad-pink text-white hover:text-white', component: PunishmentContract },
 ];

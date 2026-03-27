@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, IndianRupee, CreditCard, ArrowRight, Check, X, Search, Filter, MessageSquare, Clock, ArrowUpRight, ArrowDownLeft, Receipt, ArrowLeft, ChevronRight, UserPlus, PieChart, Loader2, DollarSign, Camera } from 'lucide-react';
+import { Users, Plus, IndianRupee, CreditCard, ArrowRight, Check, X, Search, Filter, MessageSquare, Clock, ArrowUpRight, ArrowDownLeft, Receipt, ArrowLeft, ChevronRight, UserPlus, PieChart, Loader2, DollarSign, Camera, Sparkles } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { TabComponentProps } from './constants';
@@ -26,6 +26,29 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(['You']);
   const [newParticipantName, setNewParticipantName] = useState('');
   const [customPeople, setCustomPeople] = useState<string[]>([]);
+
+  // LocalStorage Persistence Hook
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('finflex-billsplit-draft');
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed.amount) setAmount(parsed.amount);
+        if (parsed.description) setDescription(parsed.description);
+        if (parsed.paidBy) setPaidBy(parsed.paidBy);
+        if (parsed.groupName) setGroupName(parsed.groupName);
+        if (parsed.selectedParticipants) setSelectedParticipants(parsed.selectedParticipants);
+      } catch (e) {
+        console.error("Failed to parse draft", e);
+      }
+    }
+  }, []);
+
+  // Save Draft on Change
+  useEffect(() => {
+    const draft = { amount, description, paidBy, groupName, selectedParticipants };
+    localStorage.setItem('finflex-billsplit-draft', JSON.stringify(draft));
+  }, [amount, description, paidBy, groupName, selectedParticipants]);
 
   useEffect(() => {
     const fetchSplits = async () => {
@@ -213,6 +236,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
       setSelectedParticipants(['You']);
       setPaidBy('You');
       setReceiptUrl(null);
+      localStorage.removeItem('finflex-billsplit-draft'); // Clear persistence on success
       alert('Expense added successfully!');
     } else {
       console.error(error);
@@ -235,7 +259,32 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
   }
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6 h-full flex flex-col">
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6 h-full flex flex-col relative">
+      <AnimatePresence>
+        {isScanning && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center"
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                rotate: [0, 360],
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="w-24 h-24 border-8 border-gumroad-yellow border-t-gumroad-pink rounded-none mb-8"
+            />
+            <h2 className="text-4xl font-black font-headline text-white uppercase italic mb-4 flex items-center gap-4">
+              <Sparkles size={40} className="text-gumroad-yellow" /> AI Scanning...
+            </h2>
+            <p className="text-gumroad-yellow font-bold text-lg uppercase tracking-widest animate-pulse">
+              EXTRACTING DA VIBES & DATA FROM RECEIPT
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Bill Splitting</h1>
@@ -389,7 +438,19 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
           
           <div className="flex-1 overflow-y-auto p-4 grid-bg">
             <div className="space-y-4">
-              {(showAllExpenses ? filteredExpenses : filteredExpenses.slice(0, 5)).length === 0 && <p className="text-black font-bold text-sm text-center py-8">{selectedGroup ? `No expenses in group "${selectedGroup}".` : "No expenses yet. Click 'Add Expense' to get started."}</p>}
+              {(showAllExpenses ? filteredExpenses : filteredExpenses.slice(0, 5)).length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <p className="text-sm font-black text-black text-center mb-4 uppercase tracking-widest">
+                    {selectedGroup ? `Zero expenses in "${selectedGroup}".` : "Your friends owe you nothing. Are you even social?"}
+                  </p>
+                  <button 
+                    onClick={() => setIsAddExpenseOpen(true)}
+                    className="btn-rounded neo-stacked-hover bg-gumroad-yellow text-black border-4 border-black px-6 py-3 text-sm font-headline font-black uppercase inline-flex items-center gap-2 cursor-pointer transition-all"
+                  >
+                    <Plus size={18} strokeWidth={3} /> Add First Group Expense
+                  </button>
+                </div>
+              )}
               {(showAllExpenses ? filteredExpenses : filteredExpenses.slice(0, 5)).map(expense => (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
