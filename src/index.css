@@ -2,10 +2,24 @@
 @import "tailwindcss";
 
 @layer base {
-  html,
-  body {
-    overscroll-behavior: none;
+  html {
+    background-color: var(--color-background);
     overflow-x: hidden;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    background-color: var(--color-background);
+    overscroll-behavior-y: none;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Prevent overscroll on all scrollable elements */
+  .overflow-y-auto {
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch; /* Smooth scroll for iOS */
   }
 }
 

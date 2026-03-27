@@ -85,7 +85,7 @@ export default function Login({ onBack }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-background font-body antialiased flex flex-col justify-center py-12 sm:px-6 lg:px-8 grid-bg relative">
+    <div className="min-h-screen bg-background text-on-background font-body antialiased flex flex-col justify-center py-12 sm:px-6 lg:px-8 grid-bg relative selection:bg-gumroad-pink selection:text-black">
       {onBack && (
         <button 
           onClick={onBack}

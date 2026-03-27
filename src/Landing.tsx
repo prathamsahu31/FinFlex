@@ -53,7 +53,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
   }, []);
 
   return (
-    <div className="bg-background text-on-background font-body antialiased min-h-screen">
+    <div className="bg-background text-on-background font-body antialiased min-h-screen selection:bg-gumroad-pink selection:text-black">
       {/* Top Navigation Bar */}
       <nav className="fixed top-0 w-full z-50 bg-white border-b-4 border-black">
         <div className="flex justify-between items-center px-6 py-3 max-w-[1440px] mx-auto">
