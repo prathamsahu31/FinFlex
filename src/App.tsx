@@ -215,17 +215,6 @@ export default function App() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="relative z-10 flex flex-col items-center"
         >
-          {/* Central Logo Box with Video-mask vibe */}
-          <div className="w-32 h-32 border-4 border-white bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-lg p-3 group overflow-hidden">
-             <motion.img 
-                src={logoImg}
-                alt="FinFlex" 
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ repeat: Infinity, duration: 4 }}
-                className="w-full h-full object-contain"
-              />
-          </div>
-          
           <div className="mt-10 flex flex-col items-center gap-4 text-center">
              <div className="flex items-center gap-3">
                <div className="w-3 h-3 bg-gumroad-pink animate-bounce shadow-[0_0_15px_rgba(255,144,232,0.5)]" style={{ animationDelay: '0ms' }} />

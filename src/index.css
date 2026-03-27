@@ -4,14 +4,14 @@
 @layer base {
   html {
     background-color: var(--color-background);
-    overflow-x: hidden;
+    overflow-x: clip;
     overscroll-behavior-y: none;
   }
 
   body {
     background-color: var(--color-background);
     overscroll-behavior-y: none;
-    overflow-x: hidden;
+    overflow-x: clip;
     margin: 0;
     padding: 0;
   }
