@@ -19,7 +19,7 @@ const io = new Server(httpServer, {
   }
 });
 
-const PORT = process.env.BACKEND_PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
 // --- WebSockets: Real-time Market Data ---
 // We simulate real-time data by polling Yahoo Finance every 5 seconds for watched tickers

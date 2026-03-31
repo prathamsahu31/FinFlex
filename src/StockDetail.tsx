@@ -99,11 +99,25 @@ export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = im
            await supabase.from('stock_holdings').insert({ user_id: user.id, symbol, total_quantity: quantity, avg_buy_price: livePrice });
         }
 
-        // Deduct Coins & Add XP
-        await supabase.from('user_gamification').update({ 
-           coins: coins - totalCost,
-           xp: (prediction?.confidence_score || 50) > 80 ? 50 : 25 // Bonus XP for trading high confidence ML picks
-        }).eq('id', user.id);
+        // Fetch current gamification state first
+        const { data: gamification } = await supabase.from('user_gamification').select('*').eq('id', user.id).single();
+        if (gamification) {
+           const xpEarned = (prediction?.confidence_score || 50) > 80 ? 50 : 25;
+           let newXp = Number(gamification.xp) + xpEarned;
+           let newLevel = Number(gamification.level);
+           const xpThreshold = newLevel * 1000;
+
+           if (newXp >= xpThreshold) {
+              newXp -= xpThreshold;
+              newLevel += 1;
+           }
+
+           await supabase.from('user_gamification').update({ 
+              coins: coins - totalCost,
+              xp: newXp,
+              level: newLevel
+           }).eq('id', user.id);
+        }
 
         setMessage({ type: 'success', text: `Successfully bought ${quantity} share(s) of ${symbol}.` });
       } 
