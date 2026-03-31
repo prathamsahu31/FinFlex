@@ -193,3 +193,74 @@ WITH CHECK ( bucket_id = 'receipts' AND (storage.foldername(name))[1] = auth.uid
 
 DROP POLICY IF EXISTS "Receipts are public" ON storage.objects;
 CREATE POLICY "Receipts are public" ON storage.objects FOR SELECT USING ( bucket_id = 'receipts' );
+
+-- ==========================================
+-- GAMIFIED TRADING SIMULATOR SETUP
+-- ==========================================
+
+-- 9. User Gamification (Virtual Coins, XP, Level)
+CREATE TABLE IF NOT EXISTS public.user_gamification (
+  id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  coins numeric(12, 2) DEFAULT 10000.00, -- Starting balance
+  xp integer DEFAULT 0,
+  level integer DEFAULT 1,
+  updated_at timestamp with time zone DEFAULT now()
+);
+
+-- Trigger to create gamification profile on new user
+CREATE OR REPLACE FUNCTION public.handle_new_gamification_user()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.user_gamification (id)
+  VALUES (new.id)
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created_gami') THEN
+    CREATE TRIGGER on_auth_user_created_gami
+      AFTER INSERT ON auth.users
+      FOR EACH ROW EXECUTE PROCEDURE public.handle_new_gamification_user();
+  END IF;
+END $$;
+
+-- 10. Stock Holdings (Current Active Portfolio)
+CREATE TABLE IF NOT EXISTS public.stock_holdings (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  symbol text NOT NULL,
+  total_quantity numeric NOT NULL,
+  avg_buy_price numeric NOT NULL,
+  updated_at timestamp with time zone DEFAULT now(),
+  UNIQUE(user_id, symbol)
+);
+
+-- 11. Stock Trades (History)
+CREATE TABLE IF NOT EXISTS public.stock_trades (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  symbol text NOT NULL,
+  type text NOT NULL CHECK (type IN ('BUY', 'SELL')),
+  quantity numeric NOT NULL,
+  price_at_execution numeric NOT NULL,
+  timestamp timestamp with time zone DEFAULT now()
+);
+
+-- Note: RLS policies for gamification and trading
+ALTER TABLE public.user_gamification ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stock_holdings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stock_trades ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own gamification" ON public.user_gamification;
+CREATE POLICY "Users can view own gamification" ON public.user_gamification FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can view own holdings" ON public.stock_holdings;
+CREATE POLICY "Users can view own holdings" ON public.stock_holdings FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can view own trades" ON public.stock_trades;
+CREATE POLICY "Users can view own trades" ON public.stock_trades FOR SELECT USING (auth.uid() = user_id);

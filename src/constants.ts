@@ -18,6 +18,8 @@ import TaxEstimator from './TaxEstimator';
 import BudgetPlanner from './BudgetPlanner';
 import CompoundInterest from './CompoundInterest';
 import PunishmentContract from './PunishmentContract';
+import Trading from './Trading';
+import { LineChart } from 'lucide-react';
 
 export interface TabComponentProps {
   setActiveTab?: (tab: string) => void;
@@ -30,6 +32,7 @@ export interface TabComponentProps {
 
 export const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, component: Dashboard },
+  { id: 'trading', label: 'Trading Floor', icon: LineChart, component: Trading },
   { id: 'tools', label: 'Explore Tools', icon: Wrench, component: Tools },
 ];
 
