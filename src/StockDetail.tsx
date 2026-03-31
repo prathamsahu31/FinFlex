@@ -4,8 +4,10 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveCo
 import { TrendingUp, TrendingDown, ArrowLeft, Loader2, Sparkles, Activity, AlertTriangle, IndianRupee } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
+import { io } from 'socket.io-client';
 
 export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
   const [history, setHistory] = useState<any[]>([]);
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
@@ -41,21 +43,14 @@ export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = im
            }
         }
 
-        // 2. Fetch/Mock History for Chart
-        // Since yahoo-finance in node backend is not guaranteed to be running right now, we mock 30 days history.
-        const mockHist = [];
-        let price = 100 + Math.random() * 50;
-        for (let i = 30; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          mockHist.push({
-            date: d.toLocaleDateString(),
-            price: price
-          });
-          price += (Math.random() - 0.45) * 5; // Slight upward bias
+        // 2. Fetch History for Chart
+        const histRes = await fetch(`${backendUrl}/api/stock/history/${symbol}?range=1mo`).catch(() => null);
+        if (histRes?.ok) {
+           const histData = await histRes.json();
+           if (isMounted && Array.isArray(histData)) {
+              setHistory(histData.map(d => ({ date: new Date(d.date).toLocaleDateString(), price: d.close })));
+           }
         }
-        if (isMounted) setHistory(mockHist);
-        
       } catch (err) {
         console.error("Fetch failed", err);
       } finally {
@@ -65,8 +60,25 @@ export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = im
     
     fetchData();
 
-    return () => { isMounted = false; }
-  }, [symbol, proxyUrl]);
+    // 3. Socket.io Real-Time Connection
+    const socket = io(backendUrl);
+    socket.on('connect', () => {
+       socket.emit('subscribe', symbol);
+    });
+
+    socket.on('marketUpdate', (data: any[]) => {
+       if (!isMounted) return;
+       const quote = data.find(q => q.symbol === symbol);
+       if (quote && quote.price) {
+          setLivePrice(quote.price);
+       }
+    });
+
+    return () => { 
+      isMounted = false; 
+      socket.disconnect();
+    }
+  }, [symbol, proxyUrl, backendUrl]);
 
   const executeTrade = async () => {
     if (!livePrice || quantity <= 0) return;

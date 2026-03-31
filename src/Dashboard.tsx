@@ -2,17 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
   TrendingUp, 
-  TrendingDown, 
   MoreVertical, 
   CreditCard, 
-  Wallet, 
   Plus, 
-  ChevronDown, 
   Search, 
   Filter,
-  Calendar,
   Briefcase,
-  Loader2
+  Loader2,
+  CalendarDays
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -23,10 +20,7 @@ import {
   ResponsiveContainer, 
   Tooltip, 
   XAxis, 
-  YAxis,
-  PieChart,
-  Pie,
-  Cell
+  YAxis
 } from 'recharts';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
@@ -58,67 +52,86 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Salary': '#10b981'
 };
 
-const MOCK_BUDGETS: Record<string, number> = {
-  'Food & Dining': 500,
-  'Shopping': 300,
-  'Transport': 150,
-  'Rent & Bills': 1200,
-  'Entertainment': 200,
-  'Other': 100
-};
-
 export default function Dashboard({ setActiveTab, user }: DashboardProps) {
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [holdings, setHoldings] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [gamification, setGamification] = useState({ xp: 0, level: 1 });
   const [isLoading, setIsLoading] = useState(!user);
-  const [trendRange, setTrendRange] = useState<'month' | '3months' | 'all'>('month');
+  
+  // Custom Date Range State
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const [startDate, setStartDate] = useState<string>(thirtyDaysAgo.toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       if (!supabase || !user) {
         if (!user) setIsLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
+      // 1. Fetch transactions
+      const { data: txData } = await supabase
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
         .order('date', { ascending: false });
+      if (txData) setTransactions(txData);
 
-      if (!error && data) {
-        setTransactions(data);
+      // 2. Fetch User Gamification
+      const { data: gamifData } = await supabase
+        .from('user_gamification')
+        .select('xp, level')
+        .eq('id', user.id)
+        .single();
+      if (gamifData) setGamification(gamifData);
+
+      // 3. Fetch Leaderboard dynamically
+      // For this, we fetch all user gamifications and join profiles for names
+      const { data: lData } = await supabase
+        .from('user_gamification')
+        .select('xp, level, profiles(name, avatar_url)')
+        .order('xp', { ascending: false })
+        .limit(10);
+      
+      if (lData) {
+        // Find current user's actual rank
+        const formattedLdb = lData.map((d: any, idx) => ({
+          rank: idx + 1,
+          name: d.profiles?.name || 'Anonymous',
+          xp: d.xp,
+          isMe: d.profiles?.name === user.user_metadata?.name || false
+        }));
+        setLeaderboard(formattedLdb);
       }
+
+      // 4. Fetch Quick Portfolio summary from Trading logic
+      const { data: pData } = await supabase
+         .from('stock_holdings')
+         .select('*')
+         .eq('user_id', user.id);
+      if (pData) setHoldings(pData);
+
       setIsLoading(false);
     };
     
-    fetchTransactions();
-  }, []);
+    fetchData();
+  }, [user]);
 
   const stats = useMemo(() => {
     let income = 0;
     let expenses = 0;
-    let flexPoints = 1250; // Base score for a Flex Warrior
     
     transactions.forEach(t => {
       const amt = Number(t.amount);
-      if (t.type === 'income') {
-        income += amt;
-        flexPoints += 15;
-      } else {
-        expenses += amt;
-        // Gamified logic: Penalize high-frequency roast categories
-        if (['Food & Dining', 'Shopping', 'Entertainment'].includes(t.category)) {
-          flexPoints -= 10;
-        } else {
-          flexPoints += 5;
-        }
-      }
+      if (t.type === 'income') income += amt;
+      else expenses += amt;
     });
 
     const balance = income - expenses;
-    const netSavingsRate = income > 0 ? (balance / income) * 100 : 0;
-
-    return { income, expenses, balance, netSavingsRate, flexPoints };
+    return { income, expenses, balance };
   }, [transactions]);
 
   const categoryData = useMemo(() => {
@@ -136,26 +149,24 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
     })).sort((a, b) => b.value - a.value);
   }, [transactions]);
 
-  const budgetProgress = useMemo(() => {
-    return categoryData.filter(c => c.name !== 'Salary').map(cat => {
-      const target = MOCK_BUDGETS[cat.name] || 500;
-      const percent = Math.min((cat.value / target) * 100, 100);
-      const isOver = cat.value > target;
-      return { ...cat, target, percent, isOver };
-    });
-  }, [categoryData]);
-
-  const trendDataAll = useMemo(() => {
+  // Trend Data restricted by Custom Range
+  const trendData = useMemo(() => {
     const map = new Map<string, { income: number, expenses: number }>();
+    const startObj = new Date(startDate);
+    const endObj = new Date(endDate);
+    endObj.setHours(23, 59, 59, 999);
+
     transactions.forEach(t => {
       const dateObj = new Date(t.date || t.created_at);
-      const key = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
-      if (!map.has(key)) map.set(key, { income: 0, expenses: 0 });
-      const current = map.get(key)!;
-      
-      if (t.type === 'income') current.income += Number(t.amount);
-      if (t.type === 'expense') current.expenses += Number(t.amount);
+      if (dateObj >= startObj && dateObj <= endObj) {
+        const key = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        if (!map.has(key)) map.set(key, { income: 0, expenses: 0 });
+        const current = map.get(key)!;
+        
+        if (t.type === 'income') current.income += Number(t.amount);
+        if (t.type === 'expense') current.expenses += Number(t.amount);
+      }
     });
     
     return Array.from(map.entries()).reverse().map(([name, vals]) => ({
@@ -163,20 +174,15 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
       income: vals.income,
       expenses: vals.expenses
     }));
-  }, [transactions]);
+  }, [transactions, startDate, endDate]);
 
-  const trendData = useMemo(() => {
-    if (trendRange === 'all') return trendDataAll;
-    if (trendRange === '3months') return trendDataAll.slice(-42);
-    return trendDataAll.slice(-14);
-  }, [trendDataAll, trendRange]);
-
-  const cashTrackingData = trendData.slice(-7); // Just use the last 7 items from trendData for cash tracking mock
+  const cashTrackingData = trendData.slice(-7); 
+  const portfolioTotalValue = useMemo(() => holdings.reduce((sum, h) => sum + (h.total_quantity * h.avg_buy_price), 0), [holdings]);
 
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
+        <Loader2 className="animate-spin text-black" size={40} />
       </div>
     );
   }
@@ -186,7 +192,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className="max-w-[1400px] mx-auto space-y-8"
+      className="max-w-[1400px] mx-auto space-y-8 p-4 lg:p-8"
     >
       
       {/* Header with Flex Score */}
@@ -202,14 +208,14 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
 
         <div className="flex items-center gap-4">
           <div className="bg-gumroad-pink border-4 border-black px-6 py-3 neo-brutalism-shadow transition-transform hover:-translate-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">FLEX SCORE</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">FLEX SCORE (XP)</p>
             <p className="text-3xl font-black font-headline text-white italic">
-              <CountUp value={stats.flexPoints} duration={2} />
+              <CountUp value={gamification.xp} duration={2} />
             </p>
           </div>
           <div className="bg-gumroad-yellow border-4 border-black px-4 py-3 neo-brutalism-shadow hidden sm:block">
-            <p className="text-[8px] font-black uppercase tracking-widest text-black">RANK</p>
-            <p className="text-xl font-black font-headline text-black italic">#42/4.2k</p>
+            <p className="text-[8px] font-black uppercase tracking-widest text-black">TRADER LEVEL</p>
+            <p className="text-xl font-black font-headline text-black italic">LVL {gamification.level}</p>
           </div>
         </div>
       </div>
@@ -222,8 +228,8 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-gumroad-pink border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
-          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Total Balance</p>
-          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
+          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Liquid Balance</p>
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2 break-words">
             <CountUp value={stats.balance} prefix="₹" decimals={2} />
           </h2>
           <span className="flex items-center text-black text-xs font-bold bg-white border-2 border-black px-2 py-1 w-max neo-brutalism-shadow">
@@ -233,7 +239,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         
         <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
           <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Income</p>
-          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2 break-words">
             <CountUp value={stats.income} prefix="₹" decimals={2} />
           </h2>
           <p className="text-black font-bold text-xs">All incoming transfers</p>
@@ -241,18 +247,18 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         
         <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-white border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
           <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Expenses</p>
-          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2 break-words">
             <CountUp value={stats.expenses} prefix="₹" decimals={2} />
           </h2>
           <p className="text-black font-bold text-xs">Bills & daily spend</p>
         </motion.div>
         
         <motion.div variants={itemVariants} whileHover={{ x: 2, y: 2, boxShadow: 'none' }} className="bg-gumroad-yellow border-4 border-black p-6 text-black neo-brutalism-shadow cursor-pointer transition-all">
-          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Net Savings Rate</p>
-          <h2 className="text-4xl font-black font-headline mb-2 mt-2">
-            <CountUp value={stats.netSavingsRate} suffix="%" decimals={1} />
+          <p className="text-black font-black font-label text-xs uppercase tracking-widest mb-2 border-b-2 border-black pb-2 inline-block">Rank Position</p>
+          <h2 className="text-4xl font-black font-headline mb-2 mt-2 break-words">
+            #{leaderboard.find(l => l.isMe)?.rank || '?'}
           </h2>
-          <p className="text-black font-bold text-xs">Of total income saved</p>
+          <p className="text-black font-bold text-xs">Out of {leaderboard.length} traders</p>
         </motion.div>
       </motion.div>
 
@@ -261,38 +267,41 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         
         {/* Left Column */}
         <div className="lg:col-span-4 space-y-8">
-          {/* Investment Portfolio */}
+          
+          {/* True Investment Portfolio summary */}
           <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
-              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Portfolio</h3>
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Holdings</h3>
               <div className="flex gap-3 text-black">
                 <Briefcase size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" onClick={() => setActiveTab?.('portfolio')} />
-                <MoreVertical size={20} strokeWidth={3} className="cursor-pointer hover:text-gumroad-pink" onClick={() => alert('More options coming soon!')} />
               </div>
             </div>
             
-            <div className="h-44 bg-black border-4 border-black text-white p-5 cursor-pointer hover:bg-zinc-900 transition-colors relative overflow-hidden group">
+            <div 
+               className="h-44 bg-black border-4 border-black text-white p-5 cursor-pointer hover:bg-zinc-900 transition-colors relative overflow-hidden group"
+               onClick={() => setActiveTab?.('portfolio')}
+            >
               <div className="absolute top-0 right-0 w-32 h-32 bg-gumroad-pink/20 blur-2xl -mr-10 -mt-10 group-hover:bg-gumroad-pink/40 transition-colors"></div>
               <div className="relative z-10 flex flex-col justify-between h-full">
                 <div className="flex justify-between items-start">
-                  <span className="text-sm font-black font-label uppercase tracking-widest">Total Value</span>
-                  <span className="text-xs font-black text-black bg-gumroad-yellow px-2 py-1 border-2 border-white">+8.4% YTD</span>
+                  <span className="text-sm font-black font-label uppercase tracking-widest">AUM Value</span>
                 </div>
                 <div>
-                  <h4 className="text-3xl font-black font-headline tracking-tight mt-2">₹84,500.00</h4>
+                  <h4 className="text-3xl font-black font-headline tracking-tight mt-2">
+                     ₹{portfolioTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h4>
                   <div className="flex justify-between items-end mt-4">
-                    <span className="text-xs font-bold uppercase tracking-widest">S&P 500 ETF (VOO)</span>
-                    <span className="text-xs font-black">65%</span>
+                    <span className="text-xs font-bold uppercase tracking-widest">{holdings.length} Active Positions</span>
                   </div>
                   <div className="w-full bg-zinc-800 border-2 border-white h-3 mt-2 rounded-none">
-                    <div className="bg-gumroad-pink h-full" style={{ width: '65%' }}></div>
+                    <div className="bg-gumroad-pink h-full" style={{ width: '100%' }}></div>
                   </div>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Gamified Leaderboard Card */}
+          {/* Gamified Leaderboard Card (Live Server Data) */}
           <motion.div variants={itemVariants} className="md:col-span-1 lg:col-span-4">
             <div className="bg-white border-4 border-black neo-brutalism-shadow h-full flex flex-col group">
               <div className="p-4 border-b-4 border-black bg-gumroad-yellow flex items-center justify-between">
@@ -301,39 +310,31 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                 </h3>
               </div>
               <div className="p-4 space-y-3 flex-1 overflow-y-auto max-h-[300px]">
-                {[
-                  { name: 'Pratham (You)', score: stats.flexPoints, rank: 42, color: 'bg-gumroad-pink' },
-                  { name: 'CryptoWhale', score: 15420, rank: 1, color: 'bg-emerald-400' },
-                  { name: 'NavalRavikant_Bot', score: 14200, rank: 2, color: 'bg-blue-400' },
-                  { name: 'BrokeBoy99', score: 120, rank: 4200, color: 'bg-red-400' },
-                ].sort((a, b) => b.score - a.score).map((user, i) => (
-                  <div key={user.name} className={cn(
+                {leaderboard.length === 0 ? (
+                  <p className="text-center font-bold text-xs opacity-50 py-4">No ranked players yet.</p>
+                ) : leaderboard.map((l) => (
+                  <div key={l.rank} className={cn(
                     "flex items-center justify-between p-3 border-2 border-black neo-brutalism-shadow-sm transition-all hover:-translate-x-1",
-                    user.name.includes('(You)') ? "bg-gumroad-pink/10 border-gumroad-pink" : "bg-white"
+                    l.isMe ? "bg-gumroad-pink/10 border-gumroad-pink" : "bg-white",
+                    l.rank === 1 ? 'bg-emerald-100' : ''
                   )}>
                     <div className="flex items-center gap-3">
-                      <div className={cn("w-8 h-8 border-2 border-black flex items-center justify-center font-black text-xs", user.color)}>
-                        {user.rank === 1 ? '👑' : user.rank}
+                      <div className={cn("w-8 h-8 border-2 border-black flex items-center justify-center font-black text-xs", l.rank === 1 ? 'bg-emerald-400' : l.isMe ? 'bg-gumroad-pink' : 'bg-gray-200')}>
+                        {l.rank === 1 ? '👑' : l.rank}
                       </div>
-                      <span className="font-black text-sm">{user.name}</span>
+                      <span className="font-black text-sm">{l.name}</span>
                     </div>
-                    <span className="font-black font-headline text-sm">{user.score.toLocaleString()}</span>
+                    <span className="font-black font-headline text-sm">{l.xp.toLocaleString()} XP</span>
                   </div>
                 ))}
-              </div>
-              <div className="p-4 bg-black">
-                <p className="text-[9px] font-black text-white italic text-center uppercase tracking-widest">
-                  BEAT CRYPTOWHALE TO UNLOCK "ELITE" ARCADE THEME
-                </p>
               </div>
             </div>
           </motion.div>
 
-          {/* Cash Tracking */}
+          {/* Cashflow Preview */}
           <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
-              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Cashflow</h3>
-              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} onClick={() => alert('Cashflow details coming soon!')} />
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Recent Cashflow</h3>
             </div>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -351,81 +352,101 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
               </ResponsiveContainer>
             </div>
           </motion.div>
-
-          {/* Category Budgets */}
-          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
-            <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
-              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Budgets</h3>
-              <MoreVertical size={20} className="text-black cursor-pointer hover:text-gumroad-pink" strokeWidth={3} onClick={() => alert('Budget customization coming soon!')} />
-            </div>
-            <div className="space-y-6">
-              {budgetProgress.map(b => (
-                <div key={b.name}>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-xs font-black font-label uppercase tracking-widest text-black">{b.name}</span>
-                    <span className="text-xs font-bold text-black border-b-2 border-black">₹{b.value.toFixed(0)} / ₹{b.target}</span>
-                  </div>
-                  <div className="w-full bg-white border-4 border-black h-4 rounded-none overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${b.percent}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className={cn("h-full border-r-4 border-black", b.isOver ? "bg-error" : "")} 
-                      style={{ backgroundColor: b.isOver ? undefined : (b.color === '#60a5fa' || b.color === '#94a3b8' || b.color === '#cbd5e1' ? '#ffbd03' : b.color) }} 
-                    />
-                  </div>
-                </div>
-              ))}
-              {budgetProgress.length === 0 && <p className="text-sm font-bold text-black text-center py-2">No expenses yet.</p>}
-            </div>
-          </motion.div>
         </div>
 
         {/* Right Side */}
         <div className="lg:col-span-8 space-y-8">
           
-          {/* Monthly Trend */}
-          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
-            <div className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
-              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Monthly Trend</h3>
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.1 }}
-                onClick={() => setTrendRange(prev => prev === 'month' ? '3months' : prev === '3months' ? 'all' : 'month')}
-                className="flex items-center gap-2 text-xs font-black font-label uppercase tracking-widest text-black bg-gumroad-yellow hover:bg-gumroad-pink px-4 py-2 border-4 border-black neo-brutalism-shadow transition-colors cursor-pointer"
-              >
-                {trendRange === 'month' ? 'THIS MONTH' : trendRange === '3months' ? 'LAST 3 MO' : 'ALL TIME'} <ChevronDown size={16} strokeWidth={3} />
-              </motion.button>
+          {/* Custom Date Range Trend */}
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all flex flex-col min-h-[400px]">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-8 border-b-4 border-black pb-4 gap-4">
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Financial Trend</h3>
+              
+              {/* Native Date Pickers */}
+              <div className="flex items-center gap-2">
+                 <div className="flex items-center bg-white border-4 border-black p-1 neo-brutalism-shadow-xs">
+                   <CalendarDays size={16} strokeWidth={3} className="mx-2 text-black/50" />
+                   <input 
+                     type="date"
+                     value={startDate}
+                     onChange={(e) => setStartDate(e.target.value)}
+                     className="bg-transparent text-xs font-black uppercase tracking-widest outline-none cursor-pointer" 
+                   />
+                 </div>
+                 <span className="font-bold">-</span>
+                 <div className="flex items-center bg-white border-4 border-black p-1 neo-brutalism-shadow-xs">
+                   <input 
+                     type="date"
+                     value={endDate}
+                     onChange={(e) => setEndDate(e.target.value)}
+                     className="bg-transparent text-xs font-black uppercase tracking-widest outline-none cursor-pointer" 
+                   />
+                 </div>
+              </div>
             </div>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="0" vertical={true} stroke="#e5e5e5" strokeWidth={2} />
-                  <XAxis dataKey="name" axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} dy={10} />
-                  <YAxis axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} tickFormatter={val => `₹${val/1000}k`} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '0px', border: '4px solid black', boxShadow: '4px 4px 0px 0px #000', fontWeight: 'bold' }}
-                    formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, '']}
-                  />
-                  <Line 
-                    type="step" 
-                    dataKey="income" 
-                    stroke="#10b981" 
-                    strokeWidth={4} 
-                    dot={{ r: 6, fill: '#10b981', strokeWidth: 3, stroke: '#000' }} 
-                    activeDot={{ r: 8, strokeWidth: 4, stroke: '#000' }} 
-                  />
-                  <Line 
-                    type="step" 
-                    dataKey="expenses" 
-                    stroke="#ff90e8" 
-                    strokeWidth={4} 
-                    dot={{ r: 6, fill: '#ff90e8', strokeWidth: 3, stroke: '#000' }} 
-                    activeDot={{ r: 8, strokeWidth: 4, stroke: '#000' }} 
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            
+            <div className="flex-1 w-full min-h-[300px]">
+              {trendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="0" vertical={true} stroke="#e5e5e5" strokeWidth={2} />
+                    <XAxis dataKey="name" axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} dy={10} />
+                    <YAxis axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} tickFormatter={val => `₹${Number(val/1000).toFixed(0)}k`} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '0px', border: '4px solid black', boxShadow: '4px 4px 0px 0px #000', fontWeight: 'bold' }}
+                      formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, '']}
+                    />
+                    <Line 
+                      type="step" 
+                      dataKey="income" 
+                      stroke="#10b981" 
+                      strokeWidth={4} 
+                      dot={{ r: 6, fill: '#10b981', strokeWidth: 3, stroke: '#000' }} 
+                      activeDot={{ r: 8, strokeWidth: 4, stroke: '#000' }} 
+                    />
+                    <Line 
+                      type="step" 
+                      dataKey="expenses" 
+                      stroke="#ff90e8" 
+                      strokeWidth={4} 
+                      dot={{ r: 6, fill: '#ff90e8', strokeWidth: 3, stroke: '#000' }} 
+                      activeDot={{ r: 8, strokeWidth: 4, stroke: '#000' }} 
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-sm font-black text-black/40 uppercase tracking-widest">No activity in this period.</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Categorized Expenses (Actually calculated from real data, no mock limits) */}
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+            <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+              <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Expense Breakdown</h3>
+            </div>
+            <div className="space-y-6">
+              {categoryData.length > 0 ? categoryData.filter(c => c.name !== 'Salary').map(b => (
+                <div key={b.name}>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-xs font-black font-label uppercase tracking-widest text-black">{b.name}</span>
+                    <span className="text-xs font-bold text-black border-b-2 border-black">₹{b.value.toFixed(0)}</span>
+                  </div>
+                  <div className="w-full bg-white border-4 border-black h-4 rounded-none overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((b.value / Math.max(stats.expenses, 1)) * 100, 100)}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full border-r-4 border-black"
+                      style={{ backgroundColor: b.color || '#ffbd03' }} 
+                    />
+                  </div>
+                </div>
+              )) : (
+                 <p className="text-sm font-bold text-black text-center py-2">No expenses recorded yet.</p>
+              )}
             </div>
           </motion.div>
 
@@ -476,7 +497,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                 ))}
                 {transactions.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-8">
-                    <p className="text-sm font-black text-black text-center mb-4 uppercase tracking-widest">No history found. Are you even trying?</p>
+                    <p className="text-sm font-black text-black text-center mb-4 uppercase tracking-widest">No history found.</p>
                     <button 
                       onClick={() => setActiveTab?.('transactions')}
                       className="neo-stacked-hover btn-rounded bg-gumroad-yellow text-black border-4 border-black px-6 py-3 text-sm font-headline font-black uppercase transition-all cursor-pointer inline-flex items-center gap-2"
@@ -490,13 +511,6 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
           </motion.div>
 
         </div>
-      </div>
-      
-      {/* Dashboard Footer */}
-      <div className="pt-8 border-t-4 border-black flex flex-col items-center gap-2">
-        <p className="font-black text-[10px] uppercase tracking-widest text-black/40 italic">
-          MADE WITH ❤️ IN INDIA • FINFLEX ARCADE v2.0
-        </p>
       </div>
     </motion.div>
   );

@@ -46,6 +46,8 @@ export default function AIAgent({ setActiveTab, user, profile }: TabComponentPro
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [holdings, setHoldings] = useState<any[]>([]);
+  const [gamification, setGamification] = useState({ xp: 0, coins: 0, level: 1 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -60,8 +62,14 @@ export default function AIAgent({ setActiveTab, user, profile }: TabComponentPro
     const fetchUserData = async () => {
       if (!supabase || !user) return;
 
-      const { data } = await supabase.from('transactions').select('category, amount, vendor, date, type').eq('user_id', user.id).order('date', { ascending: false });
-      if (data) setTransactions(data);
+      const { data: txData } = await supabase.from('transactions').select('category, amount, vendor, date, type').eq('user_id', user.id).order('date', { ascending: false }).limit(20);
+      if (txData) setTransactions(txData);
+
+      const { data: hData } = await supabase.from('stock_holdings').select('*').eq('user_id', user.id).gt('total_quantity', 0);
+      if (hData) setHoldings(hData);
+
+      const { data: gamifData } = await supabase.from('user_gamification').select('*').eq('id', user.id).single();
+      if (gamifData) setGamification(gamifData);
     };
     fetchUserData();
   }, []);
@@ -92,20 +100,22 @@ export default function AIAgent({ setActiveTab, user, profile }: TabComponentPro
         const historyContext = messages.map(m => `${m.sender.toUpperCase()}: ${m.text}`).join('\n');
 
         const context = `
-You are FinFlex AI, a highly aggressive, Gen-Z financial "roast" bot. 
-Tone: brutally honest, hilarious, sarcastic, but ultimately helpful in a tough-love way.
-Use slang: 'no cap', 'sus', 'W', 'L', 'vibe check', 'secure the bag', 'giving broke energy'.
+You are FinFlex AI, a highly aggressive, Gen-Z financial analyst and trading bot. 
+Tone: brutally honest, hilarious, sarcastic, but technically sound in trading advice.
+Use slang: 'no cap', 'sus', 'W', 'L', 'vibe check', 'diamond hands', 'paper hands', 'bagholder'.
 
-USER PROFILE:
-${JSON.stringify(profile || {}, null, 2)}
-
-RECENT TRANSACTIONS:
-${JSON.stringify(transactions.slice(0, 50), null, 2)}
+USER PROFILE: ${JSON.stringify(profile || {})}
+GAMIFICATION STATS: Trader Level ${gamification.level}, ${gamification.xp} XP, ${gamification.coins} Liquid Coins
+ASSET HOLDINGS (Stock Portfolio): ${JSON.stringify(holdings)}
+RECENT TRANSACTIONS: ${JSON.stringify(transactions)}
 
 CONVERSATION HISTORY:
 ${historyContext}
 
-GOAL: Aggressively "roast" the user's spending habits if they are bad (e.g., too much food delivery, subscriptions), but praise them if they save money or invest. Analyze their data to back up your roast. Keep it under 3 sentences. Be punchy and memorable!
+GOAL: Answer the user's latest message by analyzing their data. 
+- If they ask for stock recs or portfolio insights, analyze ASSET HOLDINGS (call them a bagholder if they own bad stocks, praise W picks). Suggest diversification if needed. 
+- If they ask about expenses, roast their RECENT TRANSACTIONS.
+- Keep responses under 4 sentences. Be punchy, deeply personalized, and use emojis!
 
 The user's latest message is: "${input}"
 `;

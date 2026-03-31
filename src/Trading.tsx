@@ -41,12 +41,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
           const recData = await recRes.json();
           setRecommendations(recData.recommendations || []);
         } else {
-          // Fallback if ML service offline
-          setRecommendations([
-            { symbol: "AAPL", confidence: 95.2, reason: "Consistent blue-chip growth." },
-            { symbol: "MSFT", confidence: 91.0, reason: "High AI sector momentum." },
-            { symbol: "NVDA", confidence: 88.5, reason: "Volatile but strong upward trend." }
-          ]);
+          setRecommendations([]);
         }
 
         const riskRes = await fetch(`${proxyUrl}/api/ml/risk-profile/${user.id}`).catch(() => null);
@@ -54,7 +49,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
           const riskData = await riskRes.json();
           setRiskProfile(riskData);
         } else {
-          setRiskProfile({ category: 'Moderate', risk_score: 55 });
+          setRiskProfile({ category: 'Unavailable', risk_score: 0 });
         }
       } catch (err) {
         console.error("ML Fetch failed", err);
