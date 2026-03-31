@@ -1,6 +1,7 @@
 {
   "name": "finflex-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "FinFlex gamified trading backend",
   "main": "dist/index.js",
   "scripts": {
