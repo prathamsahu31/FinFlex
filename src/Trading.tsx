@@ -6,7 +6,7 @@ import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import StockDetail from './StockDetail';
 
-export default function Trading({ user, proxyUrl = 'http://localhost:8000' }: TabComponentProps & { user: any, proxyUrl?: string }) {
+export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: TabComponentProps & { user: any, proxyUrl?: string }) {
   const [activeStock, setActiveStock] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [gamification, setGamification] = useState({ coins: 10000, xp: 0, level: 1 });

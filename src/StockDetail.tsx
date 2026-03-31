@@ -5,7 +5,7 @@ import { TrendingUp, TrendingDown, ArrowLeft, Loader2, Sparkles, Activity, Alert
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
-export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = 'http://localhost:8000' }: any) {
+export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
   const [history, setHistory] = useState<any[]>([]);
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
