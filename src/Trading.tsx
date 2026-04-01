@@ -73,10 +73,19 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
     }
     const delayFn = setTimeout(async () => {
       try {
-        const res = await fetch(`${backendUrl}/api/stock/search?q=${searchQuery}`);
+        const yahooUrl = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(searchQuery)}`;
+        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`);
+        
         if (res.ok) {
-          const data = await res.json();
-          setSearchResults(data);
+          const rawData = await res.json();
+          const mapped = (rawData.quotes || [])
+            .filter((quote: any) => ['EQUITY', 'CRYPTOCURRENCY', 'ETF'].includes(quote.quoteType))
+            .slice(0, 5)
+            .map((quote: any) => ({
+              symbol: quote.symbol,
+              name: quote.shortname || quote.longname || quote.symbol
+            }));
+          setSearchResults(mapped);
         }
       } catch (err) {
         console.error("Search failed");

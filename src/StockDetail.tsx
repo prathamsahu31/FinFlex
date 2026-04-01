@@ -4,7 +4,6 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveCo
 import { TrendingUp, TrendingDown, ArrowLeft, Loader2, Sparkles, Activity, AlertTriangle, IndianRupee } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
-import { io } from 'socket.io-client';
 
 export default function StockDetail({ symbol, user, coins, onBack, onTradeComplete, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
@@ -22,6 +21,7 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
   // Fetch initial data
   useEffect(() => {
     let isMounted = true;
+    let pollInterval: any;
 
     const fetchData = async () => {
       setIsLoading(true);
@@ -33,24 +33,44 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
            const predData = await predRes.json();
            if (isMounted) {
              setPrediction(predData);
-             setLivePrice(predData.current_price);
            }
         } else {
-           // Mock data if service offline
            if (isMounted) {
              setPrediction({ predicted_trend: 'Bullish', confidence_score: 82.5, current_price: 150.25 });
-             setLivePrice(150.25);
            }
         }
 
-        // 2. Fetch History for Chart
-        const histRes = await fetch(`${backendUrl}/api/stock/history/${symbol}?range=1mo`).catch(() => null);
-        if (histRes?.ok) {
-           const histData = await histRes.json();
-           if (isMounted && Array.isArray(histData)) {
-              setHistory(histData.map(d => ({ date: new Date(d.date).toLocaleDateString(), price: d.close })));
-           }
-        }
+        // 2. Fetch Live Price & History from Yahoo directly via CORS proxy
+        const fetchYahoo = async () => {
+           try {
+              const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1mo`;
+              const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+              if (res.ok) {
+                 const data = await res.json();
+                 const result = data?.chart?.result?.[0];
+                 if (result) {
+                    const timestamps = result.timestamp || [];
+                    const closes = result.indicators?.quote?.[0]?.close || [];
+                    
+                    const newHistory = timestamps.map((ts: number, i: number) => ({
+                       date: new Date(ts * 1000).toLocaleDateString(),
+                       price: closes[i] ? Number(closes[i].toFixed(2)) : null
+                    })).filter((d: any) => d.price !== null);
+
+                    if (isMounted) {
+                       setHistory(newHistory);
+                       setLivePrice(result.meta.regularMarketPrice);
+                    }
+                 }
+              }
+           } catch(e) { console.error("Yahoo fetch error", e) }
+        };
+
+        await fetchYahoo();
+        
+        // 3. Set interval to poll live price (for hackathon demo)
+        pollInterval = setInterval(fetchYahoo, 5000);
+
       } catch (err) {
         console.error("Fetch failed", err);
       } finally {
@@ -60,25 +80,11 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
     
     fetchData();
 
-    // 3. Socket.io Real-Time Connection
-    const socket = io(backendUrl);
-    socket.on('connect', () => {
-       socket.emit('subscribe', symbol);
-    });
-
-    socket.on('marketUpdate', (data: any[]) => {
-       if (!isMounted) return;
-       const quote = data.find(q => q.symbol === symbol);
-       if (quote && quote.price) {
-          setLivePrice(quote.price);
-       }
-    });
-
     return () => { 
       isMounted = false; 
-      socket.disconnect();
+      if (pollInterval) clearInterval(pollInterval);
     }
-  }, [symbol, proxyUrl, backendUrl]);
+  }, [symbol, proxyUrl]);
 
   const executeTrade = async () => {
     if (!livePrice || quantity <= 0) return;
