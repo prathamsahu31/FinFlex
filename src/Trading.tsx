@@ -7,6 +7,7 @@ import { TabComponentProps } from './constants';
 import StockDetail from './StockDetail';
 
 export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: TabComponentProps & { user: any, proxyUrl?: string }) {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
   const [activeStock, setActiveStock] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [gamification, setGamification] = useState({ coins: 10000, xp: 0, level: 1 });
@@ -62,11 +63,34 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
     fetchML();
   }, [user, proxyUrl]);
 
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const delayFn = setTimeout(async () => {
+      try {
+        const res = await fetch(`${backendUrl}/api/stock/search?q=${searchQuery}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+        }
+      } catch (err) {
+        console.error("Search failed");
+      }
+    }, 300);
+    return () => clearTimeout(delayFn);
+  }, [searchQuery, backendUrl]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setActiveStock(searchQuery.toUpperCase().trim());
       setSearchQuery('');
+      setShowDropdown(false);
     }
   };
 
@@ -80,6 +104,9 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
              user={user} 
              onBack={() => setActiveStock(null)} 
              coins={gamification.coins}
+             onTradeComplete={(newCoins: number, newXp: number, newLevel: number) => {
+                setGamification(prev => ({...prev, coins: newCoins, xp: newXp, level: newLevel}));
+             }}
            />;
   }
 
@@ -139,7 +166,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar with Autocomplete Dropdown */}
       <form onSubmit={handleSearch} className="relative z-20">
         <div className="flex items-center">
           <div className="relative flex-1">
@@ -147,12 +174,36 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
             <input 
               type="text" 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
               placeholder="ENTER STOCK SYMBOL (e.g., TSLA, AAPL)..." 
               className="w-full h-16 bg-white border-4 border-black pl-14 pr-6 font-black text-xl uppercase tracking-widest placeholder:text-black/20 focus:outline-none focus:bg-gumroad-pink/5 transition-colors neo-brutalism-shadow-sm"
             />
+            {showDropdown && searchQuery && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black neo-brutalism-shadow-sm flex flex-col z-30">
+                {searchResults.map((stock: any) => (
+                  <div 
+                    key={stock.symbol}
+                    onMouseDown={(e) => {
+                       e.preventDefault(); // Prevent onBlur from firing before click
+                       setActiveStock(stock.symbol);
+                       setSearchQuery('');
+                       setShowDropdown(false);
+                    }}
+                    className="flex justify-between items-center p-4 border-b-2 border-black/10 hover:bg-gumroad-yellow cursor-pointer transition-colors"
+                  >
+                     <span className="font-black font-headline text-lg text-black">{stock.symbol}</span>
+                     <span className="font-bold text-xs uppercase tracking-widest text-black/60">{stock.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <button type="submit" className="h-16 px-8 bg-black text-white border-4 border-black font-black uppercase tracking-widest hover:bg-gumroad-pink hover:text-black transition-colors neo-brutalism-shadow-sm -ml-4 cursor-pointer hover:-translate-y-1">
+          <button type="submit" className="h-16 px-8 bg-black text-white border-4 border-black font-black uppercase tracking-widest hover:bg-gumroad-pink hover:text-black transition-colors neo-brutalism-shadow-sm -ml-4 cursor-pointer hover:-translate-y-1 z-10">
             Trade
           </button>
         </div>

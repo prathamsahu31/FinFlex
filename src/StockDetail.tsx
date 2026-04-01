@@ -6,7 +6,7 @@ import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { io } from 'socket.io-client';
 
-export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
+export default function StockDetail({ symbol, user, coins, onBack, onTradeComplete, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
   const [history, setHistory] = useState<any[]>([]);
   const [livePrice, setLivePrice] = useState<number | null>(null);
@@ -113,6 +113,9 @@ export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = im
 
         // Fetch current gamification state first
         const { data: gamification } = await supabase.from('user_gamification').select('*').eq('id', user.id).single();
+        let currentXp = gamification?.xp || 0;
+        let currentLevel = gamification?.level || 1;
+
         if (gamification) {
            const xpEarned = (prediction?.confidence_score || 50) > 80 ? 50 : 25;
            let newXp = Number(gamification.xp) + xpEarned;
@@ -124,6 +127,9 @@ export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = im
               newLevel += 1;
            }
 
+           currentXp = newXp;
+           currentLevel = newLevel;
+
            await supabase.from('user_gamification').update({ 
               coins: coins - totalCost,
               xp: newXp,
@@ -132,8 +138,58 @@ export default function StockDetail({ symbol, user, coins, onBack, proxyUrl = im
         }
 
         setMessage({ type: 'success', text: `Successfully bought ${quantity} share(s) of ${symbol}.` });
-      } 
-      // (Sell logic goes here, simplified for hackathon to just check balance)
+        if (onTradeComplete) onTradeComplete(coins - totalCost, currentXp, currentLevel);
+      } else if (orderType === 'SELL') {
+        // Sell logic checks if user holds enough shares
+        const { data: holding } = await supabase.from('stock_holdings')
+                                  .select('*')
+                                  .eq('user_id', user.id)
+                                  .eq('symbol', symbol)
+                                  .maybeSingle();
+                                  
+        if (!holding || holding.total_quantity < quantity) {
+          setMessage({ type: 'error', text: `Insufficient shares. You only own ${holding?.total_quantity || 0}.` });
+          setTradeLoading(false);
+          return;
+        }
+
+        const { error: tradeErr } = await supabase.from('stock_trades').insert({
+          user_id: user.id, symbol, type: 'SELL', quantity, price_at_execution: livePrice
+        });
+        if (tradeErr) throw tradeErr;
+
+        const newTotal = Number(holding.total_quantity) - quantity;
+        await supabase.from('stock_holdings').update({ total_quantity: newTotal }).eq('id', holding.id);
+
+        // Update Gamification Coins (add profits)
+        const { data: gamification } = await supabase.from('user_gamification').select('*').eq('id', user.id).single();
+        let currentXp = gamification?.xp || 0;
+        let currentLevel = gamification?.level || 1;
+        
+        if (gamification) {
+           const xpEarned = 10; // Base XP for completing a trade
+           let newXp = Number(gamification.xp) + xpEarned;
+           let newLevel = Number(gamification.level);
+           const xpThreshold = newLevel * 1000;
+
+           if (newXp >= xpThreshold) {
+              newXp -= xpThreshold;
+              newLevel += 1;
+           }
+           
+           currentXp = newXp;
+           currentLevel = newLevel;
+
+           await supabase.from('user_gamification').update({ 
+              coins: coins + totalCost,
+              xp: newXp,
+              level: newLevel
+           }).eq('id', user.id);
+        }
+
+        setMessage({ type: 'success', text: `Successfully sold ${quantity} share(s) of ${symbol}.` });
+        if (onTradeComplete) onTradeComplete(coins + totalCost, currentXp, currentLevel);
+      }
 
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || "Trade execution failed." });

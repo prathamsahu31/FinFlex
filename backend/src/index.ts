@@ -100,6 +100,27 @@ app.get('/api/stock/quote/:symbol', async (req, res) => {
   }
 });
 
+app.get('/api/stock/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || typeof q !== 'string') return res.json([]);
+    
+    const results = await yahooFinance.search(q);
+    const mapped = results.quotes
+      .filter((quote: any) => ['EQUITY', 'CRYPTOCURRENCY', 'ETF'].includes(quote.quoteType))
+      .slice(0, 5)
+      .map((quote: any) => ({
+        symbol: quote.symbol,
+        name: quote.shortname || quote.longname || quote.symbol
+      }));
+      
+    res.json(mapped);
+  } catch (error: any) {
+    console.error('YF search error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Trade execution logic will be moved to a controller, kept simple here to boot
 app.post('/api/trade/execute', async (req, res) => {
   // We'll implement this directly in the React frontend via Supabase Client 

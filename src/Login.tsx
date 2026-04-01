@@ -41,12 +41,46 @@ export default function Login({ onBack }: LoginProps) {
     setErrorText('');
     try {
       const credentials = { email: 'guest@finflex.com', password: '1234qwerty@' };
-      const { error } = await supabase.auth.signInWithPassword(credentials);
+      let { data: authData, error } = await supabase.auth.signInWithPassword(credentials);
       
       if (error) {
         // Fallback: auto-create the guest account if it does not exist
-        const { error: signUpError } = await supabase.auth.signUp(credentials);
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp(credentials);
         if (signUpError) throw signUpError;
+        authData = signUpData;
+      }
+
+      // --- DEV LOGIN DUMMY DATA SEEDING ---
+      if (authData?.user) {
+        const userId = authData.user.id;
+        
+        // 1. Reset & Seed Gamification
+        await supabase.from('user_gamification').upsert({
+          id: userId,
+          level: 5,
+          xp: 4500,
+          coins: 50000
+        });
+
+        // 2. Reset & Seed Transactions
+        await supabase.from('transactions').delete().eq('user_id', userId);
+        const dummyTxs = [
+          { user_id: userId, vendor: "Stripe Payout", category: "Income", amount: 85000, type: "income", date: new Date().toISOString() },
+          { user_id: userId, vendor: "Swiggy", category: "Food", amount: 650, type: "expense", date: new Date(Date.now() - 86400000).toISOString() },
+          { user_id: userId, vendor: "Netflix", category: "Entertainment", amount: 649, type: "expense", date: new Date(Date.now() - 172800000).toISOString() },
+          { user_id: userId, vendor: "Uber Transport", category: "Transport", amount: 320, type: "expense", date: new Date(Date.now() - 259200000).toISOString() },
+          { user_id: userId, vendor: "Blinkit", category: "Groceries", amount: 1200, type: "expense", date: new Date(Date.now() - 345600000).toISOString() }
+        ];
+        await supabase.from('transactions').insert(dummyTxs);
+
+        // 3. Reset & Seed Stock Holdings
+        await supabase.from('stock_holdings').delete().eq('user_id', userId);
+        const dummyHoldings = [
+          { user_id: userId, symbol: "AAPL", total_quantity: 15, avg_buy_price: 165.20 },
+          { user_id: userId, symbol: "NVDA", total_quantity: 5, avg_buy_price: 650.00 },
+          { user_id: userId, symbol: "TSLA", total_quantity: 10, avg_buy_price: 180.50 }
+        ];
+        await supabase.from('stock_holdings').insert(dummyHoldings);
       }
     } catch (err: any) {
       setErrorText(err.message);
