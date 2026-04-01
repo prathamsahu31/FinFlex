@@ -5,7 +5,7 @@ import { TrendingUp, TrendingDown, ArrowLeft, Loader2, Sparkles, Activity, Alert
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
-export default function StockDetail({ symbol, user, coins, onBack, onTradeComplete, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
+export default function StockDetail({ symbol, assetType = 'crypto', user, coins, onBack, onTradeComplete, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
   const [history, setHistory] = useState<any[]>([]);
   const [livePrice, setLivePrice] = useState<number | null>(null);
@@ -40,7 +40,7 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
            }
         }
 
-        // 2. Fetch Live Price & History from Binance exactly (no CORS needed)
+        // 2. Dual-Fetcher: Crypto (Binance) vs Equities (Yahoo via proxy)
         const fetchBinance = async () => {
            try {
               const histRes = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=1d&limit=30`);
@@ -61,10 +61,38 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
            } catch(e) { console.error("Crypto fetch error", e) }
         };
 
-        await fetchBinance();
-        
-        // 3. Set interval to poll live price (for hackathon demo)
-        pollInterval = setInterval(fetchBinance, 3000);
+        const fetchYahoo = async () => {
+           try {
+              const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1mo`;
+              const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+              if (res.ok) {
+                 const data = await res.json();
+                 const result = data?.chart?.result?.[0];
+                 if (result) {
+                    const timestamps = result.timestamp || [];
+                    const closes = result.indicators?.quote?.[0]?.close || [];
+                    
+                    const newHistory = timestamps.map((ts: number, i: number) => ({
+                       date: new Date(ts * 1000).toLocaleDateString(),
+                       price: closes[i] ? Number(closes[i].toFixed(2)) : null
+                    })).filter((d: any) => d.price !== null);
+
+                    if (isMounted) {
+                       setHistory(newHistory);
+                       setLivePrice(result.meta.regularMarketPrice);
+                    }
+                 }
+              }
+           } catch(e) { console.error("Yahoo fetch error", e) }
+        };
+
+        if (assetType === 'crypto') {
+           await fetchBinance();
+           pollInterval = setInterval(fetchBinance, 3000);
+        } else {
+           await fetchYahoo();
+           pollInterval = setInterval(fetchYahoo, 5000);
+        }
 
       } catch (err) {
         console.error("Fetch failed", err);
@@ -218,7 +246,7 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
              <h1 className="text-6xl font-black font-headline text-black tracking-tighter uppercase bg-gumroad-yellow px-4 border-4 border-black inline-block neo-brutalism-shadow-sm rotate-1">
                {symbol}
              </h1>
-             <span className="bg-black text-white px-3 py-1 font-black text-xs uppercase tracking-widest">Crypto</span>
+             <span className="bg-black text-white px-3 py-1 font-black text-xs uppercase tracking-widest">{assetType === 'crypto' ? 'Crypto' : 'Equities'}</span>
            </div>
            {livePrice && (
              <div className="flex items-end gap-3">

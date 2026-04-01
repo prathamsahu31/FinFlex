@@ -6,20 +6,18 @@ import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import StockDetail from './StockDetail';
 
-// Reliable Crypto Pairs for Presentation (Bypasses all CORS/API Key issues)
-const CRYPTO_PAIRS = [
-  { symbol: "BTC", name: "Bitcoin" },
-  { symbol: "ETH", name: "Ethereum" },
-  { symbol: "SOL", name: "Solana" },
-  { symbol: "BNB", name: "Binance Coin" },
-  { symbol: "XRP", name: "Ripple" },
-  { symbol: "ADA", name: "Cardano" },
-  { symbol: "AVAX", name: "Avalanche" },
-  { symbol: "DOGE", name: "Dogecoin" },
-  { symbol: "DOT", name: "Polkadot" },
-  { symbol: "LINK", name: "Chainlink" },
-  { symbol: "MATIC", name: "Polygon" },
-  { symbol: "SHIB", name: "Shiba Inu" }
+// Reliable Hybrid Pairs for Presentation
+const HYBRID_PAIRS = [
+  { symbol: "BTC", name: "Bitcoin", type: "crypto" },
+  { symbol: "ETH", name: "Ethereum", type: "crypto" },
+  { symbol: "SOL", name: "Solana", type: "crypto" },
+  { symbol: "BNB", name: "Binance Coin", type: "crypto" },
+  { symbol: "DOGE", name: "Dogecoin", type: "crypto" },
+  { symbol: "TSLA", name: "Tesla, Inc.", type: "stock" },
+  { symbol: "AAPL", name: "Apple Inc.", type: "stock" },
+  { symbol: "NVDA", name: "NVIDIA Corp.", type: "stock" },
+  { symbol: "MSFT", name: "Microsoft Corp.", type: "stock" },
+  { symbol: "GOOGL", name: "Alphabet Inc.", type: "stock" }
 ];
 
 export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: TabComponentProps & { user: any, proxyUrl?: string }) {
@@ -89,7 +87,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
     }
     
     // Instant local search for highest reliability during presentation
-    const filtered = CRYPTO_PAIRS.filter(c => 
+    const filtered = HYBRID_PAIRS.filter(c => 
       c.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
       c.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).slice(0, 5);
@@ -111,8 +109,10 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
 
   // If a stock is selected, render the detail view
   if (activeStock) {
+    const assetData = HYBRID_PAIRS.find(p => p.symbol === activeStock);
     return <StockDetail 
              symbol={activeStock} 
+             assetType={assetData?.type || 'crypto'}
              user={user} 
              onBack={() => setActiveStock(null)} 
              coins={gamification.coins}
@@ -192,7 +192,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
               }}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-              placeholder="ENTER CRYPTO SYMBOL (e.g., BTC, ETH, SOL)..." 
+              placeholder="ENTER SYMBOL (e.g., BTC, AAPL, SOL, TSLA)..." 
               className="w-full h-16 bg-white border-4 border-black pl-14 pr-6 font-black text-xl uppercase tracking-widest placeholder:text-black/20 focus:outline-none focus:bg-gumroad-pink/5 transition-colors neo-brutalism-shadow-sm"
             />
             {showDropdown && searchQuery && searchResults.length > 0 && (
