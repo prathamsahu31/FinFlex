@@ -6,6 +6,22 @@ import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import StockDetail from './StockDetail';
 
+// Reliable Crypto Pairs for Presentation (Bypasses all CORS/API Key issues)
+const CRYPTO_PAIRS = [
+  { symbol: "BTC", name: "Bitcoin" },
+  { symbol: "ETH", name: "Ethereum" },
+  { symbol: "SOL", name: "Solana" },
+  { symbol: "BNB", name: "Binance Coin" },
+  { symbol: "XRP", name: "Ripple" },
+  { symbol: "ADA", name: "Cardano" },
+  { symbol: "AVAX", name: "Avalanche" },
+  { symbol: "DOGE", name: "Dogecoin" },
+  { symbol: "DOT", name: "Polkadot" },
+  { symbol: "LINK", name: "Chainlink" },
+  { symbol: "MATIC", name: "Polygon" },
+  { symbol: "SHIB", name: "Shiba Inu" }
+];
+
 export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: TabComponentProps & { user: any, proxyUrl?: string }) {
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
   const [activeStock, setActiveStock] = useState<string | null>(null);
@@ -71,28 +87,15 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
       setSearchResults([]);
       return;
     }
-    const delayFn = setTimeout(async () => {
-      try {
-        const yahooUrl = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(searchQuery)}`;
-        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`);
-        
-        if (res.ok) {
-          const rawData = await res.json();
-          const mapped = (rawData.quotes || [])
-            .filter((quote: any) => ['EQUITY', 'CRYPTOCURRENCY', 'ETF'].includes(quote.quoteType))
-            .slice(0, 5)
-            .map((quote: any) => ({
-              symbol: quote.symbol,
-              name: quote.shortname || quote.longname || quote.symbol
-            }));
-          setSearchResults(mapped);
-        }
-      } catch (err) {
-        console.error("Search failed");
-      }
-    }, 300);
-    return () => clearTimeout(delayFn);
-  }, [searchQuery, backendUrl]);
+    
+    // Instant local search for highest reliability during presentation
+    const filtered = CRYPTO_PAIRS.filter(c => 
+      c.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      c.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 5);
+    
+    setSearchResults(filtered);
+  }, [searchQuery]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +192,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
               }}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-              placeholder="ENTER STOCK SYMBOL (e.g., TSLA, AAPL)..." 
+              placeholder="ENTER CRYPTO SYMBOL (e.g., BTC, ETH, SOL)..." 
               className="w-full h-16 bg-white border-4 border-black pl-14 pr-6 font-black text-xl uppercase tracking-widest placeholder:text-black/20 focus:outline-none focus:bg-gumroad-pink/5 transition-colors neo-brutalism-shadow-sm"
             />
             {showDropdown && searchQuery && searchResults.length > 0 && (

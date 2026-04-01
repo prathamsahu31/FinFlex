@@ -40,36 +40,31 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
            }
         }
 
-        // 2. Fetch Live Price & History from Yahoo directly via CORS proxy
-        const fetchYahoo = async () => {
+        // 2. Fetch Live Price & History from Binance exactly (no CORS needed)
+        const fetchBinance = async () => {
            try {
-              const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1mo`;
-              const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
-              if (res.ok) {
-                 const data = await res.json();
-                 const result = data?.chart?.result?.[0];
-                 if (result) {
-                    const timestamps = result.timestamp || [];
-                    const closes = result.indicators?.quote?.[0]?.close || [];
-                    
-                    const newHistory = timestamps.map((ts: number, i: number) => ({
-                       date: new Date(ts * 1000).toLocaleDateString(),
-                       price: closes[i] ? Number(closes[i].toFixed(2)) : null
-                    })).filter((d: any) => d.price !== null);
-
-                    if (isMounted) {
-                       setHistory(newHistory);
-                       setLivePrice(result.meta.regularMarketPrice);
-                    }
-                 }
+              const histRes = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=1d&limit=30`);
+              if (histRes.ok) {
+                 const data = await histRes.json();
+                 const newHistory = data.map((d: any) => ({
+                    date: new Date(d[0]).toLocaleDateString(),
+                    price: Number(Number(d[4]).toFixed(2))
+                 }));
+                 if (isMounted) setHistory(newHistory);
               }
-           } catch(e) { console.error("Yahoo fetch error", e) }
+
+              const priceRes = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}USDT`);
+              if (priceRes.ok) {
+                 const priceData = await priceRes.json();
+                 if (isMounted) setLivePrice(Number(Number(priceData.price).toFixed(2)));
+              }
+           } catch(e) { console.error("Crypto fetch error", e) }
         };
 
-        await fetchYahoo();
+        await fetchBinance();
         
         // 3. Set interval to poll live price (for hackathon demo)
-        pollInterval = setInterval(fetchYahoo, 5000);
+        pollInterval = setInterval(fetchBinance, 3000);
 
       } catch (err) {
         console.error("Fetch failed", err);
@@ -223,7 +218,7 @@ export default function StockDetail({ symbol, user, coins, onBack, onTradeComple
              <h1 className="text-6xl font-black font-headline text-black tracking-tighter uppercase bg-gumroad-yellow px-4 border-4 border-black inline-block neo-brutalism-shadow-sm rotate-1">
                {symbol}
              </h1>
-             <span className="bg-black text-white px-3 py-1 font-black text-xs uppercase tracking-widest">Equities</span>
+             <span className="bg-black text-white px-3 py-1 font-black text-xs uppercase tracking-widest">Crypto</span>
            </div>
            {livePrice && (
              <div className="flex items-end gap-3">
