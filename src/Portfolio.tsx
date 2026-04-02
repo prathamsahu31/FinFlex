@@ -13,7 +13,7 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
   const [holdings, setHoldings] = useState<any[]>([]);
   const [livePrices, setLivePrices] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(!user);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+  const backendUrl = window.location.origin;
 
   // FIRE Calculator State
   const [currentAge, setCurrentAge] = useState(28);
@@ -59,11 +59,13 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
 
     socket.on('marketUpdate', (data: any[]) => {
        if (!isMounted) return;
-       const nextPrices = { ...livePrices };
-       data.forEach(q => {
-         nextPrices[q.symbol] = q.price;
+       setLivePrices(prev => {
+         const nextPrices = { ...prev };
+         data.forEach(q => {
+           nextPrices[q.symbol] = q.price;
+         });
+         return nextPrices;
        });
-       setLivePrices(nextPrices);
     });
 
     return () => { 

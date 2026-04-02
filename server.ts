@@ -121,9 +121,8 @@ async function startServer() {
     }
   });
 
-  app.post('/api/trade/execute', async (req, res) => {
-    res.json({ status: 'Endpoint deprecated: Use Supabase client directly in frontend for trades to leverage implicit RLS auth.' });
-  });
+  // Trade execution is handled directly via Supabase client in the frontend
+  // to leverage implicit RLS auth. No server endpoint needed.
 
   // --- Hugging Face Native Integration ---
   const hf = new HfInference(process.env.HF_API_KEY || process.env.VITE_HF_API_KEY);
@@ -135,7 +134,7 @@ async function startServer() {
       const prompt = `Analyze the stock or crypto ticker "${symbol}". Predict if its very short-term trend is Bullish or Bearish and give a confidence score from 50 to 99. Output ONLY a valid JSON object in this exact format: {"predicted_trend": "Bullish", "confidence_score": 85}. Do not include markdown formatting or reasoning.`;
       
       // Fallback
-      let prediction = { predicted_trend: "Bullish", confidence_score: 82.5, current_price: 0 };
+      let prediction: any = { predicted_trend: "Bullish", confidence_score: 82.5, is_fallback: true };
       
       if (hf) {
         try {
@@ -151,6 +150,7 @@ async function startServer() {
             const parsed = JSON.parse(jsonMatch[0]);
             prediction.predicted_trend = parsed.predicted_trend || prediction.predicted_trend;
             prediction.confidence_score = parsed.confidence_score || prediction.confidence_score;
+            prediction.is_fallback = false;
           }
         } catch (e: any) {
           console.error("HF Inference Error (Predict):", e.message);
@@ -255,17 +255,25 @@ async function startServer() {
 
     try {
       const symbols = Array.from(activeWatchlist);
-      const quotes: any = await yahooFinance.quote(symbols);
+      if (symbols.length === 0) return;
       
-      const formattedData = quotes.map((q: any) => ({
-        symbol: q.symbol,
-        price: q.regularMarketPrice,
-        change: q.regularMarketChangePercent,
-        volume: q.regularMarketVolume,
-        timestamp: Date.now()
-      }));
+      // yahoo-finance2 .quote() may return a single object or array
+      const rawQuotes: any = await yahooFinance.quote(symbols);
+      const quotesArray = Array.isArray(rawQuotes) ? rawQuotes : [rawQuotes];
+      
+      const formattedData = quotesArray
+        .filter((q: any) => q && q.symbol && q.regularMarketPrice)
+        .map((q: any) => ({
+          symbol: q.symbol,
+          price: q.regularMarketPrice,
+          change: q.regularMarketChangePercent,
+          volume: q.regularMarketVolume,
+          timestamp: Date.now()
+        }));
 
-      io.emit('marketUpdate', formattedData);
+      if (formattedData.length > 0) {
+        io.emit('marketUpdate', formattedData);
+      }
     } catch (error) {
       console.error('Error fetching live prices:', error);
     }

@@ -5,8 +5,8 @@ import { TrendingUp, TrendingDown, ArrowLeft, Loader2, Sparkles, Activity, Alert
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
-export default function StockDetail({ symbol, assetType = 'crypto', user, coins, onBack, onTradeComplete, proxyUrl = import.meta.env.VITE_ML_API_URL || '' }: any) {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+export default function StockDetail({ symbol, assetType = 'crypto', user, coins, onBack, onTradeComplete }: any) {
+  const backendUrl = window.location.origin;
   const [history, setHistory] = useState<any[]>([]);
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
@@ -29,71 +29,72 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
   const [tradeLoading, setTradeLoading] = useState(false);
   const [message, setMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
 
-  // Fetch initial data
+  // Fetch ML Prediction (only when symbol changes)
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchPrediction = async () => {
+      try {
+        const predRes = await fetch(`${backendUrl}/api/ml/predict/${symbol}`).catch(() => null);
+        if (predRes?.ok) {
+          const predData = await predRes.json();
+          if (isMounted) setPrediction(predData);
+        } else {
+          if (isMounted) setPrediction({ predicted_trend: 'Bullish', confidence_score: 82.5, is_fallback: true });
+        }
+      } catch (err) {
+        console.error("ML prediction fetch failed", err);
+        if (isMounted) setPrediction({ predicted_trend: 'Bullish', confidence_score: 82.5, is_fallback: true });
+      }
+    };
+
+    fetchPrediction();
+    return () => { isMounted = false; };
+  }, [symbol, backendUrl]);
+
+  // Fetch Chart Data (when symbol or period changes)
   useEffect(() => {
     let isMounted = true;
     let pollInterval: any;
 
-    const fetchData = async () => {
+    const fetchChart = async () => {
       setIsLoading(true);
-      
       try {
-        // 1. Fetch ML Prediction
-        const predRes = await fetch(`${proxyUrl}/api/ml/predict/${symbol}`).catch(() => null);
-        if (predRes?.ok) {
-           const predData = await predRes.json();
-           if (isMounted) {
-             setPrediction(predData);
-           }
-        } else {
-           if (isMounted) {
-             setPrediction({ predicted_trend: 'Bullish', confidence_score: 82.5, current_price: 150.25 });
-           }
-        }
-
-        // 2. Fetch Chart Data via Monolith
-        const fetchChart = async () => {
-           try {
-              const res = await fetch(`${backendUrl}/api/chart/${symbol}?period=${chartPeriod}`);
-              if (res.ok) {
-                 const result = await res.json();
-                 if (result && result.quotes) {
-                    const newHistory = result.quotes.map((q: any) => {
-                       const d = new Date(q.date);
-                       return {
-                          date: (chartPeriod === '1d' || chartPeriod === '5d') 
-                            ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                            : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: chartPeriod === '5y' ? 'numeric' : undefined }),
-                          price: Number(Number(q.close).toFixed(2))
-                       }
-                    }).filter((q: any) => q.price != null && !isNaN(q.price));
-                    
-                    if (isMounted) {
-                       setHistory(newHistory);
-                       setLivePrice(result.meta?.regularMarketPrice || newHistory[newHistory.length - 1]?.price);
-                    }
-                 }
+        const res = await fetch(`${backendUrl}/api/chart/${symbol}?period=${chartPeriod}`);
+        if (res.ok) {
+          const result = await res.json();
+          if (result && result.quotes) {
+            const newHistory = result.quotes.map((q: any) => {
+              const d = new Date(q.date);
+              return {
+                date: (chartPeriod === '1d' || chartPeriod === '5d') 
+                  ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                  : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: chartPeriod === '5y' ? 'numeric' : undefined }),
+                price: Number(Number(q.close).toFixed(2))
               }
-           } catch(e) { console.error("Chart fetch error", e) }
-        };
-
-        await fetchChart();
-        pollInterval = setInterval(fetchChart, 10000);
-
-      } catch (err) {
-        console.error("Fetch failed", err);
+            }).filter((q: any) => q.price != null && !isNaN(q.price));
+            
+            if (isMounted) {
+              setHistory(newHistory);
+              setLivePrice(result.meta?.regularMarketPrice || newHistory[newHistory.length - 1]?.price);
+            }
+          }
+        }
+      } catch(e) { 
+        console.error("Chart fetch error", e);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
-    
-    fetchData();
+
+    fetchChart();
+    pollInterval = setInterval(fetchChart, 10000);
 
     return () => { 
       isMounted = false; 
       if (pollInterval) clearInterval(pollInterval);
-    }
-  }, [symbol, proxyUrl, backendUrl, chartPeriod]);
+    };
+  }, [symbol, backendUrl, chartPeriod]);
 
   const executeTrade = async () => {
     if (!livePrice || quantity <= 0) return;
@@ -251,7 +252,7 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
                  <Sparkles size={24} className="text-black" />
               </div>
               <div>
-                 <p className="text-[10px] font-black uppercase tracking-widest text-black/60">AI Prediction</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-black/60">AI Prediction{prediction.is_fallback ? ' (Estimated)' : ''}</p>
                  <p className={cn("text-xl font-black uppercase tracking-tighter", prediction.predicted_trend === 'Bearish' ? 'text-red-500' : 'text-emerald-500')}>
                    {prediction.predicted_trend} ({prediction.confidence_score}%)
                  </p>

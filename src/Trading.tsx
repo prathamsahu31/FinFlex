@@ -20,8 +20,8 @@ const HYBRID_PAIRS = [
   { symbol: "GOOGL", name: "Alphabet Inc.", type: "stock" }
 ];
 
-export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_URL || '' }: TabComponentProps & { user: any, proxyUrl?: string }) {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+export default function Trading({ user }: TabComponentProps & { user: any }) {
+  const backendUrl = window.location.origin;
   const [activeStock, setActiveStock] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [gamification, setGamification] = useState({ coins: 10000, xp: 0, level: 1 });
@@ -46,12 +46,11 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
       if (error && error.code !== 'PGRST116') console.error('Error fetching gamification:', error);
     };
 
-    // 2. Fetch ML Recommendations (FastAPI)
+    // 2. Fetch ML Recommendations (Local Monolith)
     const fetchML = async () => {
       setIsLoadingRecs(true);
       try {
-        // We catch errors to elegantly fallback if Python isn't running
-        const recRes = await fetch(`${proxyUrl}/api/ml/recommendations/${user.id}`).catch(() => null);
+        const recRes = await fetch(`${backendUrl}/api/ml/recommendations/${user.id}`).catch(() => null);
         if (recRes?.ok) {
           const recData = await recRes.json();
           setRecommendations(recData.recommendations || []);
@@ -59,7 +58,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
           setRecommendations([]);
         }
 
-        const riskRes = await fetch(`${proxyUrl}/api/ml/risk-profile/${user.id}`).catch(() => null);
+        const riskRes = await fetch(`${backendUrl}/api/ml/risk-profile/${user.id}`).catch(() => null);
         if (riskRes?.ok) {
           const riskData = await riskRes.json();
           setRiskProfile(riskData);
@@ -75,7 +74,7 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
 
     fetchGamification();
     fetchML();
-  }, [user, proxyUrl]);
+  }, [user, backendUrl]);
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -93,7 +92,23 @@ export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_U
     ).slice(0, 5);
     
     setSearchResults(filtered);
-  }, [searchQuery]);
+
+    // If no local matches, search the backend for any ticker
+    if (filtered.length === 0 && searchQuery.length >= 2) {
+      const timer = setTimeout(async () => {
+        try {
+          const res = await fetch(`${backendUrl}/api/stock/search?q=${encodeURIComponent(searchQuery)}`);
+          if (res.ok) {
+            const data = await res.json();
+            setSearchResults(data.map((d: any) => ({ symbol: d.symbol, name: d.name, type: 'stock' })));
+          }
+        } catch (e) {
+          // Silently fail — local results already shown
+        }
+      }, 300); // debounce
+      return () => clearTimeout(timer);
+    }
+  }, [searchQuery, backendUrl]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -9,7 +9,11 @@ import {
   Filter,
   Briefcase,
   Loader2,
-  CalendarDays
+  CalendarDays,
+  Target,
+  Trophy,
+  Zap,
+  Crown
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -89,20 +93,19 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
       if (gamifData) setGamification(gamifData);
 
       // 3. Fetch Leaderboard dynamically
-      // For this, we fetch all user gamifications and join profiles for names
+      // Attempts to join profiles for display names. Falls back gracefully if join fails.
       const { data: lData } = await supabase
         .from('user_gamification')
-        .select('xp, level, profiles(name, avatar_url)')
+        .select('id, xp, level, profiles(name, avatar_url)')
         .order('xp', { ascending: false })
         .limit(10);
       
       if (lData) {
-        // Find current user's actual rank
         const formattedLdb = lData.map((d: any, idx) => ({
           rank: idx + 1,
-          name: d.profiles?.name || 'Anonymous',
-          xp: d.xp,
-          isMe: d.profiles?.name === user.user_metadata?.name || false
+          name: d.profiles?.name || `Trader ${(d.id as string).slice(0, 6)}`,
+          xp: d.xp || 0,
+          isMe: d.id === user.id
         }));
         setLeaderboard(formattedLdb);
       }
@@ -178,6 +181,25 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
 
   const cashTrackingData = trendData.slice(-7); 
   const portfolioTotalValue = useMemo(() => holdings.reduce((sum, h) => sum + (h.total_quantity * h.avg_buy_price), 0), [holdings]);
+
+  const achievements = useMemo(() => {
+    const list = [];
+    const totalValue = stats.balance + portfolioTotalValue;
+    
+    if (transactions.length > 0) {
+      list.push({ id: 'first_trade', title: 'First Trade', desc: 'Made your first financial move', icon: Zap, color: 'bg-gumroad-pink' });
+    }
+    if (totalValue >= 11000) { // 10% profit from 10000
+      list.push({ id: 'profit_10', title: '10% Gainer', desc: 'Grew your wealth by 10%', icon: TrendingUp, color: 'bg-gumroad-yellow' });
+    }
+    if (totalValue >= 20000) {
+      list.push({ id: 'whale', title: 'Whale Alert', desc: 'Portfolio hit ₹20k baseline', icon: Crown, color: 'bg-emerald-400' });
+    }
+    if (gamification.level >= 5) {
+      list.push({ id: 'pro', title: 'Pro Trader', desc: 'Reached Level 5', icon: Trophy, color: 'bg-indigo-400' });
+    }
+    return list;
+  }, [transactions, stats.balance, portfolioTotalValue, gamification.level]);
 
   if (isLoading) {
     return (
@@ -299,6 +321,25 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
                 </div>
               </div>
             </div>
+          </motion.div>
+          
+          {/* Achievements from Zip(1) Integration */}
+          <motion.div whileHover={{ x: 2, y: 2, boxShadow: 'none' }} transition={{ duration: 0.1 }} className="bg-white border-4 border-black p-6 neo-brutalism-shadow transition-all">
+             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
+                <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black flex items-center gap-2">
+                  <Trophy size={20} strokeWidth={3} className="text-gumroad-yellow" /> Badges
+                </h3>
+             </div>
+             <div className="flex flex-wrap gap-3">
+                {achievements.length === 0 ? (
+                  <p className="text-xs font-bold text-black/40 uppercase tracking-widest italic py-4">No badges earned yet. Start trading to unlock!</p>
+                ) : achievements.map((a) => (
+                  <div key={a.id} className={cn("px-4 py-2 border-4 border-black font-black uppercase text-[10px] tracking-widest neo-brutalism-shadow-xs flex items-center gap-2", a.color)}>
+                     <a.icon size={12} strokeWidth={4} />
+                     {a.title}
+                  </div>
+                ))}
+             </div>
           </motion.div>
 
           {/* Gamified Leaderboard Card (Live Server Data) */}

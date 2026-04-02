@@ -42,46 +42,58 @@ export default function FlexDecks({ setActiveTab, user }: TabComponentProps & { 
       let deckId: string;
 
       if (!decks || decks.length === 0) {
-        // Create default deck
         const { data: newDeck } = await supabase.from('flex_decks').insert([{ user_id: user.id, title: 'General Finance' }]).select();
         deckId = newDeck![0].id;
-        
-        // Seed default cards
-        const seedCards = INITIAL_DECKS.map(c => ({
-          deck_id: deckId, front_text: c.front_text, back_text: c.content
-        }));
+        const seedCards = INITIAL_DECKS.map(c => ({ deck_id: deckId, front_text: c.front_text, back_text: c.content }));
         await supabase.from('flashcards').insert(seedCards);
-      } else {
-        deckId = decks[0].id;
       }
 
-      const { data: flashcards } = await supabase.from('flashcards').select('*, flex_decks(title)').eq('flex_decks.user_id', user.id);
+      // Fetch all user's deck IDs first, then cards for those decks
+      const { data: userDecks } = await supabase.from('flex_decks').select('id, title').eq('user_id', user.id);
+      const deckIds = userDecks?.map(d => d.id) || [];
+      const deckTitleMap = new Map(userDecks?.map(d => [d.id, d.title]) || []);
+
+      let allFlashcards: any[] = [];
+      if (deckIds.length > 0) {
+        const { data: flashcards } = await supabase.from('flashcards').select('*').in('deck_id', deckIds);
+        allFlashcards = flashcards || [];
+      }
+
+      const { data: progress } = await supabase.from('flashcard_progress').select('card_id').eq('user_id', user.id).eq('is_mastered', true);
       
-      if (flashcards) {
-        const formatted = flashcards.map((c, i) => ({
+      const masteredIds = new Set(progress?.map(p => p.card_id) || []);
+
+      if (allFlashcards.length > 0) {
+        const all = allFlashcards.map((c, i) => ({
           id: c.id,
           title: c.front_text,
           content: c.back_text,
-          category: c.flex_decks?.title || 'Finance',
+          category: deckTitleMap.get(c.deck_id) || 'Finance',
           color: COLORS[i % COLORS.length]
         }));
-        setAllCards(formatted);
-        setCards(formatted);
+        setAllCards(all);
+        setCards(all.filter(c => !masteredIds.has(c.id)));
       }
       setIsLoading(false);
     };
-
     initCards();
   }, []);
 
-  const handleSwipe = (id: string, direction: 'left' | 'right') => {
+  const handleSwipe = async (id: string, direction: 'left' | 'right') => {
+    if (direction === 'right' && supabase && user) {
+      await supabase.from('flashcard_progress').upsert({ user_id: user.id, card_id: id, is_mastered: true });
+    }
+    
     setSwiped(prev => [...prev, id]);
     setTimeout(() => {
       setCards(prev => prev.filter(c => c.id !== id));
     }, 300);
   };
 
-  const resetDecks = () => {
+  const resetDecks = async () => {
+    if (supabase && user) {
+      await supabase.from('flashcard_progress').delete().eq('user_id', user.id);
+    }
     setCards(allCards);
     setSwiped([]);
   };
