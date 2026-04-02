@@ -124,10 +124,10 @@ export default function Trading({ user }: TabComponentProps & { user: any }) {
 
   // If a stock is selected, render the detail view
   if (activeStock) {
-    const assetData = HYBRID_PAIRS.find(p => p.symbol === activeStock);
+    const assetData = HYBRID_PAIRS.find(p => p.symbol === activeStock) || searchResults.find(r => r.symbol === activeStock);
     return <StockDetail 
              symbol={activeStock} 
-             assetType={assetData?.type || 'crypto'}
+             assetType={assetData?.type || 'stock'}
              user={user} 
              onBack={() => setActiveStock(null)} 
              coins={gamification.coins}

@@ -7,8 +7,11 @@ import { createClient } from '@supabase/supabase-js';
 // --- Monolithic additions ---
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 import { HfInference } from '@huggingface/inference';
+
+// yahoo-finance2 v3 requires instantiation
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 async function startServer() {
   const app = express();
