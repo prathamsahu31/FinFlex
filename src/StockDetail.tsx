@@ -11,6 +11,17 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [chartPeriod, setChartPeriod] = useState('1mo');
+  
+  const periods = [
+    { label: '1D', value: '1d' },
+    { label: '5D', value: '5d' },
+    { label: '1M', value: '1mo' },
+    { label: '3M', value: '3mo' },
+    { label: '6M', value: '6mo' },
+    { label: '1Y', value: '1y' },
+    { label: '5Y', value: '5y' },
+  ];
   
   // Trade state
   const [quantity, setQuantity] = useState<number>(1);
@@ -40,59 +51,34 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
            }
         }
 
-        // 2. Dual-Fetcher: Crypto (Binance) vs Equities (Yahoo via proxy)
-        const fetchBinance = async () => {
+        // 2. Fetch Chart Data via Monolith
+        const fetchChart = async () => {
            try {
-              const histRes = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=1d&limit=30`);
-              if (histRes.ok) {
-                 const data = await histRes.json();
-                 const newHistory = data.map((d: any) => ({
-                    date: new Date(d[0]).toLocaleDateString(),
-                    price: Number(Number(d[4]).toFixed(2))
-                 }));
-                 if (isMounted) setHistory(newHistory);
-              }
-
-              const priceRes = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}USDT`);
-              if (priceRes.ok) {
-                 const priceData = await priceRes.json();
-                 if (isMounted) setLivePrice(Number(Number(priceData.price).toFixed(2)));
-              }
-           } catch(e) { console.error("Crypto fetch error", e) }
-        };
-
-        const fetchYahoo = async () => {
-           try {
-              const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1mo`;
-              const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+              const res = await fetch(`${backendUrl}/api/chart/${symbol}?period=${chartPeriod}`);
               if (res.ok) {
-                 const data = await res.json();
-                 const result = data?.chart?.result?.[0];
-                 if (result) {
-                    const timestamps = result.timestamp || [];
-                    const closes = result.indicators?.quote?.[0]?.close || [];
+                 const result = await res.json();
+                 if (result && result.quotes) {
+                    const newHistory = result.quotes.map((q: any) => {
+                       const d = new Date(q.date);
+                       return {
+                          date: (chartPeriod === '1d' || chartPeriod === '5d') 
+                            ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                            : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: chartPeriod === '5y' ? 'numeric' : undefined }),
+                          price: Number(Number(q.close).toFixed(2))
+                       }
+                    }).filter((q: any) => q.price != null && !isNaN(q.price));
                     
-                    const newHistory = timestamps.map((ts: number, i: number) => ({
-                       date: new Date(ts * 1000).toLocaleDateString(),
-                       price: closes[i] ? Number(closes[i].toFixed(2)) : null
-                    })).filter((d: any) => d.price !== null);
-
                     if (isMounted) {
                        setHistory(newHistory);
-                       setLivePrice(result.meta.regularMarketPrice);
+                       setLivePrice(result.meta?.regularMarketPrice || newHistory[newHistory.length - 1]?.price);
                     }
                  }
               }
-           } catch(e) { console.error("Yahoo fetch error", e) }
+           } catch(e) { console.error("Chart fetch error", e) }
         };
 
-        if (assetType === 'crypto') {
-           await fetchBinance();
-           pollInterval = setInterval(fetchBinance, 3000);
-        } else {
-           await fetchYahoo();
-           pollInterval = setInterval(fetchYahoo, 5000);
-        }
+        await fetchChart();
+        pollInterval = setInterval(fetchChart, 10000);
 
       } catch (err) {
         console.error("Fetch failed", err);
@@ -107,7 +93,7 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
       isMounted = false; 
       if (pollInterval) clearInterval(pollInterval);
     }
-  }, [symbol, proxyUrl]);
+  }, [symbol, proxyUrl, backendUrl, chartPeriod]);
 
   const executeTrade = async () => {
     if (!livePrice || quantity <= 0) return;
@@ -277,7 +263,25 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Chart Area */}
-        <div className="lg:col-span-2 bg-white border-4 border-black p-1 pb-6 neo-brutalism-shadow-sm min-h-[400px] relative grid-bg">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex gap-2 mb-2 overflow-x-auto pb-2 scrollbar-hide">
+             {periods.map((p) => (
+                <button
+                   key={p.value}
+                   onClick={() => setChartPeriod(p.value)}
+                   className={cn(
+                      "px-4 py-2 border-4 border-black text-xs font-black uppercase tracking-widest transition-transform hover:-translate-y-1 neo-brutalism-shadow-xs",
+                      chartPeriod === p.value 
+                        ? 'bg-gumroad-pink text-black' 
+                        : 'bg-white text-black hover:bg-gumroad-yellow'
+                   )}
+                >
+                   {p.label}
+                </button>
+             ))}
+          </div>
+
+          <div className="bg-white border-4 border-black p-1 pb-6 neo-brutalism-shadow-sm min-h-[400px] relative grid-bg">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 size={40} className="animate-spin text-black" />
@@ -303,6 +307,7 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
               </AreaChart>
             </ResponsiveContainer>
           )}
+        </div>
         </div>
 
         {/* Action Panel */}

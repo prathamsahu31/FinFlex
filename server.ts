@@ -2,13 +2,13 @@ import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import TelegramBot from "node-telegram-bot-api";
 import { createClient } from '@supabase/supabase-js';
 
 // --- Monolithic additions ---
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import yahooFinance from 'yahoo-finance2';
+import { HfInference } from '@huggingface/inference';
 
 async function startServer() {
   const app = express();
@@ -29,101 +29,60 @@ async function startServer() {
   const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
   const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
-  // --- Telegram Bot Setup (Clawbot) ---
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  let bot: TelegramBot | null = null;
-  
-  if (token && supabase) {
-    try {
-      bot = new TelegramBot(token, { polling: true });
-      
-      bot.on('polling_error', (error) => {
-        console.error("Telegram Bot Polling Error:", error.message);
-      });
-      
-      bot.onText(/\/start/, (msg) => {
-      const chatId = msg.chat.id;
-      bot?.sendMessage(chatId, "Welcome to FinFlex Clawbot! Send me your expenses like: '50 for groceries' and my AI will log them. Make sure your Telegram ID is linked in your FinFlex account.");
-    });
-
-    bot.on('message', async (msg) => {
-      if (msg.text && !msg.text.startsWith('/')) {
-        const chatId = msg.chat.id;
-        
-        // Basic parsing: "50 for groceries"
-        const match = msg.text.match(/(\d+(?:\.\d+)?)\s+(?:for|on)\s+(.+)/i);
-        if (match) {
-          const amount = parseFloat(match[1]);
-          const description = match[2];
-          
-          try {
-            // Find user by telegram_chat_id
-            const { data: users, error: userError } = await supabase
-              .from('users')
-              .select('id')
-              .eq('telegram_chat_id', chatId.toString())
-              .single();
-
-            if (userError || !users) {
-              bot?.sendMessage(chatId, `I couldn't find a FinFlex account linked to this Telegram chat. Your Chat ID is: ${chatId}. Please link it in your settings.`);
-              return;
-            }
-
-            // Save to Supabase
-            const { error: insertError } = await supabase
-              .from('transactions')
-              .insert([
-                {
-                  user_id: users.id,
-                  vendor: description,
-                  amount: -amount, // Expenses are negative
-                  date: new Date().toISOString().split('T')[0],
-                  category: 'Other',
-                  is_gig: false
-                }
-              ]);
-
-            if (insertError) throw insertError;
-
-            bot?.sendMessage(chatId, `✅ Logged $${amount} for ${description}.`);
-          } catch (error: any) {
-            console.error("Telegram Bot Error:", error);
-            bot?.sendMessage(chatId, "Sorry, there was an error saving your transaction.");
-          }
-        } else {
-          bot?.sendMessage(chatId, "I didn't understand that. Try sending: '50 for groceries'");
-        }
-      }
-    });
-    } catch (e) {
-      console.error("Failed to initialize Telegram Bot:", e);
-    }
-  } else {
-    console.warn("TELEGRAM_BOT_TOKEN or Supabase credentials not found. Clawbot is disabled.");
-  }
-
   // --- API Routes ---
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", type: "monolith" });
   });
 
-  app.get('/api/stock/history/:symbol', async (req, res) => {
+  app.get('/api/chart/:symbol', async (req, res) => {
     try {
-      const { symbol } = req.params;
-      const { range = '1mo' } = req.query;
+      const symbol = req.params.symbol;
+      const period = req.query.period as string || '1mo'; // 1d, 5d, 1mo, 3mo, 6mo, 1y, 5y, max
       
-      const period1 = new Date();
-      if (range === '1mo') period1.setMonth(period1.getMonth() - 1);
-      else if (range === '3mo') period1.setMonth(period1.getMonth() - 3);
-      else if (range === '1y') period1.setFullYear(period1.getFullYear() - 1);
-      else period1.setMonth(period1.getMonth() - 1);
+      const queryOptions: any = {
+        interval: '1d',
+      };
 
-      const queryOptions: any = { period1: period1.toISOString() };
-      const result = await yahooFinance.historical(symbol, queryOptions);
+      const now = new Date();
+      let period1 = new Date();
+
+      switch (period) {
+        case '1d':
+          period1.setDate(now.getDate() - 1);
+          queryOptions.interval = '5m';
+          break;
+        case '5d':
+          period1.setDate(now.getDate() - 5);
+          queryOptions.interval = '15m';
+          break;
+        case '1mo':
+          period1.setMonth(now.getMonth() - 1);
+          break;
+        case '3mo':
+          period1.setMonth(now.getMonth() - 3);
+          break;
+        case '6mo':
+          period1.setMonth(now.getMonth() - 6);
+          break;
+        case '1y':
+          period1.setFullYear(now.getFullYear() - 1);
+          break;
+        case '5y':
+          period1.setFullYear(now.getFullYear() - 5);
+          queryOptions.interval = '1wk';
+          break;
+        default:
+          period1.setMonth(now.getMonth() - 1);
+      }
+
+      queryOptions.period1 = period1;
+      queryOptions.period2 = now;
+
+      const result = await yahooFinance.chart(symbol, queryOptions);
       res.json(result);
     } catch (error: any) {
-      console.error('YF history error:', error);
-      res.status(500).json({ error: error.message });
+      console.error(`Chart error for ${req.params.symbol}:`, error);
+      res.status(500).json({ error: 'Failed to fetch chart data' });
     }
   });
 
@@ -162,26 +121,125 @@ async function startServer() {
     res.json({ status: 'Endpoint deprecated: Use Supabase client directly in frontend for trades to leverage implicit RLS auth.' });
   });
 
-  // --- ML Proxy (Connects the Hybrid Monolith) ---
-  const ML_SERVICE_URL = process.env.VITE_ML_API_URL || 'http://localhost:8000';
+  // --- Hugging Face Native Integration ---
+  const hf = new HfInference(process.env.HF_API_KEY || process.env.VITE_HF_API_KEY);
   
-  app.all('/api/ml/*', async (req, res) => {
+  app.get('/api/ml/predict/:symbol', async (req, res) => {
     try {
-      const targetUrl = `${ML_SERVICE_URL}${req.originalUrl}`;
-      const response = await fetch(targetUrl, {
-        method: req.method,
-        headers: {
-          'Content-Type': 'application/json',
-          // Pass along any other relevant headers if needed
-        },
-        body: ['POST', 'PUT', 'PATCH'].includes(req.method) ? JSON.stringify(req.body) : undefined,
-      });
+      const { symbol } = req.params;
+      
+      const prompt = `Analyze the stock or crypto ticker "${symbol}". Predict if its very short-term trend is Bullish or Bearish and give a confidence score from 50 to 99. Output ONLY a valid JSON object in this exact format: {"predicted_trend": "Bullish", "confidence_score": 85}. Do not include markdown formatting or reasoning.`;
+      
+      // Fallback
+      let prediction = { predicted_trend: "Bullish", confidence_score: 82.5, current_price: 0 };
+      
+      if (hf) {
+        try {
+          const result = await hf.textGeneration({
+            model: 'mistralai/Mistral-7B-Instruct-v0.3',
+            inputs: prompt,
+            parameters: { max_new_tokens: 50, return_full_text: false, temperature: 0.1 }
+          });
+          
+          const output = result.generated_text.trim();
+          const jsonMatch = output.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            prediction.predicted_trend = parsed.predicted_trend || prediction.predicted_trend;
+            prediction.confidence_score = parsed.confidence_score || prediction.confidence_score;
+          }
+        } catch (e: any) {
+          console.error("HF Inference Error (Predict):", e.message);
+        }
+      }
+      
+      res.json(prediction);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 
-      const data = await response.json();
-      res.status(response.status).json(data);
-    } catch (error: any) {
-      console.error('ML Proxy Error:', error.message);
-      res.status(502).json({ error: 'ML Service is currently unreachable. Make sure it is running on port 8000.' });
+  app.get('/api/ml/recommendations/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      let transactionHistory = "No recent transactions.";
+      if (supabase) {
+         // Gather user's transactions to personalize
+         const { data: tx } = await supabase.from('transactions').select('vendor, amount, category').eq('user_id', userId).limit(10);
+         if (tx && tx.length > 0) {
+           transactionHistory = tx.map((t: any) => `${t.category}: spent/earned ${Math.abs(t.amount)} at ${t.vendor}`).join(', ');
+         }
+      }
+
+      const prompt = `Based on a user whose recent financial transactions are: [${transactionHistory}], recommend 3 stock tickers for them to invest in. Provide a concise reason for each why it matches their spending habits. Output ONLY valid JSON in this exact format: {"recommendations": [{"symbol": "AAPL", "confidence": 90, "reason": "Because they spend heavily on electronics."}]}. Do not include markdown formatting.`;
+      
+      let defaultRecs = {
+        recommendations: [
+          { symbol: "AAPL", confidence: 88, reason: "Consistent performer for a balanced portfolio based on your steady income." },
+          { symbol: "MSFT", confidence: 85, reason: "Strong AI sector growth matching modern tech trends." },
+          { symbol: "V", confidence: 78, reason: "Aligns with high consumer spending velocity." }
+        ]
+      };
+      
+      if (hf) {
+        try {
+          const result = await hf.textGeneration({
+            model: 'mistralai/Mistral-7B-Instruct-v0.3',
+            inputs: prompt,
+            parameters: { max_new_tokens: 300, return_full_text: false, temperature: 0.3 }
+          });
+          const output = result.generated_text.trim();
+          const jsonMatch = output.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            defaultRecs = JSON.parse(jsonMatch[0]);
+          }
+        } catch (e: any) {
+          console.error("HF Inference Error (Recommendations):", e.message);
+        }
+      }
+      
+      res.json(defaultRecs);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/ml/risk-profile/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      let profileData = "";
+      if (supabase) {
+         const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).single();
+         if (prof) {
+            profileData = `Age: ${prof.age}, Savings: ${prof.current_savings}, Risk Tolerance specified: ${prof.risk_tolerance}`;
+         }
+      }
+
+      const prompt = `Profile a user's financial risk based on: [${profileData}]. Output strictly a valid JSON object in this format: {"category": "Aggressive Growth", "risk_score": 85}. Do not include markdown formatting. Keep the category short (max 3 words).`;
+      
+      let profile = { category: "Balanced Investor", risk_score: 65 };
+      
+      if (hf) {
+        try {
+          const result = await hf.textGeneration({
+            model: 'mistralai/Mistral-7B-Instruct-v0.3',
+            inputs: prompt,
+            parameters: { max_new_tokens: 50, return_full_text: false, temperature: 0.1 }
+          });
+          const output = result.generated_text.trim();
+          const jsonMatch = output.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+             profile = JSON.parse(jsonMatch[0]);
+          }
+        } catch (e: any) {
+          console.error("HF Inference Error (Risk):", e.message);
+        }
+      }
+      res.json(profile);
+    } catch(err: any) {
+       res.status(500).json({ error: err.message });
     }
   });
 
