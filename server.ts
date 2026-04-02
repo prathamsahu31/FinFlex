@@ -5,11 +5,24 @@ import path from "path";
 import TelegramBot from "node-telegram-bot-api";
 import { createClient } from '@supabase/supabase-js';
 
+// --- Monolithic additions ---
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import yahooFinance from 'yahoo-finance2';
+
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   app.use(express.json());
+  
+  const httpServer = createServer(app);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST']
+    }
+  });
 
   // --- Supabase Setup ---
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -30,7 +43,7 @@ async function startServer() {
       
       bot.onText(/\/start/, (msg) => {
       const chatId = msg.chat.id;
-      bot?.sendMessage(chatId, "Welcome to FinFlex Clawbot! Send me your expenses like: '50 for groceries' and I will log them. Make sure your Telegram ID is linked in your FinFlex account.");
+      bot?.sendMessage(chatId, "Welcome to FinFlex Clawbot! Send me your expenses like: '50 for groceries' and my AI will log them. Make sure your Telegram ID is linked in your FinFlex account.");
     });
 
     bot.on('message', async (msg) => {
@@ -89,9 +102,127 @@ async function startServer() {
     console.warn("TELEGRAM_BOT_TOKEN or Supabase credentials not found. Clawbot is disabled.");
   }
 
-  // API routes
+  // --- API Routes ---
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", type: "monolith" });
+  });
+
+  app.get('/api/stock/history/:symbol', async (req, res) => {
+    try {
+      const { symbol } = req.params;
+      const { range = '1mo' } = req.query;
+      
+      const period1 = new Date();
+      if (range === '1mo') period1.setMonth(period1.getMonth() - 1);
+      else if (range === '3mo') period1.setMonth(period1.getMonth() - 3);
+      else if (range === '1y') period1.setFullYear(period1.getFullYear() - 1);
+      else period1.setMonth(period1.getMonth() - 1);
+
+      const queryOptions: any = { period1: period1.toISOString() };
+      const result = await yahooFinance.historical(symbol, queryOptions);
+      res.json(result);
+    } catch (error: any) {
+      console.error('YF history error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/stock/quote/:symbol', async (req, res) => {
+    try {
+      const { symbol } = req.params;
+      const quote = await yahooFinance.quote(symbol);
+      res.json(quote);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/stock/search', async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') return res.json([]);
+      
+      const results: any = await yahooFinance.search(q);
+      const mapped = results.quotes
+        .filter((quote: any) => ['EQUITY', 'CRYPTOCURRENCY', 'ETF'].includes(quote.quoteType))
+        .slice(0, 5)
+        .map((quote: any) => ({
+          symbol: quote.symbol,
+          name: quote.shortname || quote.longname || quote.symbol
+        }));
+        
+      res.json(mapped);
+    } catch (error: any) {
+      console.error('YF search error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/trade/execute', async (req, res) => {
+    res.json({ status: 'Endpoint deprecated: Use Supabase client directly in frontend for trades to leverage implicit RLS auth.' });
+  });
+
+  // --- ML Proxy (Connects the Hybrid Monolith) ---
+  const ML_SERVICE_URL = process.env.VITE_ML_API_URL || 'http://localhost:8000';
+  
+  app.all('/api/ml/*', async (req, res) => {
+    try {
+      const targetUrl = `${ML_SERVICE_URL}${req.originalUrl}`;
+      const response = await fetch(targetUrl, {
+        method: req.method,
+        headers: {
+          'Content-Type': 'application/json',
+          // Pass along any other relevant headers if needed
+        },
+        body: ['POST', 'PUT', 'PATCH'].includes(req.method) ? JSON.stringify(req.body) : undefined,
+      });
+
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error: any) {
+      console.error('ML Proxy Error:', error.message);
+      res.status(502).json({ error: 'ML Service is currently unreachable. Make sure it is running on port 8000.' });
+    }
+  });
+
+  // --- WebSockets: Real-time Market Data ---
+  let activeWatchlist = new Set(['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'SPY']);
+
+  const fetchLivePrices = async () => {
+    if (io.engine.clientsCount === 0) return; 
+
+    try {
+      const symbols = Array.from(activeWatchlist);
+      const quotes: any = await yahooFinance.quote(symbols);
+      
+      const formattedData = quotes.map((q: any) => ({
+        symbol: q.symbol,
+        price: q.regularMarketPrice,
+        change: q.regularMarketChangePercent,
+        volume: q.regularMarketVolume,
+        timestamp: Date.now()
+      }));
+
+      io.emit('marketUpdate', formattedData);
+    } catch (error) {
+      console.error('Error fetching live prices:', error);
+    }
+  };
+
+  // Poll every 7 seconds
+  setInterval(fetchLivePrices, 7000);
+
+  io.on('connection', (socket) => {
+    console.log(`Client connected: ${socket.id}`);
+    
+    socket.on('subscribe', (symbol: string) => {
+      activeWatchlist.add(symbol.toUpperCase());
+      console.log(`Added ${symbol} to active watchlist`);
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`Client disconnected: ${socket.id}`);
+    });
   });
 
   // Vite middleware for development
@@ -109,8 +240,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`Monolithic Server running on http://localhost:${PORT}`);
   });
 }
 

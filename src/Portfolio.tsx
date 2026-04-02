@@ -13,7 +13,7 @@ export default function Portfolio({ setActiveTab, user, profile }: TabComponentP
   const [holdings, setHoldings] = useState<any[]>([]);
   const [livePrices, setLivePrices] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(!user);
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
 
   // FIRE Calculator State
   const [currentAge, setCurrentAge] = useState(28);

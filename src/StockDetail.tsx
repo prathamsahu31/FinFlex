@@ -5,8 +5,8 @@ import { TrendingUp, TrendingDown, ArrowLeft, Loader2, Sparkles, Activity, Alert
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
-export default function StockDetail({ symbol, assetType = 'crypto', user, coins, onBack, onTradeComplete, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: any) {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+export default function StockDetail({ symbol, assetType = 'crypto', user, coins, onBack, onTradeComplete, proxyUrl = import.meta.env.VITE_ML_API_URL || '' }: any) {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
   const [history, setHistory] = useState<any[]>([]);
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [prediction, setPrediction] = useState<any>(null);

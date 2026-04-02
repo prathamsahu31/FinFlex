@@ -20,8 +20,8 @@ const HYBRID_PAIRS = [
   { symbol: "GOOGL", name: "Alphabet Inc.", type: "stock" }
 ];
 
-export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_URL || 'http://localhost:8000' }: TabComponentProps & { user: any, proxyUrl?: string }) {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+export default function Trading({ user, proxyUrl = import.meta.env.VITE_ML_API_URL || '' }: TabComponentProps & { user: any, proxyUrl?: string }) {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
   const [activeStock, setActiveStock] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [gamification, setGamification] = useState({ coins: 10000, xp: 0, level: 1 });
