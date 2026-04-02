@@ -36,7 +36,11 @@ async function startServer() {
 
   app.get('/api/chart/:symbol', async (req, res) => {
     try {
-      const symbol = req.params.symbol;
+      let symbol = req.params.symbol;
+      const cryptoTickers = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP', 'ADA', 'DOT'];
+      if (cryptoTickers.includes(symbol.toUpperCase())) {
+        symbol = `${symbol.toUpperCase()}-USD`;
+      }
       const period = req.query.period as string || '1mo'; // 1d, 5d, 1mo, 3mo, 6mo, 1y, 5y, max
       
       const queryOptions: any = {
