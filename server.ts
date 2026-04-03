@@ -11,7 +11,11 @@ import yahooFinance from 'yahoo-finance2';
 import { HfInference } from '@huggingface/inference';
 
 // Suppress the "Yahoo Finance Survey" console notice
-(yahooFinance as any).suppressNotices(['yahooSurvey']);
+try {
+  (yahooFinance as any).suppressNotices(['yahooSurvey']);
+} catch (e) {
+  // Ignore if method doesn't exist in this version
+}
 
 async function startServer() {
   const app = express();
@@ -364,4 +368,8 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error('\n=== SERVER STARTUP FAILED ===');
+  console.error(err);
+  process.exit(1);
+});
