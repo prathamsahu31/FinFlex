@@ -96,14 +96,14 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         // 3. Fetch Leaderboard dynamically
         const { data: lData } = await supabase
           .from('user_gamification')
-          .select('id, xp, level, profiles(name, avatar_url)')
+          .select('id, xp, level')
           .order('xp', { ascending: false })
           .limit(10);
         
         if (lData) {
           const formattedLdb = lData.map((d: any, idx) => ({
             rank: idx + 1,
-            name: d.profiles?.name || `Trader ${(d.id as string).slice(0, 6)}`,
+            name: `Trader ${(d.id as string).slice(0, 6)}`,
             xp: d.xp || 0,
             isMe: d.id === user.id
           }));
