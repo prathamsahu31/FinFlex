@@ -17,7 +17,7 @@ export default function Portfolio({ setActiveTab, user, profile }: any) {
 
       if (!isBackground) setLoading(true);
       const prices: Record<string, number> = {};
-      
+
       try {
         await Promise.all(
           portfolio.map(async (item) => {
@@ -62,124 +62,134 @@ export default function Portfolio({ setActiveTab, user, profile }: any) {
   }, [portfolioValue, loading, checkAchievements]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <Briefcase className="h-8 w-8 text-emerald-500" />
-          My Portfolio
-        </h1>
-        <p className="text-slate-400 mt-1">Track your investments and performance</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="bg-emerald-500/20 p-2 rounded-lg">
-              <DollarSign className="h-5 w-5 text-emerald-500" />
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-full flex flex-col relative grid-bg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+        <div>
+          <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight flex items-center gap-4">
+            <div className="w-12 h-12 border-4 border-black bg-gumroad-pink flex items-center justify-center neo-brutalism-shadow-xs italic">
+              <Briefcase className="h-8 w-8 text-black" strokeWidth={3} />
             </div>
-            <h3 className="text-slate-400 font-medium">Total Value</h3>
-          </div>
-          <div className="text-3xl font-mono font-bold text-white">
-            ${totalValue.toFixed(2)}
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="bg-blue-500/20 p-2 rounded-lg">
-              <PieChart className="h-5 w-5 text-blue-500" />
-            </div>
-            <h3 className="text-slate-400 font-medium">Invested Value</h3>
-          </div>
-          <div className="text-3xl font-mono font-bold text-white">
-            ${portfolioValue.toFixed(2)}
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className={cn("p-2 rounded-lg", totalProfit >= 0 ? "bg-emerald-500/20" : "bg-rose-500/20")}>
-              {totalProfit >= 0 ? <TrendingUp className="h-5 w-5 text-emerald-500" /> : <TrendingDown className="h-5 w-5 text-rose-500" />}
-            </div>
-            <h3 className="text-slate-400 font-medium">Total Profit/Loss</h3>
-          </div>
-          <div className="flex items-end gap-3">
-            <div className={cn("text-3xl font-mono font-bold", totalProfit >= 0 ? "text-emerald-400" : "text-rose-400")}>
-              ${Math.abs(totalProfit).toFixed(2)}
-            </div>
-            <div className={cn("font-medium mb-1", totalProfit >= 0 ? "text-emerald-500" : "text-rose-500")}>
-              {totalProfit >= 0 ? '+' : '-'}{Math.abs(totalProfitPercent).toFixed(2)}%
-            </div>
-          </div>
+            My Portfolio
+          </h1>
+          <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter italic">Track your investments and performance</p>
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-slate-800">
-          <h2 className="text-xl font-bold text-white">Holdings</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
+        <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-black text-[10px] font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">Total Value</p>
+            <h2 className="text-3xl font-black font-headline mt-2 text-black">
+              ${totalValue.toFixed(2)}
+            </h2>
+          </div>
+          <div className="w-14 h-14 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-sm group-hover:rotate-12 transition-transform">
+            <DollarSign className="h-8 w-8 text-black" strokeWidth={3} />
+          </div>
+        </div>
+
+        <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-black text-[10px] font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">Invested Value</p>
+            <h2 className="text-3xl font-black font-headline mt-2 text-black">
+              ${portfolioValue.toFixed(2)}
+            </h2>
+          </div>
+          <div className="w-14 h-14 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black neo-brutalism-shadow-sm group-hover:rotate-12 transition-transform">
+            <PieChart className="h-8 w-8 text-black" strokeWidth={3} />
+          </div>
+        </div>
+
+        <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow flex items-center justify-between relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-black text-[10px] font-black uppercase tracking-widest mb-1 border-b-2 border-black pb-1 inline-block">Total Profit/Loss</p>
+            <div className="flex items-center gap-3 mt-2">
+              <h2 className={cn("text-3xl font-black font-headline", totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                ${Math.abs(totalProfit).toFixed(2)}
+              </h2>
+              <span className={cn("text-[10px] font-black uppercase px-2 py-0.5 border-2 border-black", totalProfit >= 0 ? "bg-emerald-400" : "bg-rose-400")}>
+                {totalProfit >= 0 ? '+' : '-'}{Math.abs(totalProfitPercent).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+          <div className={cn("w-14 h-14 border-4 border-black flex items-center justify-center text-black neo-brutalism-shadow-sm group-hover:rotate-12 transition-transform", totalProfit >= 0 ? "bg-emerald-400" : "bg-rose-400")}>
+            {totalProfit >= 0 ? <TrendingUp className="h-8 w-8" strokeWidth={3} /> : <TrendingDown className="h-8 w-8" strokeWidth={3} />}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border-4 border-black neo-brutalism-shadow flex flex-col overflow-hidden flex-1 min-h-0">
+        <div className="p-6 border-b-4 border-black bg-gumroad-pink/10 shrink-0">
+          <h2 className="text-2xl font-black font-headline uppercase text-black">Holdings</h2>
         </div>
         
-        {portfolio.length === 0 ? (
-          <div className="p-12 text-center">
-            <Briefcase className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No stocks yet</h3>
-            <p className="text-slate-400">Go to the dashboard to make your first trade.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-800/50 text-slate-400 text-sm uppercase tracking-wider">
-                  <th className="p-4 font-medium">Symbol</th>
-                  <th className="p-4 font-medium text-right">Shares</th>
-                  <th className="p-4 font-medium text-right">Avg Price</th>
-                  <th className="p-4 font-medium text-right">Current Price</th>
-                  <th className="p-4 font-medium text-right">Total Value</th>
-                  <th className="p-4 font-medium text-right">Return</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {portfolio.map((item) => {
-                  const currentPrice = currentPrices[item.symbol] || item.averagePrice;
-                  const totalValue = item.shares * currentPrice;
-                  const totalCost = item.shares * item.averagePrice;
-                  const profit = totalValue - totalCost;
-                  const profitPercent = (profit / totalCost) * 100;
-                  const isPositive = profit >= 0;
+        <div className="flex-1 overflow-y-auto p-4 lg:p-6 grid-bg">
+          {portfolio.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center h-full">
+              <div className="w-20 h-20 border-4 border-black bg-white flex items-center justify-center mb-6 neo-brutalism-shadow-xs rotate-3">
+                <Briefcase className="h-10 w-10 text-black/20" strokeWidth={3} />
+              </div>
+              <h3 className="text-xl font-black font-headline uppercase text-black mb-2">No stocks yet</h3>
+              <p className="text-black/60 font-bold text-sm uppercase tracking-tighter mb-8 italic">Go to the dashboard to make your first trade.</p>
+              <button 
+                onClick={() => setActiveTab?.('trading')}
+                className="bg-gumroad-yellow text-black border-4 border-black px-8 py-4 text-sm font-black font-headline uppercase tracking-widest neo-brutalism-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+              >
+                Go to Trading Floor
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {portfolio.map((item) => {
+                const currentPrice = currentPrices[item.symbol] || item.averagePrice;
+                const totalVal = item.shares * currentPrice;
+                const totalCost = item.shares * item.averagePrice;
+                const profit = totalVal - totalCost;
+                const profitPercent = (profit / totalCost) * 100;
+                const isPositive = profit >= 0;
 
-                  return (
-                    <tr key={item.symbol} className="hover:bg-slate-800/50 transition-colors">
-                      <td className="p-4">
-                        <span className="font-bold text-white">{item.symbol}</span>
-                      </td>
-                      <td className="p-4 text-right font-mono text-slate-300">
-                        {item.shares}
-                      </td>
-                      <td className="p-4 text-right font-mono text-slate-300">
-                        ${item.averagePrice.toFixed(2)}
-                      </td>
-                      <td className="p-4 text-right font-mono text-white">
-                        {loading ? '...' : `$${currentPrice.toFixed(2)}`}
-                      </td>
-                      <td className="p-4 text-right font-mono font-bold text-white">
-                        ${totalValue.toFixed(2)}
-                      </td>
-                      <td className="p-4 text-right">
+                return (
+                  <div key={item.symbol} className="bg-white border-4 border-black p-5 neo-brutalism-shadow-sm hover:bg-gumroad-yellow/5 transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 border-4 border-black bg-gumroad-pink flex items-center justify-center text-black shrink-0 font-black text-2xl font-headline group-hover:rotate-3 transition-transform italic">
+                        {item.symbol.substring(0, 2)}
+                      </div>
+                      <div>
+                        <p className="font-black font-headline text-2xl uppercase text-black">{item.symbol}</p>
+                        <p className="text-[10px] font-black text-black uppercase tracking-widest mt-1">
+                          <span className="bg-black text-white px-2 py-0.5">{item.shares} SHARES</span> @ ${item.averagePrice.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-6 sm:text-right sm:justify-end">
+                      <div className="flex-1 min-w-[120px]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-1">Current Price</p>
+                        <p className="text-xl font-black text-black">
+                          {loading ? '...' : `$${currentPrice.toFixed(2)}`}
+                        </p>
+                      </div>
+                      <div className="flex-1 min-w-[120px]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-1">Total Value</p>
+                        <p className="text-xl font-black text-black">${totalVal.toFixed(2)}</p>
+                      </div>
+                      <div className="flex-1 min-w-[120px] sm:w-auto">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-1">Return</p>
                         <div className={cn(
-                          "inline-flex items-center gap-1 font-medium px-2 py-1 rounded-md",
-                          isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                          "inline-flex items-center gap-2 font-black px-3 py-1 border-2 border-black text-[10px] uppercase",
+                          isPositive ? "bg-emerald-400" : "bg-rose-400"
                         )}>
-                          {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                          {isPositive ? <TrendingUp className="h-4 w-4" strokeWidth={3} /> : <TrendingDown className="h-4 w-4" strokeWidth={3} />}
                           {Math.abs(profitPercent).toFixed(2)}%
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

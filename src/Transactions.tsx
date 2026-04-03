@@ -8,7 +8,7 @@ import DataEntryModal from './DataEntryModal';
 
 export default function Transactions({ setActiveTab, user }: TabComponentProps & { user: any }) {
   const [transactions, setTransactions] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(!user);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDataEntryOpen, setIsDataEntryOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');

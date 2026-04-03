@@ -61,7 +61,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
   const [holdings, setHoldings] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [gamification, setGamification] = useState({ xp: 0, level: 1 });
-  const [isLoading, setIsLoading] = useState(!user);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Custom Date Range State
   const thirtyDaysAgo = new Date();
@@ -81,7 +81,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('created_at', { ascending: false });
       if (txData) setTransactions(txData);
 
       // 2. Fetch User Gamification

@@ -112,16 +112,16 @@ export default function Trading({ setActiveTab, user, profile }: any) {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-full flex flex-col relative grid-bg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white">Market Dashboard</h1>
-          <p className="text-slate-400 mt-1">Simulate trades with real-time market data</p>
+          <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Market Dashboard</h1>
+          <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter italic">Simulate trades with real-time market data</p>
         </div>
         
-        <form onSubmit={handleSearch} className="w-full md:w-auto relative" ref={searchRef}>
+        <form onSubmit={handleSearch} className="w-full md:w-auto relative z-20" ref={searchRef}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-black" strokeWidth={3} />
             <input
               type="text"
               value={searchQuery}
@@ -132,22 +132,22 @@ export default function Trading({ setActiveTab, user, profile }: any) {
               onFocus={() => {
                 if (searchQuery.length >= 2) setShowResults(true);
               }}
-              placeholder="Search company or symbol..."
-              className="w-full md:w-80 bg-slate-800 border border-slate-700 rounded-full py-2 pl-10 pr-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="SEARCH SYMBOL..."
+              className="w-full md:w-80 bg-white border-4 border-black px-4 py-3 pl-12 text-black font-black uppercase tracking-widest placeholder-black/20 focus:outline-none focus:bg-gumroad-pink/5 transition-colors neo-brutalism-shadow-xs"
             />
             {showResults && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black neo-brutalism-shadow flex flex-col z-50 max-h-60 overflow-y-auto">
                 {searchResults.map((result) => (
                   <button
                     key={result.symbol}
                     type="button"
                     onClick={() => handleSelectResult(result.symbol)}
-                    className="w-full text-left px-4 py-3 hover:bg-slate-700 transition-colors border-b border-slate-700/50 last:border-0"
+                    className="w-full text-left px-4 py-4 hover:bg-gumroad-yellow transition-colors border-b-2 border-black last:border-0 group"
                   >
                     <div className="flex justify-between items-center">
-                      <div className="font-bold text-white">{result.symbol}</div>
+                      <div className="font-black font-headline text-lg text-black group-hover:scale-105 transition-transform">{result.symbol}</div>
                     </div>
-                    <div className="text-sm text-slate-400 truncate">{result.name || result.shortName || result.longName}</div>
+                    <div className="text-[10px] font-black text-black/60 uppercase tracking-widest truncate">{result.name || result.shortName || result.longName}</div>
                   </button>
                 ))}
               </div>
@@ -157,8 +157,8 @@ export default function Trading({ setActiveTab, user, profile }: any) {
       </div>
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/50 text-rose-400 p-4 rounded-xl flex items-center gap-3 mb-8">
-          <AlertCircle className="h-5 w-5" />
+        <div className="bg-rose-400 border-4 border-black text-black p-4 neo-brutalism-shadow-xs flex items-center gap-3 mb-8 font-black uppercase text-xs">
+          <AlertCircle className="h-5 w-5" strokeWidth={3} />
           {error}
         </div>
       )}
@@ -166,36 +166,38 @@ export default function Trading({ setActiveTab, user, profile }: any) {
       {currentStock && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div className="flex justify-between items-start mb-6">
+            <div className="bg-white border-4 border-black neo-brutalism-shadow p-6 relative overflow-hidden group">
+              <div className="flex justify-between items-start mb-8 relative z-10">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{currentStock.shortName}</h2>
-                  <p className="text-slate-400 font-mono">{currentStock.symbol}</p>
+                  <h2 className="text-5xl font-black font-headline text-black tracking-tighter uppercase bg-gumroad-yellow px-4 border-4 border-black inline-block -rotate-1">
+                    {currentStock.shortName}
+                  </h2>
+                  <p className="text-black font-black text-lg mt-2 font-mono bg-black text-white px-2 w-fit">{currentStock.symbol}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-mono font-bold text-white">
+                  <div className="text-4xl font-black text-black">
                     ${currentStock.regularMarketPrice?.toFixed(2)}
                   </div>
                   <div className={cn(
-                    "flex items-center justify-end gap-1 font-medium mt-1",
-                    currentStock.regularMarketChangePercent >= 0 ? "text-emerald-400" : "text-rose-400"
+                    "flex items-center justify-end gap-1 font-black mt-2 text-sm uppercase px-2 py-1 border-2 border-black rotate-1",
+                    currentStock.regularMarketChangePercent >= 0 ? "bg-emerald-400" : "bg-rose-400"
                   )}>
-                    {currentStock.regularMarketChangePercent >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                    {currentStock.regularMarketChangePercent >= 0 ? <TrendingUp className="h-4 w-4" strokeWidth={3} /> : <TrendingDown className="h-4 w-4" strokeWidth={3} />}
                     {Math.abs(currentStock.regularMarketChangePercent || 0).toFixed(2)}%
                   </div>
                 </div>
               </div>
               
-              <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide shrink-0 relative z-10">
                 {periods.map((p) => (
                   <button
                     key={p.value}
                     onClick={() => setChartPeriod(p.value)}
                     className={cn(
-                      "px-3 py-1 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
+                      "px-4 py-2 border-4 border-black text-xs font-black uppercase tracking-widest transition-transform hover:-translate-y-1 neo-brutalism-shadow-xs",
                       chartPeriod === p.value 
-                        ? "bg-emerald-500/20 text-emerald-400" 
-                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                        ? "bg-gumroad-pink text-black" 
+                        : "bg-white text-black hover:bg-gumroad-yellow"
                     )}
                   >
                     {p.label}
@@ -203,47 +205,51 @@ export default function Trading({ setActiveTab, user, profile }: any) {
                 ))}
               </div>
 
-              <StockChart symbol={currentStock.symbol} period={chartPeriod} />
+              <div className="bg-white border-4 border-black p-1 pb-6 neo-brutalism-shadow-sm min-h-[300px] relative grid-bg">
+                <StockChart symbol={currentStock.symbol} period={chartPeriod} />
+              </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-emerald-500" />
+            <div className="bg-white border-4 border-black neo-brutalism-shadow p-6 flex flex-col justify-between group">
+              <h3 className="text-xl font-black font-headline uppercase text-black mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 border-4 border-black bg-gumroad-pink flex items-center justify-center neo-brutalism-shadow-xs group-hover:-rotate-3 transition-transform">
+                  <Activity className="h-6 w-6 text-black" strokeWidth={3} />
+                </div>
                 Trade {currentStock.symbol}
               </h3>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button
                   onClick={() => setTradeModal({ isOpen: true, type: 'BUY' })}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-colors"
+                  className="w-full bg-emerald-400 hover:bg-emerald-300 text-black border-4 border-black neo-brutalism-shadow font-black uppercase tracking-widest py-4 transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer"
                 >
                   Buy Shares
                 </button>
                 <button
                   onClick={() => setTradeModal({ isOpen: true, type: 'SELL' })}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl border border-slate-700 transition-colors"
+                  className="w-full bg-white hover:bg-black hover:text-white text-black border-4 border-black neo-brutalism-shadow font-black uppercase tracking-widest py-4 transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer"
                 >
                   Sell Shares
                 </button>
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Market Info</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Status</span>
-                  <span className="text-emerald-400 font-medium">Market Open</span>
+            <div className="bg-white border-4 border-black neo-brutalism-shadow p-6 flex flex-col shrink-0">
+              <h3 className="text-xs font-black uppercase tracking-widest text-black mb-6 border-b-2 border-black pb-1 inline-block w-fit">Market Info</h3>
+              <div className="space-y-5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black/50">Status</span>
+                  <span className="bg-emerald-400 border-2 border-black px-2 py-0.5 text-xs font-black uppercase">Market Open</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Data Source</span>
-                  <span className="text-white">Yahoo Finance</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black/50">Data Source</span>
+                  <span className="font-black text-xs uppercase underline decoration-gumroad-pink decoration-4">Yahoo Finance</span>
                 </div>
-                <div className="flex justify-between pb-2">
-                  <span className="text-slate-400">Currency</span>
-                  <span className="text-white">USD</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-black/50">Currency</span>
+                  <span className="font-black text-xs uppercase px-2 py-0.5 border-2 border-black bg-gumroad-yellow">USD</span>
                 </div>
               </div>
             </div>

@@ -51,56 +51,69 @@ export function StockChart({ symbol, period = '1mo' }: StockChartProps) {
 
   if (loading) {
     return (
-      <div className="h-[300px] w-full flex items-center justify-center bg-slate-800/50 rounded-xl border border-slate-700 animate-pulse">
-        <span className="text-slate-400">Loading chart...</span>
+      <div className="h-[300px] w-full flex flex-col items-center justify-center bg-white border-4 border-black animate-pulse">
+        <div className="w-12 h-12 border-4 border-black bg-gumroad-pink mb-4" />
+        <span className="text-black font-black uppercase tracking-widest text-xs">Loading chart...</span>
       </div>
     );
   }
 
   if (error || data.length === 0) {
     return (
-      <div className="h-[300px] w-full flex items-center justify-center bg-slate-800/50 rounded-xl border border-slate-700">
-        <span className="text-slate-400">{error || 'No data available'}</span>
+      <div className="h-[300px] w-full flex flex-col items-center justify-center bg-white border-4 border-black">
+         <div className="w-12 h-12 border-4 border-black bg-rose-400 mb-4 flex items-center justify-center">
+           <span className="font-black text-2xl">!</span>
+         </div>
+        <span className="text-black font-black uppercase tracking-widest text-xs">{error || 'No data available'}</span>
       </div>
     );
   }
 
   const isPositive = data[data.length - 1]?.price >= data[0]?.price;
-  const color = isPositive ? '#10b981' : '#ef4444';
+  const color = isPositive ? '#10b981' : '#ef4444'; // emerald-500 / rose-500
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-[300px] w-full p-2">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+              <stop offset="5%" stopColor={color} stopOpacity={0.4} />
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#000000" vertical={false} strokeOpacity={0.1} />
           <XAxis 
             dataKey="date" 
             tickFormatter={(date) => {
               if (period === '1d' || period === '5d') return format(date, 'HH:mm');
               return format(date, 'MMM d');
             }}
-            stroke="#64748b"
-            fontSize={12}
+            stroke="#000000"
+            fontSize={10}
+            fontWeight={900}
             tickLine={false}
             axisLine={false}
           />
           <YAxis 
             domain={['auto', 'auto']} 
-            stroke="#64748b"
-            fontSize={12}
+            stroke="#000000"
+            fontSize={10}
+            fontWeight={900}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `$${value.toFixed(2)}`}
+            tickFormatter={(value) => `$${value.toFixed(0)}`}
           />
           <Tooltip
-            contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-            itemStyle={{ color: '#f8fafc' }}
+            contentStyle={{ 
+              backgroundColor: '#ffffff', 
+              border: '4px solid #000000', 
+              borderRadius: '0px',
+              padding: '8px',
+              boxShadow: '4px 4px 0px #000000'
+            }}
+            itemStyle={{ color: '#000000', fontWeight: 900, textTransform: 'uppercase', fontSize: '10px' }}
+            labelStyle={{ color: '#000000', fontWeight: 900, textTransform: 'uppercase', fontSize: '10px', marginBottom: '4px' }}
             labelFormatter={(label: any) => format(new Date(label), period === '1d' ? 'MMM d, HH:mm' : 'MMM d, yyyy')}
             formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
           />
@@ -108,9 +121,10 @@ export function StockChart({ symbol, period = '1mo' }: StockChartProps) {
             type="monotone"
             dataKey="price"
             stroke={color}
-            strokeWidth={2}
+            strokeWidth={4}
             fillOpacity={1}
             fill="url(#colorPrice)"
+            animationDuration={1000}
           />
         </AreaChart>
       </ResponsiveContainer>
