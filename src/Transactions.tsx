@@ -29,6 +29,11 @@ export default function Transactions({ setActiveTab, user }: TabComponentProps &
     const uid = userId || user?.id;
     if (!uid) return;
 
+    // Circuit breaker for Supabase deadlocks
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
     try {
       const { data, error } = await supabase
         .from('transactions')
@@ -41,6 +46,7 @@ export default function Transactions({ setActiveTab, user }: TabComponentProps &
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };

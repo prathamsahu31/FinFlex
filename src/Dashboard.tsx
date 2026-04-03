@@ -70,9 +70,10 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
   const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
       if (!supabase || !user) {
-        if (!user) setIsLoading(false);
+        if (!user && isMounted) setIsLoading(false);
         return;
       }
 
@@ -119,11 +120,21 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
       } catch (error) {
         console.error("Dashboard fetch error:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
     
-    fetchData();
+    // Circuit breaker: force unlock after 5 seconds if Supabase hangs
+    const timeoutId = setTimeout(() => {
+      if (isMounted) setIsLoading(false);
+    }, 5000);
+    
+    fetchData().then(() => clearTimeout(timeoutId));
+    
+    return () => {
+       isMounted = false;
+       clearTimeout(timeoutId);
+    }
   }, [user]);
 
   const stats = useMemo(() => {
