@@ -31,6 +31,7 @@ import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import CountUp from './CountUp';
 import AIInsights from './components/AIInsights';
+import AIDiagnostics from './components/AIDiagnostics';
 
 interface DashboardProps extends TabComponentProps {
   user: any;
@@ -269,6 +270,9 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         </div>
       </div>
       
+      {/* AI Troubleshooting Diagnostics */}
+      <AIDiagnostics />
+
       {/* AI Financial Vibe Check (Gemini Integration) */}
       <AIInsights transactions={transactions} />
 

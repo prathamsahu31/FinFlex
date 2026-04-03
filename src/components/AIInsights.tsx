@@ -23,16 +23,41 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         if (!apiKey) throw new Error("Missing Key");
 
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = new GoogleGenAI(apiKey);
+        
+        // Fallback for Demo Mode / Broken Supabase
+        const dataToAnalyze = transactions.length > 0 ? transactions : [
+          { category: 'Dining', amount: 450, vendor: 'Starbucks', date: new Date().toISOString() },
+          { category: 'Shopping', amount: 12000, vendor: 'Apple Store', date: new Date().toISOString() },
+          { category: 'Entertainment', amount: 800, vendor: 'Netflix', date: new Date().toISOString() },
+        ];
+
         const context = `
 Analyze these transactions and give a sarcastic, Gen-Z "financial vibe check" in under 2 sentences. 
 Target personality: Brutally honest, uses slang (no cap, W, L, sus), obsessed with productivity.
-Transactions: ${JSON.stringify(transactions.slice(0, 10))}
+Transactions: ${JSON.stringify(dataToAnalyze.slice(0, 10))}
 `;
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
-          contents: context,
-        });
+        
+        const callAI = async (modelName: 'gemini-2.0-flash' | 'gemini-1.5-flash' = 'gemini-2.0-flash') => {
+          try {
+            return await ai.models.generateContent({
+              model: modelName,
+              contents: context,
+            });
+          } catch (err: any) {
+            // If primary model 2.0 fails with quota/not found, fallback to 1.5
+            if (modelName === 'gemini-2.0-flash') {
+              console.warn("Gemini 2.0-Flash Quota Exceeded or Not Found, falling back to 1.5-Flash...");
+              return await ai.models.generateContent({
+                model: 'gemini-1.5-flash',
+                contents: context,
+              });
+            }
+            throw err;
+          }
+        };
+
+        const response = await callAI();
 
         setInsight(response.text || "Brain empty, keep spending ig.");
       } catch (err) {

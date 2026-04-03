@@ -73,9 +73,10 @@ export function StockChart({ symbol, period = '1mo' }: StockChartProps) {
   const color = isPositive ? '#10b981' : '#ef4444'; // emerald-500 / rose-500
 
   return (
-    <div className="h-[300px] w-full p-2">
-      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+    <div className="h-[300px] w-full p-2 relative">
+      <div className="absolute inset-2">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={color} stopOpacity={0.4} />
@@ -127,7 +128,8 @@ export function StockChart({ symbol, period = '1mo' }: StockChartProps) {
             animationDuration={1000}
           />
         </AreaChart>
-      </ResponsiveContainer>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

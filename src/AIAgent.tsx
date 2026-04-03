@@ -89,27 +89,28 @@ export default function AIAgent({ setActiveTab, user, profile }: TabComponentPro
     setInput('');
     setIsTyping(true);
 
-    const callAI = async (retryCount = 0) => {
-      try {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (!apiKey) {
-          throw new Error("MISSING_KEY");
-        }
+    // Fallback for Demo Mode / Broken Supabase
+    const txToAnalyze = transactions.length > 0 ? transactions : [
+      { category: 'Dining', amount: 450, vendor: 'Starbucks', date: new Date().toISOString() },
+      { category: 'Shopping', amount: 12000, vendor: 'Apple Store', date: new Date().toISOString() },
+    ];
+    const holdingsToAnalyze = holdings.length > 0 ? holdings : [
+      { symbol: 'AAPL', average_price: 150, total_quantity: 10 },
+      { symbol: 'BTC-USD', average_price: 45000, total_quantity: 0.1 },
+    ];
 
-        const ai = new GoogleGenAI({ apiKey });
-        
-        // Build conversation history string
-        const historyContext = messages.map(m => `${m.sender.toUpperCase()}: ${m.text}`).join('\n');
+    // Build conversation history string
+    const historyContext = messages.map(m => `${m.sender.toUpperCase()}: ${m.text}`).join('\n');
 
-        const context = `
+    const context = `
 You are FinFlex AI, a highly aggressive, Gen-Z financial analyst and trading bot. 
 Tone: brutally honest, hilarious, sarcastic, but technically sound in trading advice.
 Use slang: 'no cap', 'sus', 'W', 'L', 'vibe check', 'diamond hands', 'paper hands', 'bagholder'.
 
-USER PROFILE: ${JSON.stringify(profile || {})}
-GAMIFICATION STATS: Trader Level ${gamification.level}, ${gamification.xp} XP, ${gamification.coins} Liquid Coins
-ASSET HOLDINGS (Stock Portfolio): ${JSON.stringify(holdings)}
-RECENT TRANSACTIONS: ${JSON.stringify(transactions)}
+USER PROFILE: ${JSON.stringify(profile || { name: 'Demo Trader' })}
+GAMIFICATION STATS: Trader Level ${gamification.level}, ${gamification.xp} XP
+ASSET HOLDINGS (Stock Portfolio): ${JSON.stringify(holdingsToAnalyze)}
+RECENT TRANSACTIONS: ${JSON.stringify(txToAnalyze)}
 
 CONVERSATION HISTORY:
 ${historyContext}
@@ -121,10 +122,35 @@ GOAL: Answer the user's latest message by analyzing their data.
 
 The user's latest message is: "${input}"
 `;
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
-          contents: context,
-        });
+
+    const callAI = async (modelName: 'gemini-2.0-flash' | 'gemini-1.5-flash' = 'gemini-2.0-flash', retryCount = 0) => {
+      try {
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!apiKey) throw new Error("MISSING_KEY");
+
+        const ai = new GoogleGenAI(apiKey);
+        
+        // Use the pattern compatible with @google/genai with internal fallback
+        const internalFetch = async (currentModel: 'gemini-2.0-flash' | 'gemini-1.5-flash') => {
+          try {
+            return await ai.models.generateContent({
+              model: currentModel,
+              contents: context,
+            });
+          } catch (err: any) {
+            // Fallback from 2.0 to 1.5 if 429 or quota zero
+            if (currentModel === 'gemini-2.0-flash' && (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED'))) {
+               console.warn("Gemini 2.0 Quota Exhausted, falling back to 1.5-flash...");
+               return await ai.models.generateContent({
+                 model: 'gemini-1.5-flash',
+                 contents: context,
+               });
+            }
+            throw err;
+          }
+        };
+
+        const response = await internalFetch(modelName);
 
         const newBotMsg = {
           id: Date.now() + 1,
@@ -136,12 +162,50 @@ The user's latest message is: "${input}"
       } catch (err: any) {
         console.error("AI Error:", err);
         
-        // Retry once on rate limit (429)
+        // Retry once on rate limit (429) - if even 1.5 fails
         if ((err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) && retryCount < 1) {
-          setTimeout(() => callAI(retryCount + 1), 2000);
+          setTimeout(() => callAI('gemini-1.5-flash', retryCount + 1), 2000); 
           return;
         }
-        
+
+        // Handle Expired Key (400)
+        if (err.message?.includes('API_KEY_INVALID') || err.message?.includes('400') || err.message?.includes('expired')) {
+          const errorMsg = {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: "🚨 Your Gemini API Key has expired or is invalid. Please go to AI Studio and get a new one! (Check the Diagnostics tool in the Dashboard for more info).",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setMessages(prev => [...prev, errorMsg]);
+          setIsTyping(false);
+          return;
+        }
+
+        // Handle Quota Exceeded (429)
+        if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+          const waitStr = err.message.match(/retry in ([\d.]+s)/)?.[1] || "30 seconds";
+          const errorMsg = {
+             id: Date.now() + 1,
+             sender: 'bot',
+             text: `⏳ Quota exceeded for both Gemini 2.0 and 1.5. Wait for ${waitStr} or check your AI Studio plan. No cap, the free tier is sweating rn.`,
+             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setMessages(prev => [...prev, errorMsg]);
+          setIsTyping(false);
+          return;
+        }
+        // Handle Expired Key Specifically
+        if (err.message?.includes('API_KEY_INVALID') || err.message?.includes('400') || err.message?.includes('expired')) {
+          const errorMsg = {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: "🚨 Your Gemini API Key has expired or is invalid. Please go to AI Studio and get a new one! (Check the Diagnostics tool in the Dashboard for more info).",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setMessages(prev => [...prev, errorMsg]);
+          setIsTyping(false);
+          return;
+        }        
         let errorText = "Bruh, the AI is down rn. Too much load.";
         if (err.message === "MISSING_KEY") {
           errorText = "Missing VITE_GEMINI_API_KEY in .env file. Can't help without it. 🔑";

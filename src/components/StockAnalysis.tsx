@@ -29,7 +29,7 @@ export default function StockAnalysis({ stock }: StockAnalysisProps) {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         if (!apiKey) throw new Error("Missing Key");
 
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = new GoogleGenAI(apiKey);
         const context = `
 Analyze this stock: ${stock.symbol} (${stock.shortName})
 Current Price: $${stock.regularMarketPrice}
@@ -39,10 +39,27 @@ Goal: Give a sarcastic Gen-Z "market vibe check" in under 2 sentences.
 Target personality: Brutally honest, uses slang (diamond hands, paper hands, bagholder, W, L).
 End your response with specifically one of these words on a new line: [BUY], [SELL], or [HOLD].
 `;
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
-          contents: context,
-        });
+        
+        const callAI = async (modelName: 'gemini-2.0-flash' | 'gemini-1.5-flash' = 'gemini-2.0-flash') => {
+          try {
+            return await ai.models.generateContent({
+              model: modelName,
+              contents: context,
+            });
+          } catch (err: any) {
+            // If primary model 2.0 fails with quota/not found, fallback to 1.5
+            if (modelName === 'gemini-2.0-flash' && (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED'))) {
+              console.warn("Gemini 2.0 Quota Exhausted, falling back to 1.5-flash...");
+              return await ai.models.generateContent({
+                model: 'gemini-1.5-flash',
+                contents: context,
+              });
+            }
+            throw err;
+          }
+        };
+
+        const response = await callAI();
 
         const text = response.text || "";
         setAnalysis(text.replace(/\[(BUY|SELL|HOLD)\]/g, '').trim());
@@ -51,8 +68,17 @@ End your response with specifically one of these words on a new line: [BUY], [SE
         else if (text.includes('[SELL]')) setRecommendation('SELL');
         else if (text.includes('[HOLD]')) setRecommendation('HOLD');
 
-      } catch (err) {
+      } catch (err: any) {
         console.error("AI Analysis Error:", err);
+        let msg = "AI is currently offline or sleeping.";
+        
+        if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+          msg = "API Quota Exceeded. Free tier is sweating rn ⏳";
+        } else if (err.message?.includes('API_KEY_INVALID') || err.message?.includes('400') || err.message?.includes('expired')) {
+          msg = "API Key Expired. Generate a new one in AI Studio 🔑";
+        }
+        
+        setAnalysis(msg);
       } finally {
         setIsLoading(false);
       }
