@@ -114,7 +114,7 @@ export default function App() {
     // Safety timeout to ensure we don't get stuck on the loading screen
     const timeout = setTimeout(() => {
       setIsInitializing(false);
-    }, 10000);
+    }, 4000);
 
     if (supabase) {
       supabase.auth.getSession().then(async ({ data: { session } }) => {

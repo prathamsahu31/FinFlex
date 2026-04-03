@@ -18,7 +18,7 @@ export default function AIDiagnostics() {
       const apiKey = customKey.trim() || import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) throw new Error("API Key is missing. Enter one or update .env");
 
-      const ai = new GoogleGenAI(apiKey);
+      const ai = new GoogleGenAI({ apiKey });
       
       const result = await ai.models.generateContent({
         model: 'gemini-2.0-flash',

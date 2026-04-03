@@ -125,12 +125,10 @@ The user's latest message is: "${input}"
 
     const callAI = async (modelName: 'gemini-2.0-flash' | 'gemini-1.5-flash' = 'gemini-2.0-flash', retryCount = 0) => {
       try {
-        const apiKey = (process.env.VITE_GEMINI_API_KEY) || 
-                       (process.env.GEMINI_API_KEY) || 
-                       (import.meta as any).env.VITE_GEMINI_API_KEY;
+        const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
         if (!apiKey) throw new Error("MISSING_KEY");
 
-        const ai = new GoogleGenAI(apiKey);
+        const ai = new GoogleGenAI({ apiKey });
         
         // Use the pattern compatible with @google/genai with internal fallback
         const internalFetch = async (currentModel: 'gemini-2.0-flash' | 'gemini-1.5-flash') => {
@@ -196,18 +194,7 @@ The user's latest message is: "${input}"
           setIsTyping(false);
           return;
         }
-        // Handle Expired Key Specifically
-        if (err.message?.includes('API_KEY_INVALID') || err.message?.includes('400') || err.message?.includes('expired')) {
-          const errorMsg = {
-            id: Date.now() + 1,
-            sender: 'bot',
-            text: "🚨 Your Gemini API Key has expired or is invalid. Please go to AI Studio and get a new one! (Check the Diagnostics tool in the Dashboard for more info).",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          setMessages(prev => [...prev, errorMsg]);
-          setIsTyping(false);
-          return;
-        }        
+
         let errorText = "Bruh, the AI is down rn. Too much load.";
         if (err.message === "MISSING_KEY") {
           errorText = "Missing VITE_GEMINI_API_KEY in .env file. Can't help without it. 🔑";

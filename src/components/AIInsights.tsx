@@ -20,12 +20,10 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
       setIsLoading(true);
       setError(false);
       try {
-        const apiKey = (process.env.VITE_GEMINI_API_KEY) || 
-                       (process.env.GEMINI_API_KEY) || 
-                       (import.meta as any).env.VITE_GEMINI_API_KEY;
+        const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
         if (!apiKey) throw new Error("Missing Key");
 
-        const ai = new GoogleGenAI(apiKey);
+        const ai = new GoogleGenAI({ apiKey });
         
         // Fallback for Demo Mode / Broken Supabase
         const dataToAnalyze = transactions.length > 0 ? transactions : [
@@ -72,7 +70,7 @@ Transactions: ${JSON.stringify(dataToAnalyze.slice(0, 10))}
 
     const timer = setTimeout(generateInsight, 1000); // Small delay for effect
     return () => clearTimeout(timer);
-  }, [transactions]);
+  }, [transactions.length]);
 
   if (isLoading) {
     return (

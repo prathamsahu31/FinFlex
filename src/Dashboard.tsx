@@ -72,7 +72,7 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
 
   const fetchData = React.useCallback(async (isSilent = false) => {
     if (!supabase || !user) {
-      if (!user) setIsLoading(false);
+      setIsLoading(false);
       return;
     }
 
@@ -113,39 +113,42 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
 
     // 1. Re-fetch on Window Focus / Tab Switch
     const handleFocus = () => {
-      // Small cooldown or silent fetch
       fetchData(true); 
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchData(true);
     };
 
     window.addEventListener('focus', handleFocus);
-    window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') fetchData(true);
-    });
+    window.addEventListener('visibilitychange', handleVisibility);
 
     // 2. Real-time Supabase Subscription
-    const channel = supabase
-      .channel('dashboard_sync')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'transactions',
-        filter: `user_id=eq.${user?.id}`
-      }, () => fetchData(true))
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'user_gamification',
-        filter: `id=eq.${user?.id}`
-      }, () => fetchData(true))
-      .subscribe();
+    let channel: any = null;
+    if (supabase) {
+      channel = supabase
+        .channel('dashboard_sync')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'transactions',
+          filter: `user_id=eq.${user?.id}`
+        }, () => fetchData(true))
+        .on('postgres_changes', { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'user_gamification',
+          filter: `id=eq.${user?.id}`
+        }, () => fetchData(true))
+        .subscribe();
+    }
 
     // 3. Periodic Polling (every 60s) as a fail-safe
     const pollInterval = setInterval(() => fetchData(true), 60000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('visibilitychange', handleFocus);
-      supabase.removeChannel(channel);
+      window.removeEventListener('visibilitychange', handleVisibility);
+      if (supabase && channel) supabase.removeChannel(channel);
       clearInterval(pollInterval);
     };
   }, [user, fetchData]);

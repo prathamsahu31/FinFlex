@@ -7,11 +7,11 @@ import { createClient } from '@supabase/supabase-js';
 // --- Monolithic additions ---
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import YahooFinance from 'yahoo-finance2';
+import yahooFinance from 'yahoo-finance2';
 import { HfInference } from '@huggingface/inference';
 
-// yahoo-finance2 v3 requires instantiation
-const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+// Suppress the "Yahoo Finance Survey" console notice
+(yahooFinance as any).suppressNotices(['yahooSurvey']);
 
 async function startServer() {
   const app = express();
@@ -148,9 +148,9 @@ async function startServer() {
   app.get('/api/search/:query', async (req, res) => {
     try {
       const query = req.params.query;
-      const results = await yahooFinance.search(query);
+      const results: any = await yahooFinance.search(query);
       // Filter for equities to keep it simple
-      const equities = results.quotes.filter(q => q.quoteType === 'EQUITY' || q.quoteType === 'ETF');
+      const equities = results.quotes.filter((q: any) => q.quoteType === 'EQUITY' || q.quoteType === 'ETF');
       res.json(equities.slice(0, 10));
     } catch (error) {
       console.error('Search error:', error);
