@@ -125,7 +125,9 @@ The user's latest message is: "${input}"
 
     const callAI = async (modelName: 'gemini-2.0-flash' | 'gemini-1.5-flash' = 'gemini-2.0-flash', retryCount = 0) => {
       try {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        const apiKey = (process.env.VITE_GEMINI_API_KEY) || 
+                       (process.env.GEMINI_API_KEY) || 
+                       (import.meta as any).env.VITE_GEMINI_API_KEY;
         if (!apiKey) throw new Error("MISSING_KEY");
 
         const ai = new GoogleGenAI(apiKey);

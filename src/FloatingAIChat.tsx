@@ -75,27 +75,19 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
     if (isOpen) fetchTransactions();
   }, [user, isOpen]);
 
-  const initChat = (currentModel: 'gemini-2.0-flash' | 'gemini-1.5-flash') => {
-    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("MISSING_KEY");
+  const initChat = (currentModel: string) => {
+    // Check both possible locations for the API key (Vite define vs import.meta.env)
+    const apiKey = (process.env.VITE_GEMINI_API_KEY) || 
+                   (process.env.GEMINI_API_KEY) || 
+                   (import.meta as any).env.VITE_GEMINI_API_KEY;
+
+    if (!apiKey) {
+      console.error("Gemini API Key missing! Checked: process.env.VITE_GEMINI_API_KEY, process.env.GEMINI_API_KEY, and import.meta.env.VITE_GEMINI_API_KEY");
+      throw new Error("MISSING_KEY");
+    }
     
     const ai = new GoogleGenAI(apiKey);
-    const context = `
-You are FinFlex AI, a global Gen-Z financial advisor. 
-Style: Fun, slightly roasting, encouraging, and highly analytical. Use slang like "no cap", "giving millionaire energy", "vibe check".
-
-USER CONTEXT:
-${JSON.stringify(profile || {}, null, 2)}
-
-RECENT TRANSACTIONS:
-${JSON.stringify(transactions, null, 2)}
-`;
-    return ai.chats.create({
-      model: currentModel,
-      config: {
-        systemInstruction: context,
-      }
-    });
+    return ai;
   };
 
   const handleSend = async (textOverride?: string, retryCount = 0) => {
@@ -119,12 +111,30 @@ ${JSON.stringify(transactions, null, 2)}
         chatRef.current = initChat('gemini-2.0-flash');
       }
 
-      const response = await chatRef.current.sendMessage({ message: textToSend });
+      const context = `
+You are FinFlex AI, a global Gen-Z financial advisor. 
+Style: Fun, slightly roasting, encouraging, and highly analytical. Use slang like "no cap", "giving millionaire energy", "vibe check".
+
+USER CONTEXT:
+${JSON.stringify(profile || {}, null, 2)}
+
+RECENT TRANSACTIONS:
+${JSON.stringify(transactions, null, 2)}
+
+THE USER MESSAGE: "${textToSend}"
+`;
+
+      const response = await chatRef.current.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: context,
+      });
+
+      const botText = response.text || "My brain is lagging, bestie. Try again.";
 
       const newBotMsg = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: response.text || "My brain is lagging, bestie. Try again.",
+        text: botText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, newBotMsg]);
