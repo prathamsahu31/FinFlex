@@ -30,6 +30,7 @@ import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { TabComponentProps } from './constants';
 import CountUp from './CountUp';
+import AIInsights from './components/AIInsights';
 
 interface DashboardProps extends TabComponentProps {
   user: any;
@@ -243,6 +244,9 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
           </div>
         </div>
       </div>
+      
+      {/* AI Financial Vibe Check (Gemini Integration) */}
+      <AIInsights transactions={transactions} />
 
       {/* Top Cards */}
       <motion.div 

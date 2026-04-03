@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, TrendingUp, TrendingDown, Activity, AlertCircle } from 'lucide-react';
+import { Search, TrendingUp, TrendingDown, Activity, AlertCircle, Loader2 } from 'lucide-react';
 import { StockChart } from './components/StockChart';
 import { TradeModal } from './components/TradeModal';
+import StockAnalysis from './components/StockAnalysis';
 import { Stock } from './types';
 import { cn } from './utils';
 
@@ -47,7 +48,6 @@ export default function Trading({ setActiveTab, user, profile }: any) {
     fetchQuote('AAPL');
   }, []);
 
-  // Poll for real-time updates every 10 seconds
   useEffect(() => {
     if (!currentStock?.symbol) return;
     
@@ -208,6 +208,9 @@ export default function Trading({ setActiveTab, user, profile }: any) {
               <div className="bg-white border-4 border-black p-1 pb-6 neo-brutalism-shadow-sm min-h-[300px] relative grid-bg">
                 <StockChart symbol={currentStock.symbol} period={chartPeriod} />
               </div>
+
+              {/* AI Gemini Analysis */}
+              <StockAnalysis stock={currentStock} />
             </div>
           </div>
 
