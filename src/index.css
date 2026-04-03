@@ -196,8 +196,9 @@
     border-radius: 12px !important;
   }
 
-  /* Global Speed Override */
-  .transition-all, .transition-colors, .transition-transform {
-    transition-duration: 150ms !important;
+  /* Global Speed Override - FAST ANIMATIONS */
+  .transition-all, .transition-colors, .transition-transform, .neo-stacked-hover {
+    transition-duration: 75ms !important;
+    transition-timing-function: ease-out !important;
   }
 }

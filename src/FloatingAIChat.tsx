@@ -38,6 +38,7 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
   const [transactions, setTransactions] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatRef = useRef<any>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -74,11 +75,33 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
     if (isOpen) fetchTransactions();
   }, [user, isOpen]);
 
+  const initChat = (currentModel: 'gemini-2.0-flash' | 'gemini-1.5-flash') => {
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+    if (!apiKey) throw new Error("MISSING_KEY");
+    
+    const ai = new GoogleGenAI(apiKey);
+    const context = `
+You are FinFlex AI, a global Gen-Z financial advisor. 
+Style: Fun, slightly roasting, encouraging, and highly analytical. Use slang like "no cap", "giving millionaire energy", "vibe check".
+
+USER CONTEXT:
+${JSON.stringify(profile || {}, null, 2)}
+
+RECENT TRANSACTIONS:
+${JSON.stringify(transactions, null, 2)}
+`;
+    return ai.chats.create({
+      model: currentModel,
+      config: {
+        systemInstruction: context,
+      }
+    });
+  };
+
   const handleSend = async (textOverride?: string, retryCount = 0) => {
     const textToSend = textOverride || input;
     if (!textToSend.trim()) return;
 
-    // Only add user message on first attempt (not retries)
     if (retryCount === 0) {
       const newUserMsg = {
         id: Date.now(),
@@ -92,30 +115,11 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
     }
 
     try {
-      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error("MISSING_KEY");
+      if (!chatRef.current) {
+        chatRef.current = initChat('gemini-2.0-flash');
+      }
 
-      const ai = new GoogleGenAI({ apiKey });
-      const context = `
-You are FinFlex AI, a global Gen-Z financial advisor. 
-Style: Fun, slightly roasting, encouraging, and highly analytical. Use slang like "no cap", "giving millionaire energy", "vibe check".
-
-USER CONTEXT:
-${JSON.stringify(profile || {}, null, 2)}
-
-RECENT TRANSACTIONS:
-${JSON.stringify(transactions, null, 2)}
-
-The user says: "${textToSend}"
-Give a brief, witty, and helpful response. If they upload a document (implied by context if applicable), acknowledge the effort.
-`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: [
-            { role: 'user', parts: [{ text: context }] }
-        ],
-      });
+      const response = await chatRef.current.sendMessage({ message: textToSend });
 
       const newBotMsg = {
         id: Date.now() + 1,
@@ -127,17 +131,26 @@ Give a brief, witty, and helpful response. If they upload a document (implied by
     } catch (err: any) {
       console.error(err);
       
-      // Retry once on rate limit
+      // Handle Quota/Exhaustion with exact retry logic
       if ((err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) && retryCount < 1) {
-        setTimeout(() => handleSend(textToSend, retryCount + 1), 2000);
-        return;
+        console.warn("Retrying with gemini-1.5-flash due to quota...");
+        try {
+          chatRef.current = initChat('gemini-1.5-flash');
+          setTimeout(() => handleSend(textToSend, retryCount + 1), 2000);
+          return;
+        } catch (initErr) {
+          console.error(initErr);
+        }
       }
       
       let errorText = "Bruh, the AI is hitting a wall. Check your connection or API key.";
       if (err.message === "MISSING_KEY") {
         errorText = "Missing VITE_GEMINI_API_KEY in .env. Set it up first! 🔑";
+      } else if (err.message?.includes('API_KEY_INVALID') || err.message?.includes('400') || err.message?.includes('expired')) {
+        errorText = "🚨 Your Gemini API Key has expired. Please update it in the Dashboard!";
       } else if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
-        errorText = "Rate limited! Wait 30 sec and try again. ⏳";
+        const waitStr = err.message.match(/retry in ([\d.]+s)/)?.[1] || "30 sec";
+        errorText = `Rate limited! Wait ${waitStr} and try again. The free tier is suffering rn. ⏳`;
       }
       
       setMessages(prev => [...prev, {

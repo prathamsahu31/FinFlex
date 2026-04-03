@@ -5,24 +5,26 @@ import {
 } from 'lucide-react';
 import { LineChart } from 'lucide-react';
 
-// Eagerly loaded (always visible on first render)
+// Eagerly loaded core components
 import Dashboard from './Dashboard';
 import Trading from './Trading';
 import Tools from './Tools';
 
-// Lazy loaded (only loaded when user navigates to them)
-const Transactions = lazy(() => import('./Transactions'));
+// Tools eagerly loaded for instant access (Top most used)
+import Transactions from './Transactions';
+import BudgetPlanner from './BudgetPlanner';
+import AIAgent from './AIAgent';
+import ProfileSettings from './ProfileSettings';
+
+// Lazy loaded niche tools
 const Portfolio = lazy(() => import('./Portfolio'));
 const FlexDecks = lazy(() => import('./FlexDecks'));
-const AIAgent = lazy(() => import('./AIAgent'));
 const BillSplit = lazy(() => import('./BillSplit'));
-const ProfileSettings = lazy(() => import('./ProfileSettings'));
 const EMICalculator = lazy(() => import('./EMICalculator'));
 const FIRECalculator = lazy(() => import('./FIRECalculator'));
 const SubscriptionTracker = lazy(() => import('./SubscriptionTracker'));
 const CurrencyConverter = lazy(() => import('./CurrencyConverter'));
 const TaxEstimator = lazy(() => import('./TaxEstimator'));
-const BudgetPlanner = lazy(() => import('./BudgetPlanner'));
 const CompoundInterest = lazy(() => import('./CompoundInterest'));
 const PunishmentContract = lazy(() => import('./PunishmentContract'));
 

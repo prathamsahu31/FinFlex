@@ -14,6 +14,8 @@ import Login from './Login';
 import Landing from './Landing';
 import Onboarding from './Onboarding';
 import FloatingAIChat from './FloatingAIChat';
+import GlobalLoader from './components/GlobalLoader';
+import ErrorBoundary from './components/ErrorBoundary';
 import { supabase } from './lib/supabase';
 import logoImg from './logo.png';
 
@@ -231,27 +233,6 @@ export default function App() {
              </div>
           </div>
           
-          {/* Failsafe Bypass */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 5 }}
-            className="mt-8 flex flex-col items-center gap-4 px-4"
-          >
-            <p className="text-[10px] font-black uppercase text-white/40 max-w-xs leading-tight">
-              Taking longer than usual? Your Supabase project might be offline or sleeping.
-            </p>
-            <button 
-              onClick={() => {
-                setSession({ user: { id: 'demo-user', email: 'demo@finflex.io' } });
-                setProfile({ name: 'Demo Trader', onboarding_completed: true });
-                setIsInitializing(false);
-              }}
-              className="bg-gumroad-yellow border-4 border-black px-8 py-3 font-black uppercase tracking-widest text-black neo-brutalism-shadow-sm hover:-translate-y-1 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
-            >
-              🚀 Launch Demo Mode
-            </button>
-          </motion.div>
         </motion.div>
         
         {/* Bottom Corner Label */}
@@ -499,21 +480,19 @@ export default function App() {
             )}
             
             <div className="flex-1">
-              <Suspense fallback={
-                <div className="flex h-64 items-center justify-center">
-                  <div className="w-12 h-12 border-4 border-black bg-gumroad-pink animate-pulse" />
-                </div>
-              }>
-                <ActiveComponent 
-                  setActiveTab={handleTabChange} 
-                  pinnedToolIds={pinnedToolIds} 
-                  togglePinTool={togglePinTool}
-                  defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
-                  onToolOpen={() => setSelectedToolId(null)}
-                  onLogout={handleLogout}
-                  user={user}
-                  profile={profile}
-                />
+              <Suspense fallback={<GlobalLoader />}>
+                <ErrorBoundary>
+                  <ActiveComponent 
+                    setActiveTab={handleTabChange} 
+                    pinnedToolIds={pinnedToolIds} 
+                    togglePinTool={togglePinTool}
+                    defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
+                    onToolOpen={() => setSelectedToolId(null)}
+                    onLogout={handleLogout}
+                    user={user}
+                    profile={profile}
+                  />
+                </ErrorBoundary>
               </Suspense>
             </div>
             
