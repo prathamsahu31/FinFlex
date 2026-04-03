@@ -71,57 +71,43 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
 
   useEffect(() => {
     let isMounted = true;
+    
     const fetchData = async () => {
       if (!supabase || !user) {
         if (!user && isMounted) setIsLoading(false);
         return;
       }
 
-      try {
-        // 1. Fetch transactions
-        const { data: txData } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: false });
-        if (txData) setTransactions(txData);
+      // Fetch all data in parallel — each query is independent
+      const [txResult, gamifResult, lbResult, holdResult] = await Promise.allSettled([
+        supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
+        supabase.from('user_gamification').select('xp, level').eq('id', user.id).single(),
+        supabase.from('user_gamification').select('id, xp, level').order('xp', { ascending: false }).limit(10),
+        supabase.from('stock_holdings').select('*').eq('user_id', user.id),
+      ]);
 
-        // 2. Fetch User Gamification
-        const { data: gamifData } = await supabase
-          .from('user_gamification')
-          .select('xp, level')
-          .eq('id', user.id)
-          .single();
-        if (gamifData) setGamification(gamifData);
+      if (!isMounted) return;
 
-        // 3. Fetch Leaderboard dynamically
-        const { data: lData } = await supabase
-          .from('user_gamification')
-          .select('id, xp, level')
-          .order('xp', { ascending: false })
-          .limit(10);
-        
-        if (lData) {
-          const formattedLdb = lData.map((d: any, idx) => ({
-            rank: idx + 1,
-            name: `Trader ${(d.id as string).slice(0, 6)}`,
-            xp: d.xp || 0,
-            isMe: d.id === user.id
-          }));
-          setLeaderboard(formattedLdb);
-        }
-
-        // 4. Fetch Quick Portfolio summary from Trading logic
-        const { data: pData } = await supabase
-           .from('stock_holdings')
-           .select('*')
-           .eq('user_id', user.id);
-        if (pData) setHoldings(pData);
-      } catch (error) {
-        console.error("Dashboard fetch error:", error);
-      } finally {
-        if (isMounted) setIsLoading(false);
+      // Process each result independently — one failure won't affect others
+      if (txResult.status === 'fulfilled' && txResult.value.data) {
+        setTransactions(txResult.value.data);
       }
+      if (gamifResult.status === 'fulfilled' && gamifResult.value.data) {
+        setGamification(gamifResult.value.data);
+      }
+      if (lbResult.status === 'fulfilled' && lbResult.value.data) {
+        setLeaderboard(lbResult.value.data.map((d: any, idx: number) => ({
+          rank: idx + 1,
+          name: `Trader ${(d.id as string).slice(0, 6)}`,
+          xp: d.xp || 0,
+          isMe: d.id === user.id
+        })));
+      }
+      if (holdResult.status === 'fulfilled' && holdResult.value.data) {
+        setHoldings(holdResult.value.data);
+      }
+
+      if (isMounted) setIsLoading(false);
     };
     
     // Circuit breaker: force unlock after 5 seconds if Supabase hangs
@@ -129,12 +115,14 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
       if (isMounted) setIsLoading(false);
     }, 5000);
     
-    fetchData().then(() => clearTimeout(timeoutId));
+    fetchData().catch(() => {
+      if (isMounted) setIsLoading(false);
+    }).finally(() => clearTimeout(timeoutId));
     
     return () => {
        isMounted = false;
        clearTimeout(timeoutId);
-    }
+    };
   }, [user]);
 
   const stats = useMemo(() => {
@@ -391,8 +379,8 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
             <div className="flex justify-between items-center mb-6 border-b-4 border-black pb-4">
               <h3 className="font-black font-headline text-xl uppercase tracking-tight text-black">Recent Cashflow</h3>
             </div>
-            <div className="mt-4 w-full">
-              <ResponsiveContainer width="100%" height={200} minWidth={1} minHeight={1}>
+            <div className="mt-4 w-full h-[200px]">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <BarChart data={cashTrackingData} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#000', fontSize: 10, fontWeight: 'bold' }} dy={5} />
@@ -440,9 +428,9 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
               </div>
             </div>
             
-            <div className="flex-1 w-full mt-4">
+            <div className="flex-1 w-full mt-4 h-[320px]">
               {trendData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320} minWidth={1} minHeight={1}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="0" vertical={true} stroke="#e5e5e5" strokeWidth={2} />
                     <XAxis dataKey="name" axisLine={{ stroke: '#000', strokeWidth: 4 }} tickLine={{ stroke: '#000', strokeWidth: 4 }} tick={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} dy={10} />

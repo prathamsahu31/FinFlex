@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
@@ -13,12 +13,11 @@ import { cn } from './utils';
 import Login from './Login';
 import Landing from './Landing';
 import Onboarding from './Onboarding';
-import ProfileSettings from './ProfileSettings';
 import FloatingAIChat from './FloatingAIChat';
 import { supabase } from './lib/supabase';
 import logoImg from './logo.png';
 
-import { TABS, TOOLS_METADATA } from './constants';
+import { TABS, TOOLS_METADATA, ProfileSettings } from './constants';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(() => {
@@ -478,16 +477,22 @@ export default function App() {
             )}
             
             <div className="flex-1">
-              <ActiveComponent 
-                setActiveTab={handleTabChange} 
-                pinnedToolIds={pinnedToolIds} 
-                togglePinTool={togglePinTool}
-                defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
-                onToolOpen={() => setSelectedToolId(null)}
-                onLogout={handleLogout}
-                user={user}
-                profile={profile}
-              />
+              <Suspense fallback={
+                <div className="flex h-64 items-center justify-center">
+                  <div className="w-12 h-12 border-4 border-black bg-gumroad-pink animate-pulse" />
+                </div>
+              }>
+                <ActiveComponent 
+                  setActiveTab={handleTabChange} 
+                  pinnedToolIds={pinnedToolIds} 
+                  togglePinTool={togglePinTool}
+                  defaultToolId={selectedToolId || (!TABS.find(t => t.id === activeTab) && activeTab !== 'settings' ? activeTab : null)}
+                  onToolOpen={() => setSelectedToolId(null)}
+                  onLogout={handleLogout}
+                  user={user}
+                  profile={profile}
+                />
+              </Suspense>
             </div>
             
             {/* Footer */}

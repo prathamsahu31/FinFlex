@@ -1,25 +1,32 @@
+import { lazy } from 'react';
 import { 
   LayoutDashboard, CreditCard, TrendingUp, BookOpen, Bot,
   Wrench, Users, User as UserIcon, Calculator, Target, Repeat, DollarSign, PieChart, ShieldAlert, Gavel
 } from 'lucide-react';
-import Dashboard from './Dashboard';
-import Transactions from './Transactions';
-import Portfolio from './Portfolio';
-import FlexDecks from './FlexDecks';
-import AIAgent from './AIAgent';
-import Tools from './Tools';
-import BillSplit from './BillSplit';
-import ProfileSettings from './ProfileSettings';
-import EMICalculator from './EMICalculator';
-import FIRECalculator from './FIRECalculator';
-import SubscriptionTracker from './SubscriptionTracker';
-import CurrencyConverter from './CurrencyConverter';
-import TaxEstimator from './TaxEstimator';
-import BudgetPlanner from './BudgetPlanner';
-import CompoundInterest from './CompoundInterest';
-import PunishmentContract from './PunishmentContract';
-import Trading from './Trading';
 import { LineChart } from 'lucide-react';
+
+// Eagerly loaded (always visible on first render)
+import Dashboard from './Dashboard';
+import Trading from './Trading';
+import Tools from './Tools';
+
+// Lazy loaded (only loaded when user navigates to them)
+const Transactions = lazy(() => import('./Transactions'));
+const Portfolio = lazy(() => import('./Portfolio'));
+const FlexDecks = lazy(() => import('./FlexDecks'));
+const AIAgent = lazy(() => import('./AIAgent'));
+const BillSplit = lazy(() => import('./BillSplit'));
+const ProfileSettings = lazy(() => import('./ProfileSettings'));
+const EMICalculator = lazy(() => import('./EMICalculator'));
+const FIRECalculator = lazy(() => import('./FIRECalculator'));
+const SubscriptionTracker = lazy(() => import('./SubscriptionTracker'));
+const CurrencyConverter = lazy(() => import('./CurrencyConverter'));
+const TaxEstimator = lazy(() => import('./TaxEstimator'));
+const BudgetPlanner = lazy(() => import('./BudgetPlanner'));
+const CompoundInterest = lazy(() => import('./CompoundInterest'));
+const PunishmentContract = lazy(() => import('./PunishmentContract'));
+
+export { ProfileSettings };
 
 export interface TabComponentProps {
   setActiveTab?: (tab: string) => void;

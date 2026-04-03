@@ -89,10 +89,12 @@ export default function AIAgent({ setActiveTab, user, profile }: TabComponentPro
     setInput('');
     setIsTyping(true);
 
-    const callAI = async () => {
+    const callAI = async (retryCount = 0) => {
       try {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (!apiKey) throw new Error("Missing Gemini API Key in .env");
+        if (!apiKey) {
+          throw new Error("MISSING_KEY");
+        }
 
         const ai = new GoogleGenAI({ apiKey });
         
@@ -133,10 +135,26 @@ The user's latest message is: "${input}"
         setMessages(prev => [...prev, newBotMsg]);
       } catch (err: any) {
         console.error("AI Error:", err);
+        
+        // Retry once on rate limit (429)
+        if ((err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) && retryCount < 1) {
+          setTimeout(() => callAI(retryCount + 1), 2000);
+          return;
+        }
+        
+        let errorText = "Bruh, the AI is down rn. Too much load.";
+        if (err.message === "MISSING_KEY") {
+          errorText = "Missing VITE_GEMINI_API_KEY in .env file. Can't help without it. 🔑";
+        } else if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+          errorText = "Hit the AI rate limit, bestie. Wait 30 sec and try again. ⏳";
+        } else if (err.message?.includes('API_KEY_INVALID') || err.message?.includes('403')) {
+          errorText = "Your Gemini API key seems invalid or expired. Get a new one at aistudio.google.com 🔑";
+        }
+        
         setMessages(prev => [...prev, {
           id: Date.now() + 1,
           sender: 'bot',
-          text: err.message.includes("Missing API Key") ? "Bruh, missing VITE_GEMINI_API_KEY in .env. Can't help without it." : "Bruh, the AI is down rn. Too much load.",
+          text: errorText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }]);
       } finally {

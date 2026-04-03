@@ -74,24 +74,26 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
     if (isOpen) fetchTransactions();
   }, [user, isOpen]);
 
-  const handleSend = async (textOverride?: string) => {
+  const handleSend = async (textOverride?: string, retryCount = 0) => {
     const textToSend = textOverride || input;
     if (!textToSend.trim()) return;
 
-    const newUserMsg = {
-      id: Date.now(),
-      sender: 'user',
-      text: textToSend,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages(prev => [...prev, newUserMsg]);
-    setInput('');
-    setIsTyping(true);
+    // Only add user message on first attempt (not retries)
+    if (retryCount === 0) {
+      const newUserMsg = {
+        id: Date.now(),
+        sender: 'user',
+        text: textToSend,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, newUserMsg]);
+      setInput('');
+      setIsTyping(true);
+    }
 
     try {
       const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error("Missing API Key");
+      if (!apiKey) throw new Error("MISSING_KEY");
 
       const ai = new GoogleGenAI({ apiKey });
       const context = `
@@ -124,10 +126,24 @@ Give a brief, witty, and helpful response. If they upload a document (implied by
       setMessages(prev => [...prev, newBotMsg]);
     } catch (err: any) {
       console.error(err);
+      
+      // Retry once on rate limit
+      if ((err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) && retryCount < 1) {
+        setTimeout(() => handleSend(textToSend, retryCount + 1), 2000);
+        return;
+      }
+      
+      let errorText = "Bruh, the AI is hitting a wall. Check your connection or API key.";
+      if (err.message === "MISSING_KEY") {
+        errorText = "Missing VITE_GEMINI_API_KEY in .env. Set it up first! 🔑";
+      } else if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+        errorText = "Rate limited! Wait 30 sec and try again. ⏳";
+      }
+      
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'bot',
-        text: "Bruh, the AI is hitting a wall. Check your connection or API key.",
+        text: errorText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
     } finally {

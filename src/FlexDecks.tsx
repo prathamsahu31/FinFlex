@@ -25,59 +25,78 @@ export default function FlexDecks({ setActiveTab, user }: TabComponentProps & { 
   const [cards, setCards] = useState<any[]>([]);
   const [allCards, setAllCards] = useState<any[]>([]);
   const [swiped, setSwiped] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(!user);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCard, setNewCard] = useState({ title: '', content: '' });
 
   useEffect(() => {
+    let isMounted = true;
     const initCards = async () => {
       if (!supabase || !user) {
-        setIsLoading(!user);
+        if (!user && isMounted) setIsLoading(false);
         return;
       }
 
-      // fetch decks
-      let { data: decks } = await supabase.from('flex_decks').select('*').eq('user_id', user.id);
-      let deckId: string;
+      try {
+        // fetch decks
+        let { data: decks } = await supabase.from('flex_decks').select('*').eq('user_id', user.id);
+        let deckId: string;
 
-      if (!decks || decks.length === 0) {
-        const { data: newDeck } = await supabase.from('flex_decks').insert([{ user_id: user.id, title: 'General Finance' }]).select();
-        deckId = newDeck![0].id;
-        const seedCards = INITIAL_DECKS.map(c => ({ deck_id: deckId, front_text: c.front_text, back_text: c.content }));
-        await supabase.from('flashcards').insert(seedCards);
+        if (!decks || decks.length === 0) {
+          const { data: newDeck } = await supabase.from('flex_decks').insert([{ user_id: user.id, title: 'General Finance' }]).select();
+          if (newDeck) deckId = newDeck[0].id;
+          const seedCards = INITIAL_DECKS.map(c => ({ deck_id: deckId!, front_text: c.front_text, back_text: c.content }));
+          await supabase.from('flashcards').insert(seedCards);
+        }
+
+        // Fetch all user's deck IDs first, then cards for those decks
+        const { data: userDecks } = await supabase.from('flex_decks').select('id, title').eq('user_id', user.id);
+        const deckIds = userDecks?.map(d => d.id) || [];
+        const deckTitleMap = new Map(userDecks?.map(d => [d.id, d.title]) || []);
+
+        let allFlashcards: any[] = [];
+        if (deckIds.length > 0) {
+          const { data: flashcards } = await supabase.from('flashcards').select('*').in('deck_id', deckIds);
+          allFlashcards = flashcards || [];
+        }
+
+        const { data: progress } = await supabase.from('flashcard_progress').select('card_id').eq('user_id', user.id).eq('is_mastered', true);
+        
+        const masteredIds = new Set(progress?.map(p => p.card_id) || []);
+
+        if (allFlashcards.length > 0) {
+          const all = allFlashcards.map((c, i) => ({
+            id: c.id,
+            title: c.front_text,
+            content: c.back_text,
+            category: deckTitleMap.get(c.deck_id) || 'Finance',
+            color: COLORS[i % COLORS.length]
+          }));
+          if (isMounted) {
+            setAllCards(all);
+            setCards(all.filter(c => !masteredIds.has(c.id)));
+          }
+        }
+      } catch (err) {
+        console.error('FlexDecks init error:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-
-      // Fetch all user's deck IDs first, then cards for those decks
-      const { data: userDecks } = await supabase.from('flex_decks').select('id, title').eq('user_id', user.id);
-      const deckIds = userDecks?.map(d => d.id) || [];
-      const deckTitleMap = new Map(userDecks?.map(d => [d.id, d.title]) || []);
-
-      let allFlashcards: any[] = [];
-      if (deckIds.length > 0) {
-        const { data: flashcards } = await supabase.from('flashcards').select('*').in('deck_id', deckIds);
-        allFlashcards = flashcards || [];
-      }
-
-      const { data: progress } = await supabase.from('flashcard_progress').select('card_id').eq('user_id', user.id).eq('is_mastered', true);
-      
-      const masteredIds = new Set(progress?.map(p => p.card_id) || []);
-
-      if (allFlashcards.length > 0) {
-        const all = allFlashcards.map((c, i) => ({
-          id: c.id,
-          title: c.front_text,
-          content: c.back_text,
-          category: deckTitleMap.get(c.deck_id) || 'Finance',
-          color: COLORS[i % COLORS.length]
-        }));
-        setAllCards(all);
-        setCards(all.filter(c => !masteredIds.has(c.id)));
-      }
-      setIsLoading(false);
     };
-    initCards();
-  }, []);
+
+    // Circuit breaker
+    const timeoutId = setTimeout(() => {
+      if (isMounted) setIsLoading(false);
+    }, 5000);
+
+    initCards().finally(() => clearTimeout(timeoutId));
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [user]);
 
   const handleSwipe = async (id: string, direction: 'left' | 'right') => {
     if (direction === 'right' && supabase && user) {

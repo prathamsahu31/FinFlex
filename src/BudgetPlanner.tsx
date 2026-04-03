@@ -9,22 +9,32 @@ export default function BudgetPlanner() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchIncome = async () => {
       if (!supabase) {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
         return;
       }
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          if (isMounted) setIsLoading(false);
+          return;
+        }
+        
+        const { data } = await supabase.from('profiles').select('monthly_income').eq('id', user.id).single();
+        if (data && isMounted) setIncome(data.monthly_income || 0);
+      } catch (err) {
+        console.error('BudgetPlanner fetch error:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-      
-      const { data } = await supabase.from('profiles').select('monthly_income').eq('id', user.id).single();
-      if (data) setIncome(data.monthly_income || 0);
-      setIsLoading(false);
     };
-    fetchIncome();
+
+    const timeoutId = setTimeout(() => { if (isMounted) setIsLoading(false); }, 5000);
+    fetchIncome().finally(() => clearTimeout(timeoutId));
+
+    return () => { isMounted = false; clearTimeout(timeoutId); };
   }, []);
 
   const handleSave = async () => {

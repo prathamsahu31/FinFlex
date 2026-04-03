@@ -12,21 +12,34 @@ export default function PunishmentContract() {
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
+    let isMounted = true;
     const fetchContract = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase.from('punishment_contracts').select('*').eq('user_id', user.id).eq('is_active', true).single();
-      if (data) {
-        setGoal(data.goal);
-        setPledge(data.pledge_amount);
-        setAntiCharity(data.anti_charity);
-        setIsContractSigned(true);
+      if (!supabase) {
+        if (isMounted) setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { if (isMounted) setIsLoading(false); return; }
+
+        const { data } = await supabase.from('punishment_contracts').select('*').eq('user_id', user.id).eq('is_active', true).maybeSingle();
+        if (data && isMounted) {
+          setGoal(data.goal);
+          setPledge(data.pledge_amount);
+          setAntiCharity(data.anti_charity);
+          setIsContractSigned(true);
+        }
+      } catch (err) {
+        console.error('Punishment contract fetch error:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     };
-    fetchContract();
+
+    const timeoutId = setTimeout(() => { if (isMounted) setIsLoading(false); }, 5000);
+    fetchContract().finally(() => clearTimeout(timeoutId));
+
+    return () => { isMounted = false; clearTimeout(timeoutId); };
   }, []);
 
   const handleSign = async () => {

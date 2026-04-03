@@ -144,6 +144,7 @@ async function startServer() {
     }
   });
 
+
   // Trade execution is handled directly via Supabase client in the frontend
   // to leverage implicit RLS auth. No server endpoint needed.
 
@@ -302,8 +303,8 @@ async function startServer() {
     }
   };
 
-  // Poll every 7 seconds
-  setInterval(fetchLivePrices, 7000);
+  // Poll every 15 seconds to avoid Yahoo Finance rate limits
+  setInterval(fetchLivePrices, 15000);
 
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
