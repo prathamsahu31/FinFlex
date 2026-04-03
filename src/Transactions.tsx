@@ -34,7 +34,7 @@ export default function Transactions({ setActiveTab, user }: TabComponentProps &
         .from('transactions')
         .select('*')
         .eq('user_id', uid)
-        .order('created_at', { ascending: false });
+        .order('date', { ascending: false });
       
       if (error) throw error;
       setTransactions(data || []);

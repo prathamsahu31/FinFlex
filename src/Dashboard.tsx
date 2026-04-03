@@ -76,48 +76,51 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
         return;
       }
 
-      // 1. Fetch transactions
-      const { data: txData } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (txData) setTransactions(txData);
+      try {
+        // 1. Fetch transactions
+        const { data: txData } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
+        if (txData) setTransactions(txData);
 
-      // 2. Fetch User Gamification
-      const { data: gamifData } = await supabase
-        .from('user_gamification')
-        .select('xp, level')
-        .eq('id', user.id)
-        .single();
-      if (gamifData) setGamification(gamifData);
+        // 2. Fetch User Gamification
+        const { data: gamifData } = await supabase
+          .from('user_gamification')
+          .select('xp, level')
+          .eq('id', user.id)
+          .single();
+        if (gamifData) setGamification(gamifData);
 
-      // 3. Fetch Leaderboard dynamically
-      // Attempts to join profiles for display names. Falls back gracefully if join fails.
-      const { data: lData } = await supabase
-        .from('user_gamification')
-        .select('id, xp, level, profiles(name, avatar_url)')
-        .order('xp', { ascending: false })
-        .limit(10);
-      
-      if (lData) {
-        const formattedLdb = lData.map((d: any, idx) => ({
-          rank: idx + 1,
-          name: d.profiles?.name || `Trader ${(d.id as string).slice(0, 6)}`,
-          xp: d.xp || 0,
-          isMe: d.id === user.id
-        }));
-        setLeaderboard(formattedLdb);
+        // 3. Fetch Leaderboard dynamically
+        const { data: lData } = await supabase
+          .from('user_gamification')
+          .select('id, xp, level, profiles(name, avatar_url)')
+          .order('xp', { ascending: false })
+          .limit(10);
+        
+        if (lData) {
+          const formattedLdb = lData.map((d: any, idx) => ({
+            rank: idx + 1,
+            name: d.profiles?.name || `Trader ${(d.id as string).slice(0, 6)}`,
+            xp: d.xp || 0,
+            isMe: d.id === user.id
+          }));
+          setLeaderboard(formattedLdb);
+        }
+
+        // 4. Fetch Quick Portfolio summary from Trading logic
+        const { data: pData } = await supabase
+           .from('stock_holdings')
+           .select('*')
+           .eq('user_id', user.id);
+        if (pData) setHoldings(pData);
+      } catch (error) {
+        console.error("Dashboard fetch error:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-      // 4. Fetch Quick Portfolio summary from Trading logic
-      const { data: pData } = await supabase
-         .from('stock_holdings')
-         .select('*')
-         .eq('user_id', user.id);
-      if (pData) setHoldings(pData);
-
-      setIsLoading(false);
     };
     
     fetchData();
