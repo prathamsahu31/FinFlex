@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { LineChart } from 'lucide-react';
 
+import { TabComponentProps, Tab, ToolMetadata } from './types';
+
 // Eagerly loaded core components
 import Dashboard from './Dashboard';
 import Trading from './Trading';
@@ -30,22 +32,13 @@ const PunishmentContract = lazy(() => import('./PunishmentContract'));
 
 export { ProfileSettings };
 
-export interface TabComponentProps {
-  setActiveTab?: (tab: string) => void;
-  pinnedToolIds?: string[];
-  togglePinTool?: (id: string) => void;
-  defaultToolId?: string | null;
-  onToolOpen?: () => void;
-  onLogout?: () => void;
-}
-
-export const TABS = [
+export const TABS: Tab[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, component: Dashboard },
   { id: 'trading', label: 'Trading Floor', icon: LineChart, component: Trading },
   { id: 'tools', label: 'Explore Tools', icon: Wrench, component: Tools },
 ];
 
-export const TOOLS_METADATA: any[] = [
+export const TOOLS_METADATA: ToolMetadata[] = [
   // High Usability / Daily-Weekly Use
   { id: 'transactions', title: 'Transactions', icon: CreditCard, description: 'Manage your income and expenses', color: 'bg-gumroad-pink text-black', component: Transactions },
   { id: 'budget', title: 'Budget Planner', icon: PieChart, description: '50/30/20 rule calculator', color: 'bg-gumroad-yellow text-black', component: BudgetPlanner },

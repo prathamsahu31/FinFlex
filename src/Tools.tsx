@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { cn } from './utils';
 import { TOOLS_METADATA } from './constants';
+import { ToolMetadata } from './types';
 
 interface ToolsProps {
   pinnedToolIds?: string[];

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { IndianRupee, TrendingUp, Calendar, Hash } from 'lucide-react';
 import { cn } from './utils';
 

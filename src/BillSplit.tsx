@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Users, Plus, IndianRupee, CreditCard, ArrowRight, Check, X, Search, Filter, MessageSquare, Clock, ArrowUpRight, ArrowDownLeft, Receipt, ArrowLeft, ChevronRight, UserPlus, PieChart, Loader2, DollarSign, Camera, Sparkles } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
-import { TabComponentProps } from './constants';
+import { TabComponentProps } from './types';
 import { GoogleGenAI } from '@google/genai';
 
 export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabComponentProps & { user: any }) {

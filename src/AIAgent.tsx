@@ -4,7 +4,7 @@ import { Bot, Send, Sparkles, Trash2, Maximize2, Minimize2, TrendingUp, CreditCa
 import { GoogleGenAI } from '@google/genai';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
-import { TabComponentProps } from './constants';
+import { TabComponentProps } from './types';
 
 const INITIAL_MESSAGES = [
   {

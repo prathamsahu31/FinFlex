@@ -38,3 +38,30 @@ export interface UserState {
   checkAchievements: (currentPortfolioValue: number) => void;
   resetAccount: () => void;
 }
+
+export interface TabComponentProps {
+  setActiveTab?: (tab: string) => void;
+  pinnedToolIds?: string[];
+  togglePinTool?: (id: string) => void;
+  selectedToolId?: string | null;
+  onToolOpen?: () => void;
+  onLogout?: () => void;
+  user?: any;
+  profile?: any;
+}
+
+export interface Tab {
+  id: string;
+  label: string;
+  icon: any;
+  component: any;
+}
+
+export interface ToolMetadata {
+  id: string;
+  title: string;
+  icon: any;
+  description: string;
+  color: string;
+  component: any;
+}

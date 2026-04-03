@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Search, Plus, Filter, BookOpen, Brain, Sparkles, X, Check, ArrowRight, RotateCcw, Loader2, RefreshCcw } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
-import { TabComponentProps } from './constants';
+import { TabComponentProps } from './types';
 
 const COLORS = [
   "bg-gumroad-pink",

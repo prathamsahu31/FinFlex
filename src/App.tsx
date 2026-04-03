@@ -20,6 +20,7 @@ import { supabase } from './lib/supabase';
 import logoImg from './logo.png';
 
 import { TABS, TOOLS_METADATA, ProfileSettings } from './constants';
+import { Tab, ToolMetadata } from './types';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(() => {

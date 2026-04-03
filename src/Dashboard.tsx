@@ -28,7 +28,7 @@ import {
 } from 'recharts';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
-import { TabComponentProps } from './constants';
+import { TabComponentProps } from './types';
 import CountUp from './CountUp';
 import AIInsights from './components/AIInsights';
 
