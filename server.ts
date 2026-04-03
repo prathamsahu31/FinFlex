@@ -18,7 +18,7 @@ async function startServer() {
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   app.use(express.json());
-  
+
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
     cors: {
@@ -45,7 +45,7 @@ async function startServer() {
         symbol = `${symbol.toUpperCase()}-USD`;
       }
       const period = req.query.period as string || '1mo'; // 1d, 5d, 1mo, 3mo, 6mo, 1y, 5y, max
-      
+
       const queryOptions: any = {
         interval: '1d',
       };
@@ -91,13 +91,13 @@ async function startServer() {
       console.error(`Chart error for ${req.params.symbol}:`, error.message);
       const symbol = req.params.symbol.toUpperCase();
       res.json({
-          meta: { symbol },
-          timestamp: Array.from({length: 30}, (_, i) => Math.floor(Date.now() / 1000) - (29 - i) * 86400),
-          indicators: {
-              quote: [{
-                  close: Array.from({length: 30}, () => 150 + Math.random() * 20),
-              }]
-          }
+        meta: { symbol },
+        timestamp: Array.from({ length: 30 }, (_, i) => Math.floor(Date.now() / 1000) - (29 - i) * 86400),
+        indicators: {
+          quote: [{
+            close: Array.from({ length: 30 }, () => 150 + Math.random() * 20),
+          }]
+        }
       });
     }
   });
@@ -124,7 +124,7 @@ async function startServer() {
     try {
       const { q } = req.query;
       if (!q || typeof q !== 'string') return res.json([]);
-      
+
       const results: any = await yahooFinance.search(q);
       const mapped = results.quotes
         .filter((quote: any) => ['EQUITY', 'CRYPTOCURRENCY', 'ETF'].includes(quote.quoteType))
@@ -133,7 +133,7 @@ async function startServer() {
           symbol: quote.symbol,
           name: quote.shortname || quote.longname || quote.symbol
         }));
-        
+
       res.json(mapped);
     } catch (error: any) {
       console.error('YF search error:', error.message);
@@ -144,22 +144,47 @@ async function startServer() {
     }
   });
 
+  // Search stocks (from snippet)
+  app.get('/api/search/:query', async (req, res) => {
+    try {
+      const query = req.params.query;
+      const results = await yahooFinance.search(query);
+      // Filter for equities to keep it simple
+      const equities = results.quotes.filter(q => q.quoteType === 'EQUITY' || q.quoteType === 'ETF');
+      res.json(equities.slice(0, 10));
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({ error: 'Failed to search stocks' });
+    }
+  });
+
+  // Get stock quote (from snippet)
+  app.get('/api/quote/:symbol', async (req, res) => {
+    try {
+      const symbol = req.params.symbol;
+      const quote = await yahooFinance.quote(symbol);
+      res.json(quote);
+    } catch (error) {
+      console.error(`Quote error for ${req.params.symbol}:`, error);
+      res.status(500).json({ error: 'Failed to fetch quote' });
+    }
+  });
 
   // Trade execution is handled directly via Supabase client in the frontend
   // to leverage implicit RLS auth. No server endpoint needed.
 
   // --- Hugging Face Native Integration ---
   const hf = new HfInference(process.env.HF_API_KEY || process.env.VITE_HF_API_KEY);
-  
+
   app.get('/api/ml/predict/:symbol', async (req, res) => {
     try {
       const { symbol } = req.params;
-      
+
       const prompt = `Analyze the stock or crypto ticker "${symbol}". Predict if its very short-term trend is Bullish or Bearish and give a confidence score from 50 to 99. Output ONLY a valid JSON object in this exact format: {"predicted_trend": "Bullish", "confidence_score": 85}. Do not include markdown formatting or reasoning.`;
-      
+
       // Fallback
       let prediction: any = { predicted_trend: "Bullish", confidence_score: 82.5, is_fallback: true };
-      
+
       if (hf) {
         try {
           const result = await hf.textGeneration({
@@ -167,7 +192,7 @@ async function startServer() {
             inputs: prompt,
             parameters: { max_new_tokens: 50, return_full_text: false, temperature: 0.1 }
           });
-          
+
           const output = result.generated_text.trim();
           const jsonMatch = output.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
@@ -180,7 +205,7 @@ async function startServer() {
           console.error("HF Inference Error (Predict):", e.message);
         }
       }
-      
+
       res.json(prediction);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -190,18 +215,18 @@ async function startServer() {
   app.get('/api/ml/recommendations/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
-      
+
       let transactionHistory = "No recent transactions.";
       if (supabase) {
-         // Gather user's transactions to personalize
-         const { data: tx } = await supabase.from('transactions').select('vendor, amount, category').eq('user_id', userId).limit(10);
-         if (tx && tx.length > 0) {
-           transactionHistory = tx.map((t: any) => `${t.category}: spent/earned ${Math.abs(t.amount)} at ${t.vendor}`).join(', ');
-         }
+        // Gather user's transactions to personalize
+        const { data: tx } = await supabase.from('transactions').select('vendor, amount, category').eq('user_id', userId).limit(10);
+        if (tx && tx.length > 0) {
+          transactionHistory = tx.map((t: any) => `${t.category}: spent/earned ${Math.abs(t.amount)} at ${t.vendor}`).join(', ');
+        }
       }
 
       const prompt = `Based on a user whose recent financial transactions are: [${transactionHistory}], recommend 3 stock tickers for them to invest in. Provide a concise reason for each why it matches their spending habits. Output ONLY valid JSON in this exact format: {"recommendations": [{"symbol": "AAPL", "confidence": 90, "reason": "Because they spend heavily on electronics."}]}. Do not include markdown formatting.`;
-      
+
       let defaultRecs = {
         recommendations: [
           { symbol: "AAPL", confidence: 88, reason: "Consistent performer for a balanced portfolio based on your steady income." },
@@ -209,7 +234,7 @@ async function startServer() {
           { symbol: "V", confidence: 78, reason: "Aligns with high consumer spending velocity." }
         ]
       };
-      
+
       if (hf) {
         try {
           const result = await hf.textGeneration({
@@ -226,7 +251,7 @@ async function startServer() {
           console.error("HF Inference Error (Recommendations):", e.message);
         }
       }
-      
+
       res.json(defaultRecs);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
@@ -236,19 +261,19 @@ async function startServer() {
   app.get('/api/ml/risk-profile/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
-      
+
       let profileData = "";
       if (supabase) {
-         const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).single();
-         if (prof) {
-            profileData = `Age: ${prof.age}, Savings: ${prof.current_savings}, Risk Tolerance specified: ${prof.risk_tolerance}`;
-         }
+        const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).single();
+        if (prof) {
+          profileData = `Age: ${prof.age}, Savings: ${prof.current_savings}, Risk Tolerance specified: ${prof.risk_tolerance}`;
+        }
       }
 
       const prompt = `Profile a user's financial risk based on: [${profileData}]. Output strictly a valid JSON object in this format: {"category": "Aggressive Growth", "risk_score": 85}. Do not include markdown formatting. Keep the category short (max 3 words).`;
-      
+
       let profile = { category: "Balanced Investor", risk_score: 65 };
-      
+
       if (hf) {
         try {
           const result = await hf.textGeneration({
@@ -259,15 +284,15 @@ async function startServer() {
           const output = result.generated_text.trim();
           const jsonMatch = output.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
-             profile = JSON.parse(jsonMatch[0]);
+            profile = JSON.parse(jsonMatch[0]);
           }
         } catch (e: any) {
           console.error("HF Inference Error (Risk):", e.message);
         }
       }
       res.json(profile);
-    } catch(err: any) {
-       res.status(500).json({ error: err.message });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
   });
 
@@ -275,16 +300,16 @@ async function startServer() {
   let activeWatchlist = new Set(['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'SPY']);
 
   const fetchLivePrices = async () => {
-    if (io.engine.clientsCount === 0) return; 
+    if (io.engine.clientsCount === 0) return;
 
     try {
       const symbols = Array.from(activeWatchlist);
       if (symbols.length === 0) return;
-      
+
       // yahoo-finance2 .quote() may return a single object or array
       const rawQuotes: any = await yahooFinance.quote(symbols);
       const quotesArray = Array.isArray(rawQuotes) ? rawQuotes : [rawQuotes];
-      
+
       const formattedData = quotesArray
         .filter((q: any) => q && q.symbol && q.regularMarketPrice)
         .map((q: any) => ({
@@ -303,12 +328,12 @@ async function startServer() {
     }
   };
 
-  // Poll every 15 seconds to avoid Yahoo Finance rate limits
-  setInterval(fetchLivePrices, 15000);
+  // Poll every 7 seconds
+  setInterval(fetchLivePrices, 7000);
 
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
-    
+
     socket.on('subscribe', (symbol: string) => {
       activeWatchlist.add(symbol.toUpperCase());
       console.log(`Added ${symbol} to active watchlist`);

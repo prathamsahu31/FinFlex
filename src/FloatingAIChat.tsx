@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Bot, Send, Sparkles, X, Mic, Paperclip, Loader2, User, MessageSquare, Maximize2, Minimize2, Trash2 } from 'lucide-react';
+import { Bot, Send, Sparkles, X, Mic, Paperclip, MessageSquare } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
@@ -13,7 +13,7 @@ interface FloatingAIChatProps {
 const THINKING_MESSAGES = [
   "Analyzing your vibe...",
   "Consulting the budget gods...",
-  "Roasting your latest spending...",
+  "Roasting your  latest spending...",
   "Checking if that's giving FIRE energy...",
   "Calculating the cost of being iconic...",
   "No cap, thinking hard rn...",
@@ -48,7 +48,6 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
     if (isOpen) scrollToBottom();
   }, [messages, isTyping, isOpen]);
 
-  // Cycle thinking messages
   useEffect(() => {
     let interval: any;
     if (isTyping) {
@@ -70,24 +69,36 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .limit(50);
-      if (data) setTransactions(data);
+      if (data) {
+        setTransactions(data);
+        // Invalidate chat ref so it rebuilds context with new data on next message
+        chatRef.current = null;
+      }
     };
     if (isOpen) fetchTransactions();
   }, [user, isOpen]);
 
-  const initChat = (currentModel: string) => {
-    // Check both possible locations for the API key (Vite define vs import.meta.env)
-    const apiKey = (process.env.VITE_GEMINI_API_KEY) || 
-                   (process.env.GEMINI_API_KEY) || 
-                   (import.meta as any).env.VITE_GEMINI_API_KEY;
+  const initChat = (currentModel: 'gemini-2.0-flash' | 'gemini-1.5-flash') => {
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+    if (!apiKey) throw new Error("MISSING_KEY");
 
-    if (!apiKey) {
-      console.error("Gemini API Key missing! Checked: process.env.VITE_GEMINI_API_KEY, process.env.GEMINI_API_KEY, and import.meta.env.VITE_GEMINI_API_KEY");
-      throw new Error("MISSING_KEY");
-    }
-    
-    const ai = new GoogleGenAI(apiKey);
-    return ai;
+    const ai = new GoogleGenAI({ apiKey });
+    const context = `
+You are FinFlex AI, a global Gen-Z financial advisor. 
+Style: Fun, slightly roasting, encouraging, and highly analytical. Use slang like "no cap", "giving millionaire energy", "vibe check".
+
+USER CONTEXT:
+${JSON.stringify(profile || {}, null, 2)}
+
+RECENT TRANSACTIONS:
+${JSON.stringify(transactions, null, 2)}
+`;
+    return ai.chats.create({
+      model: currentModel,
+      config: {
+        systemInstruction: context,
+      }
+    });
   };
 
   const handleSend = async (textOverride?: string, retryCount = 0) => {
@@ -103,56 +114,40 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
       };
       setMessages(prev => [...prev, newUserMsg]);
       setInput('');
-      setIsTyping(true);
     }
+
+    setIsTyping(true);
+    let willRetry = false;
 
     try {
       if (!chatRef.current) {
         chatRef.current = initChat('gemini-2.0-flash');
       }
 
-      const context = `
-You are FinFlex AI, a global Gen-Z financial advisor. 
-Style: Fun, slightly roasting, encouraging, and highly analytical. Use slang like "no cap", "giving millionaire energy", "vibe check".
-
-USER CONTEXT:
-${JSON.stringify(profile || {}, null, 2)}
-
-RECENT TRANSACTIONS:
-${JSON.stringify(transactions, null, 2)}
-
-THE USER MESSAGE: "${textToSend}"
-`;
-
-      const response = await chatRef.current.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: context,
-      });
-
-      const botText = response.text || "My brain is lagging, bestie. Try again.";
+      const response = await chatRef.current.sendMessage(textToSend);
 
       const newBotMsg = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: botText,
+        text: response.text || "My brain is lagging, bestie. Try again.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, newBotMsg]);
     } catch (err: any) {
-      console.error(err);
-      
-      // Handle Quota/Exhaustion with exact retry logic
+      console.error("Chat Error:", err);
+
       if ((err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) && retryCount < 1) {
         console.warn("Retrying with gemini-1.5-flash due to quota...");
         try {
           chatRef.current = initChat('gemini-1.5-flash');
+          willRetry = true;
           setTimeout(() => handleSend(textToSend, retryCount + 1), 2000);
           return;
         } catch (initErr) {
-          console.error(initErr);
+          console.error("Retry Init Error:", initErr);
         }
       }
-      
+
       let errorText = "Bruh, the AI is hitting a wall. Check your connection or API key.";
       if (err.message === "MISSING_KEY") {
         errorText = "Missing VITE_GEMINI_API_KEY in .env. Set it up first! 🔑";
@@ -160,9 +155,9 @@ THE USER MESSAGE: "${textToSend}"
         errorText = "🚨 Your Gemini API Key has expired. Please update it in the Dashboard!";
       } else if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
         const waitStr = err.message.match(/retry in ([\d.]+s)/)?.[1] || "30 sec";
-        errorText = `Rate limited! Wait ${waitStr} and try again. The free tier is suffering rn. ⏳`;
+        errorText = `Rate limited! Wait ${waitStr} and try again. ⏳`;
       }
-      
+
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'bot',
@@ -170,7 +165,9 @@ THE USER MESSAGE: "${textToSend}"
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
     } finally {
-      setIsTyping(false);
+      if (!willRetry) {
+        setIsTyping(false);
+      }
     }
   };
 
@@ -183,8 +180,8 @@ THE USER MESSAGE: "${textToSend}"
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
-    recognition.start();
-    setIsListening(true);
+
+    recognition.onstart = () => setIsListening(true);
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
@@ -192,13 +189,22 @@ THE USER MESSAGE: "${textToSend}"
       setIsListening(false);
     };
 
-    recognition.onerror = () => setIsListening(false);
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
     recognition.onend = () => setIsListening(false);
+
+    recognition.start();
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Reset input so the same file can be selected again if needed
+    if (fileInputRef.current) fileInputRef.current.value = '';
 
     setIsTyping(true);
     setMessages(prev => [...prev, {
@@ -208,36 +214,59 @@ THE USER MESSAGE: "${textToSend}"
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }]);
 
-    // OCR logic (simplified for chat context)
     try {
-        const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-        const ai = new GoogleGenAI({ apiKey });
-        const reader = new FileReader();
-        reader.onload = async () => {
-            const base64Data = (reader.result as string).split(',')[1];
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: [
-                    { 
-                        role: 'user', 
-                        parts: [
-                            { text: "Analyze this document/receipt. What's the main takeaway for my finances?" },
-                            { inlineData: { data: base64Data, mimeType: file.type } }
-                        ] 
-                    }
+      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("MISSING_KEY");
+
+      const ai = new GoogleGenAI({ apiKey });
+      const reader = new FileReader();
+
+      reader.onload = async () => {
+        try {
+          const base64Data = (reader.result as string).split(',')[1];
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.0-flash',
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  { text: "Analyze this document/receipt. What's the main takeaway for my finances?" },
+                  { inlineData: { data: base64Data, mimeType: file.type } }
                 ]
-            });
-            setMessages(prev => [...prev, {
-                id: Date.now() + 1,
-                sender: 'bot',
-                text: response.text || "Document scanned, but I've got no words. Looks interesting though!",
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }]);
-            setIsTyping(false);
-        };
-        reader.readAsDataURL(file);
-    } catch (err) {
-        setIsTyping(false);
+              }
+            ]
+          });
+          setMessages(prev => [...prev, {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: response.text || "Document scanned, but I've got no words. Looks interesting though!",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }]);
+        } catch (err: any) {
+          console.error("File Analysis Error:", err);
+          setMessages(prev => [...prev, {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: "Couldn't read that file. Make sure it's a clear image. 🧐",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }]);
+        } finally {
+          setIsTyping(false);
+        }
+      };
+      reader.onerror = () => {
+        throw new Error("Failed to read file locally.");
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error("Upload process error:", err);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        sender: 'bot',
+        text: err.message === "MISSING_KEY" ? "Missing API Key. Setup VITE_GEMINI_API_KEY." : "Something went wrong processing your file.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+      setIsTyping(false);
     }
   };
 
@@ -265,7 +294,7 @@ THE USER MESSAGE: "${textToSend}"
                   </div>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
                 className="text-white hover:text-gumroad-pink transition-colors cursor-pointer"
               >
@@ -276,7 +305,7 @@ THE USER MESSAGE: "${textToSend}"
             {/* Chat Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 grid-bg custom-scrollbar">
               {messages.map((msg) => (
-                <div 
+                <div
                   key={msg.id}
                   className={cn(
                     "flex flex-col max-w-[85%]",
@@ -287,7 +316,7 @@ THE USER MESSAGE: "${textToSend}"
                     "px-4 py-3 border-2 border-black neo-brutalism-shadow-xs",
                     msg.sender === 'user' ? "bg-gumroad-pink text-black font-bold" : "bg-white text-black font-medium"
                   )}>
-                    <p className="text-sm leading-tight">{msg.text}</p>
+                    <p className="text-sm leading-tight whitespace-pre-wrap">{msg.text}</p>
                   </div>
                   <span className="text-[8px] font-black uppercase text-black/50 mt-1 px-1">{msg.timestamp}</span>
                 </div>
@@ -310,30 +339,30 @@ THE USER MESSAGE: "${textToSend}"
             {/* Input Area */}
             <div className="p-4 bg-white border-t-4 border-black">
               <div className="flex gap-2 mb-3">
-                 <button 
-                    onClick={() => setInput("Check my spending vibes")} 
-                    className="text-[8px] font-black border-2 border-black px-2 py-1 uppercase hover:bg-gumroad-yellow transition-all"
-                 >
-                    Vibe Check?
-                 </button>
-                 <button 
-                    onClick={() => setInput("Am I on track for FIRE?")} 
-                    className="text-[8px] font-black border-2 border-black px-2 py-1 uppercase hover:bg-gumroad-yellow transition-all"
-                 >
-                    FIRE Status?
-                 </button>
+                <button
+                  onClick={() => setInput("Check my spending vibes")}
+                  className="text-[8px] font-black border-2 border-black px-2 py-1 uppercase hover:bg-gumroad-yellow transition-all cursor-pointer"
+                >
+                  Vibe Check?
+                </button>
+                <button
+                  onClick={() => setInput("Am I on track for FIRE?")}
+                  className="text-[8px] font-black border-2 border-black px-2 py-1 uppercase hover:bg-gumroad-yellow transition-all cursor-pointer"
+                >
+                  FIRE Status?
+                </button>
               </div>
               <div className="flex items-center gap-2">
-                <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-2 border-2 border-black bg-white hover:bg-gumroad-pink transition-all shrink-0 cursor-pointer"
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 border-2 border-black bg-white hover:bg-gumroad-pink transition-all shrink-0 cursor-pointer"
                 >
-                    <Paperclip size={18} strokeWidth={3} />
-                    <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} accept="image/*" />
+                  <Paperclip size={18} strokeWidth={3} />
+                  <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} accept="image/*" />
                 </button>
                 <div className="relative flex-1">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -341,16 +370,16 @@ THE USER MESSAGE: "${textToSend}"
                     className="w-full bg-white border-2 border-black px-3 py-2 text-sm font-bold outline-none focus:bg-gumroad-yellow/10"
                   />
                 </div>
-                <button 
-                    onClick={isListening ? () => {} : startVoice}
-                    className={cn(
-                        "p-2 border-2 border-black transition-all shrink-0 cursor-pointer",
-                        isListening ? "bg-red-500 text-white animate-pulse" : "bg-white hover:bg-gumroad-pink"
-                    )}
+                <button
+                  onClick={isListening ? () => setIsListening(false) : startVoice}
+                  className={cn(
+                    "p-2 border-2 border-black transition-all shrink-0 cursor-pointer",
+                    isListening ? "bg-red-500 text-white animate-pulse" : "bg-white hover:bg-gumroad-pink"
+                  )}
                 >
-                    <Mic size={18} strokeWidth={3} />
+                  <Mic size={18} strokeWidth={3} />
                 </button>
-                <button 
+                <button
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isTyping}
                   className="p-2 border-2 border-black bg-black text-white hover:bg-gumroad-pink hover:text-black transition-all disabled:opacity-50 cursor-pointer"
@@ -374,13 +403,13 @@ THE USER MESSAGE: "${textToSend}"
       >
         {isOpen ? <X size={32} strokeWidth={3} /> : <MessageSquare size={32} strokeWidth={3} fill="currentColor" />}
         {!isOpen && (
-            <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-gumroad-pink border-2 border-black flex items-center justify-center"
-            >
-                <Sparkles size={12} className="text-black" fill="currentColor" />
-            </motion.div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-2 -right-2 w-6 h-6 bg-gumroad-pink border-2 border-black flex items-center justify-center"
+          >
+            <Sparkles size={12} className="text-black" fill="currentColor" />
+          </motion.div>
         )}
       </motion.button>
     </div>
