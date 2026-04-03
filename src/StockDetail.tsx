@@ -288,7 +288,7 @@ export default function StockDetail({ symbol, assetType = 'crypto', user, coins,
               <Loader2 size={40} className="animate-spin text-black" />
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={400} minWidth={1} minHeight={1}>
               <AreaChart data={history} margin={{ top: 20, right: 10, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
