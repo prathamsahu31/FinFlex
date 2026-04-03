@@ -70,61 +70,85 @@ export default function Dashboard({ setActiveTab, user }: DashboardProps) {
   const [startDate, setStartDate] = useState<string>(thirtyDaysAgo.toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchData = async () => {
-      if (!supabase || !user) {
-        if (!user && isMounted) setIsLoading(false);
-        return;
-      }
+  const fetchData = React.useCallback(async (isSilent = false) => {
+    if (!supabase || !user) {
+      if (!user) setIsLoading(false);
+      return;
+    }
 
-      // Fetch all data in parallel — each query is independent
-      const [txResult, gamifResult, lbResult, holdResult] = await Promise.allSettled([
-        supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
-        supabase.from('user_gamification').select('xp, level').eq('id', user.id).single(),
-        supabase.from('user_gamification').select('id, xp, level').order('xp', { ascending: false }).limit(10),
-        supabase.from('stock_holdings').select('*').eq('user_id', user.id),
-      ]);
+    if (!isSilent) setIsLoading(true);
 
-      if (!isMounted) return;
+    // Fetch all data in parallel — each query is independent
+    const [txResult, gamifResult, lbResult, holdResult] = await Promise.allSettled([
+      supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
+      supabase.from('user_gamification').select('xp, level').eq('id', user.id).single(),
+      supabase.from('user_gamification').select('id, xp, level').order('xp', { ascending: false }).limit(10),
+      supabase.from('stock_holdings').select('*').eq('user_id', user.id),
+    ]);
 
-      // Process each result independently — one failure won't affect others
-      if (txResult.status === 'fulfilled' && txResult.value.data) {
-        setTransactions(txResult.value.data);
-      }
-      if (gamifResult.status === 'fulfilled' && gamifResult.value.data) {
-        setGamification(gamifResult.value.data);
-      }
-      if (lbResult.status === 'fulfilled' && lbResult.value.data) {
-        setLeaderboard(lbResult.value.data.map((d: any, idx: number) => ({
-          rank: idx + 1,
-          name: `Trader ${(d.id as string).slice(0, 6)}`,
-          xp: d.xp || 0,
-          isMe: d.id === user.id
-        })));
-      }
-      if (holdResult.status === 'fulfilled' && holdResult.value.data) {
-        setHoldings(holdResult.value.data);
-      }
+    // Process each result independently — one failure won't affect others
+    if (txResult.status === 'fulfilled' && txResult.value.data) {
+      setTransactions(txResult.value.data);
+    }
+    if (gamifResult.status === 'fulfilled' && gamifResult.value.data) {
+      setGamification(gamifResult.value.data);
+    }
+    if (lbResult.status === 'fulfilled' && lbResult.value.data) {
+      setLeaderboard(lbResult.value.data.map((d: any, idx: number) => ({
+        rank: idx + 1,
+        name: `Trader ${(d.id as string).slice(0, 6)}`,
+        xp: d.xp || 0,
+        isMe: d.id === user.id
+      })));
+    }
+    if (holdResult.status === 'fulfilled' && holdResult.value.data) {
+      setHoldings(holdResult.value.data);
+    }
 
-      if (isMounted) setIsLoading(false);
-    };
-    
-    // Circuit breaker: force unlock after 5 seconds if Supabase hangs
-    const timeoutId = setTimeout(() => {
-      if (isMounted) setIsLoading(false);
-    }, 5000);
-    
-    fetchData().catch(() => {
-      if (isMounted) setIsLoading(false);
-    }).finally(() => clearTimeout(timeoutId));
-    
-    return () => {
-       isMounted = false;
-       clearTimeout(timeoutId);
-    };
+    setIsLoading(false);
   }, [user]);
+
+  useEffect(() => {
+    fetchData();
+
+    // 1. Re-fetch on Window Focus / Tab Switch
+    const handleFocus = () => {
+      // Small cooldown or silent fetch
+      fetchData(true); 
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') fetchData(true);
+    });
+
+    // 2. Real-time Supabase Subscription
+    const channel = supabase
+      .channel('dashboard_sync')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'transactions',
+        filter: `user_id=eq.${user?.id}`
+      }, () => fetchData(true))
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'user_gamification',
+        filter: `id=eq.${user?.id}`
+      }, () => fetchData(true))
+      .subscribe();
+
+    // 3. Periodic Polling (every 60s) as a fail-safe
+    const pollInterval = setInterval(() => fetchData(true), 60000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('visibilitychange', handleFocus);
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
+  }, [user, fetchData]);
 
   const stats = useMemo(() => {
     let income = 0;
