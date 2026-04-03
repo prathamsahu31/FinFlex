@@ -1,316 +1,185 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { Target, IndianRupee, TrendingUp, TrendingDown, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
-import { supabase } from './lib/supabase';
+import { useEffect, useState } from 'react';
+import { useStore } from './store';
+import { Briefcase, TrendingUp, TrendingDown, DollarSign, PieChart } from 'lucide-react';
 import { cn } from './utils';
-import { TabComponentProps } from './constants';
-import { io } from 'socket.io-client';
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#64748b', '#ec4899', '#8b5cf6', '#d946ef', '#f43f5e'];
-
-export default function Portfolio({ setActiveTab, user, profile }: TabComponentProps & { user: any, profile: any }) {
-  const [holdings, setHoldings] = useState<any[]>([]);
-  const [livePrices, setLivePrices] = useState<Record<string, number>>({});
-  const [isLoading, setIsLoading] = useState(!user);
-  const backendUrl = window.location.origin;
-
-  // FIRE Calculator State
-  const [currentAge, setCurrentAge] = useState(28);
-  const [retirementAge, setRetirementAge] = useState(45);
-  const [monthlySavings, setMonthlySavings] = useState(1500);
-  const [fireNumber, setFireNumber] = useState(1500000);
+export default function Portfolio({ setActiveTab, user, profile }: any) {
+  const { balance, portfolio, checkAchievements } = useStore();
+  const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
-    const socket = io(backendUrl);
-
-    const initData = async () => {
-      if (!supabase || !user) {
-        setIsLoading(!user);
+    const fetchPrices = async (isBackground = false) => {
+      if (portfolio.length === 0) {
+        if (!isBackground) setLoading(false);
         return;
       }
 
-      // Fetch Real Holdings from FinFlex Simulator
-      const { data: assetData } = await supabase.from('stock_holdings').select('*').eq('user_id', user.id);
-      if (assetData) {
-        const hData = assetData.filter(a => a.total_quantity > 0);
-        setHoldings(hData);
-        
-        // Subscribe to live prices for all held symbols
-        socket.on('connect', () => {
-           hData.forEach(h => {
-             socket.emit('subscribe', h.symbol);
-           });
-        });
-      }
-      setIsLoading(false);
-
-      if (profile) {
-        if (profile.fire_target) setFireNumber(Number(profile.fire_target));
-        if (profile.age) setCurrentAge(Number(profile.age));
-        if (profile.monthly_income && profile.monthly_expenses) {
-          const savings = Number(profile.monthly_income) - Number(profile.monthly_expenses);
-          if (savings >= 0) setMonthlySavings(savings);
-        }
+      if (!isBackground) setLoading(true);
+      const prices: Record<string, number> = {};
+      
+      try {
+        await Promise.all(
+          portfolio.map(async (item) => {
+            const res = await fetch(`/api/stock/quote/${item.symbol}`);
+            if (res.ok) {
+              const data = await res.json();
+              prices[item.symbol] = data.regularMarketPrice;
+            }
+          })
+        );
+        setCurrentPrices(prices);
+      } catch (err) {
+        console.error('Failed to fetch portfolio prices', err);
+      } finally {
+        if (!isBackground) setLoading(false);
       }
     };
-    initData();
 
-    socket.on('marketUpdate', (data: any[]) => {
-       if (!isMounted) return;
-       setLivePrices(prev => {
-         const nextPrices = { ...prev };
-         data.forEach(q => {
-           nextPrices[q.symbol] = q.price;
-         });
-         return nextPrices;
-       });
-    });
+    fetchPrices();
 
-    return () => { 
-        isMounted = false;
-        socket.disconnect();
-    };
-  }, [user, profile, backendUrl]);
+    // Poll for real-time updates every 10 seconds
+    const interval = setInterval(() => {
+      fetchPrices(true);
+    }, 10000);
 
-  const assets = useMemo(() => {
-    return holdings.map((h, i) => {
-        const currentPrice = livePrices[h.symbol] || h.avg_buy_price; 
-        const currentValue = h.total_quantity * currentPrice;
-        const investedValue = h.total_quantity * h.avg_buy_price;
-        const plPercent = ((currentValue - investedValue) / investedValue) * 100;
+    return () => clearInterval(interval);
+  }, [portfolio]);
 
-        return {
-            symbol: h.symbol,
-            shares: h.total_quantity,
-            value: currentValue,
-            invested: investedValue,
-            plPercent: plPercent || 0,
-            color: COLORS[i % COLORS.length]
-        };
-    }).sort((a,b) => b.value - a.value);
-  }, [holdings, livePrices]);
+  const portfolioValue = portfolio.reduce((total, item) => {
+    const currentPrice = currentPrices[item.symbol] || item.averagePrice;
+    return total + (item.shares * currentPrice);
+  }, 0);
 
-  const totalCurrentValue = useMemo(() => assets.reduce((sum, a) => sum + a.value, 0), [assets]);
-  const totalInvestedValue = useMemo(() => assets.reduce((sum, a) => sum + a.invested, 0), [assets]);
-  const portfolioPlPercent = totalInvestedValue > 0 ? ((totalCurrentValue - totalInvestedValue) / totalInvestedValue) * 100 : 0;
-  
-  const currentSavings = totalCurrentValue;
+  const totalValue = balance + portfolioValue;
+  const totalProfit = totalValue - 1000; // Initial balance is 1000
+  const totalProfitPercent = (totalProfit / 1000) * 100;
 
-  const updateFireTarget = async (newVal: number) => {
-    setFireNumber(newVal);
-    if (!supabase || !user) return;
-    await supabase.from('profiles').update({ fire_target: newVal }).eq('id', user.id);
-  };
-
-  const yearsToRetire = retirementAge - currentAge;
-  const annualReturn = 7; 
-  const monthlyRate = annualReturn / 100 / 12;
-  const months = yearsToRetire * 12;
-
-  const projectedSavings =
-    currentSavings * Math.pow(1 + monthlyRate, months) +
-    monthlySavings * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
-
-  const isFireOnTrack = projectedSavings >= fireNumber;
-
-  if (isLoading) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="animate-spin text-black" size={40} />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!loading) {
+      checkAchievements(portfolioValue);
+    }
+  }, [portfolioValue, loading, checkAchievements]);
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Portfolio & FIRE</h1>
-        <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter">Track your simulated assets and plan your early retirement</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <Briefcase className="h-8 w-8 text-emerald-500" />
+          My Portfolio
+        </h1>
+        <p className="text-slate-400 mt-1">Track your investments and performance</p>
       </div>
 
-      <div className="bg-white border-4 border-black p-6 lg:p-8 neo-brutalism-shadow flex flex-col relative overflow-hidden">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-black text-xs font-black uppercase tracking-widest border-b-2 border-black pb-1 flex items-center gap-2">
-             <RefreshCw size={14} className="animate-spin-slow" /> Live Holdings
-          </h3>
-          <button
-             onClick={() => setActiveTab?.('trading')}
-             className="px-4 py-2 border-4 border-black bg-gumroad-pink text-black text-xs font-black uppercase tracking-widest cursor-pointer neo-brutalism-shadow-xs hover:translate-x-1 hover:-translate-y-1 transition-transform"
-          >
-             Open Trading Floor
-          </button>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-emerald-500/20 p-2 rounded-lg">
+              <DollarSign className="h-5 w-5 text-emerald-500" />
+            </div>
+            <h3 className="text-slate-400 font-medium">Total Value</h3>
+          </div>
+          <div className="text-3xl font-mono font-bold text-white">
+            ${totalValue.toFixed(2)}
+          </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-end gap-6 mb-12">
-           <div className="relative z-10 w-full md:w-auto">
-             <p className="text-xs text-black font-black uppercase tracking-widest mb-3">Total Asset Value (AUM)</p>
-             <div className="flex items-center gap-4">
-               <motion.h2
-                 key={totalCurrentValue}
-                 initial={{ opacity: 0.8, y: -2 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 className="text-6xl font-black font-headline tracking-tighter text-black bg-gumroad-yellow px-4 py-2 border-4 border-black neo-brutalism-shadow-sm inline-block"
-               >
-                 ₹{totalCurrentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-               </motion.h2>
-             </div>
-           </div>
-
-           {assets.length > 0 && (
-              <div className={cn("px-4 py-2 border-4 border-black flex items-center gap-2 text-xl font-black rotate-2", portfolioPlPercent >= 0 ? "bg-emerald-400 text-black" : "bg-rose-400 text-black")}>
-                 {portfolioPlPercent >= 0 ? <TrendingUp size={24} strokeWidth={3} /> : <TrendingDown size={24} strokeWidth={3} />}
-                 {portfolioPlPercent >= 0 ? '+' : ''}{portfolioPlPercent.toFixed(2)}%
-              </div>
-           )}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-blue-500/20 p-2 rounded-lg">
+              <PieChart className="h-5 w-5 text-blue-500" />
+            </div>
+            <h3 className="text-slate-400 font-medium">Invested Value</h3>
+          </div>
+          <div className="text-3xl font-mono font-bold text-white">
+            ${portfolioValue.toFixed(2)}
+          </div>
         </div>
 
-        {assets.length === 0 ? (
-           <div className="flex flex-col items-center justify-center p-12 border-4 border-black border-dashed">
-              <p className="text-sm font-black text-black/50 uppercase tracking-widest mb-4">You hold exactly 0 assets.</p>
-           </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={cn("p-2 rounded-lg", totalProfit >= 0 ? "bg-emerald-500/20" : "bg-rose-500/20")}>
+              {totalProfit >= 0 ? <TrendingUp className="h-5 w-5 text-emerald-500" /> : <TrendingDown className="h-5 w-5 text-rose-500" />}
+            </div>
+            <h3 className="text-slate-400 font-medium">Total Profit/Loss</h3>
+          </div>
+          <div className="flex items-end gap-3">
+            <div className={cn("text-3xl font-mono font-bold", totalProfit >= 0 ? "text-emerald-400" : "text-rose-400")}>
+              ${Math.abs(totalProfit).toFixed(2)}
+            </div>
+            <div className={cn("font-medium mb-1", totalProfit >= 0 ? "text-emerald-500" : "text-rose-500")}>
+              {totalProfit >= 0 ? '+' : '-'}{Math.abs(totalProfitPercent).toFixed(2)}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div className="p-6 border-b border-slate-800">
+          <h2 className="text-xl font-bold text-white">Holdings</h2>
+        </div>
+        
+        {portfolio.length === 0 ? (
+          <div className="p-12 text-center">
+            <Briefcase className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">No stocks yet</h3>
+            <p className="text-slate-400">Go to the dashboard to make your first trade.</p>
+          </div>
         ) : (
-           <div className="flex flex-col lg:flex-row gap-8">
-               <div className="flex-1 min-h-[300px] relative grid-bg border-4 border-black neo-brutalism-shadow-sm">
-                 <ResponsiveContainer width="100%" height="100%">
-                   <RechartsPieChart>
-                     <Pie
-                       data={assets}
-                       cx="50%"
-                       cy="50%"
-                       innerRadius={60}
-                       outerRadius={100}
-                       paddingAngle={8}
-                       dataKey="value"
-                       stroke="#000"
-                       strokeWidth={4}
-                     >
-                       {assets.map((entry, index) => (
-                         <Cell key={`cell-${index}`} fill={entry.color} />
-                       ))}
-                     </Pie>
-                     <RechartsTooltip
-                       formatter={(value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`}
-                       contentStyle={{
-                         backgroundColor: '#fff', border: '4px solid #000', borderRadius: '0', boxShadow: '4px 4px 0px #000', fontWeight: 'bold'
-                       }}
-                     />
-                   </RechartsPieChart>
-                 </ResponsiveContainer>
-               </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-800/50 text-slate-400 text-sm uppercase tracking-wider">
+                  <th className="p-4 font-medium">Symbol</th>
+                  <th className="p-4 font-medium text-right">Shares</th>
+                  <th className="p-4 font-medium text-right">Avg Price</th>
+                  <th className="p-4 font-medium text-right">Current Price</th>
+                  <th className="p-4 font-medium text-right">Total Value</th>
+                  <th className="p-4 font-medium text-right">Return</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {portfolio.map((item) => {
+                  const currentPrice = currentPrices[item.symbol] || item.averagePrice;
+                  const totalValue = item.shares * currentPrice;
+                  const totalCost = item.shares * item.averagePrice;
+                  const profit = totalValue - totalCost;
+                  const profitPercent = (profit / totalCost) * 100;
+                  const isPositive = profit >= 0;
 
-               <div className="lg:w-1/2 space-y-4 max-h-[300px] overflow-y-auto pr-4">
-                  {assets.map(a => (
-                     <div key={a.symbol} className="bg-white border-2 border-black p-3 flex items-center justify-between group hover:bg-black/5 transition-colors neo-brutalism-shadow-xs">
-                        <div className="flex items-center gap-3">
-                           <div className="w-4 h-4 border-2 border-black" style={{ backgroundColor: a.color }}></div>
-                           <div>
-                              <p className="font-black text-lg uppercase leading-none">{a.symbol}</p>
-                              <p className="text-[10px] font-bold text-black/60 uppercase tracking-widest mt-1">{a.shares} Shares</p>
-                           </div>
+                  return (
+                    <tr key={item.symbol} className="hover:bg-slate-800/50 transition-colors">
+                      <td className="p-4">
+                        <span className="font-bold text-white">{item.symbol}</span>
+                      </td>
+                      <td className="p-4 text-right font-mono text-slate-300">
+                        {item.shares}
+                      </td>
+                      <td className="p-4 text-right font-mono text-slate-300">
+                        ${item.averagePrice.toFixed(2)}
+                      </td>
+                      <td className="p-4 text-right font-mono text-white">
+                        {loading ? '...' : `$${currentPrice.toFixed(2)}`}
+                      </td>
+                      <td className="p-4 text-right font-mono font-bold text-white">
+                        ${totalValue.toFixed(2)}
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className={cn(
+                          "inline-flex items-center gap-1 font-medium px-2 py-1 rounded-md",
+                          isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                        )}>
+                          {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                          {Math.abs(profitPercent).toFixed(2)}%
                         </div>
-                        <div className="text-right">
-                           <p className="font-black text-lg">₹{a.value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
-                           <p className={cn("text-xs font-black flex items-center justify-end gap-1 mt-1", a.plPercent >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                              {a.plPercent >= 0 ? <TrendingUp size={12} strokeWidth={3} /> : <TrendingDown size={12} strokeWidth={3} />}
-                              {a.plPercent >= 0 ? '+' : ''}{a.plPercent.toFixed(2)}%
-                           </p>
-                        </div>
-                     </div>
-                  ))}
-               </div>
-           </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
-
-      {/* FIRE Calculator */}
-      <div className="bg-white border-4 border-black neo-brutalism-shadow p-6 lg:p-8 text-black relative overflow-hidden flex flex-col">
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 border-4 border-black bg-gumroad-yellow flex items-center justify-center text-black neo-brutalism-shadow-sm">
-              <Target size={28} strokeWidth={3} />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black font-headline uppercase tracking-tighter">FIRE Calculator</h3>
-              <p className="text-black font-bold text-xs uppercase tracking-tighter opacity-60">Financial Independence, Retire Early</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-black uppercase tracking-widest">Current Age</label>
-              <input
-                type="number"
-                value={currentAge}
-                onChange={(e) => setCurrentAge(Number(e.target.value))}
-                className="w-full bg-white border-4 border-black px-4 py-3 text-black font-bold focus:bg-gumroad-pink/10 outline-none transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-black uppercase tracking-widest">Retire Age</label>
-              <input
-                type="number"
-                value={retirementAge}
-                onChange={(e) => setRetirementAge(Number(e.target.value))}
-                className="w-full bg-white border-4 border-black px-4 py-3 text-black font-bold focus:bg-gumroad-pink/10 outline-none transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-black uppercase tracking-widest">Monthly Save</label>
-              <div className="relative">
-                <IndianRupee size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
-                <input
-                  type="number"
-                  value={monthlySavings}
-                  onChange={(e) => setMonthlySavings(Number(e.target.value))}
-                  className="w-full bg-white border-4 border-black pl-10 pr-4 py-3 text-black font-bold focus:bg-gumroad-yellow/10 outline-none transition-all"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-black uppercase tracking-widest">FIRE Target</label>
-              <div className="relative">
-                <IndianRupee size={18} strokeWidth={3} className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
-                <input
-                  type="number"
-                  value={fireNumber}
-                  onChange={(e) => updateFireTarget(Number(e.target.value))}
-                  className="w-full bg-white border-4 border-black pl-10 pr-4 py-3 text-black font-bold focus:bg-gumroad-yellow/10 outline-none transition-all"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border-4 border-black p-6 neo-brutalism-shadow-sm flex-1 flex flex-col justify-center">
-            <p className="text-xs font-black text-black uppercase tracking-widest mb-2">Projected Value at Age {retirementAge}</p>
-            <h4 className={cn(
-              "text-5xl font-black font-headline tracking-tighter mb-6",
-              projectedSavings >= fireNumber ? "text-emerald-600" : "text-black"
-            )}>
-              ₹{projectedSavings.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-            </h4>
-
-            <div className="w-full bg-white border-4 border-black h-8 mb-4 overflow-hidden relative">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min((projectedSavings / fireNumber) * 100, 100)}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className={cn(
-                  "h-full border-r-4 border-black",
-                  isFireOnTrack ? "bg-emerald-500" : "bg-gumroad-yellow"
-                )}
-              />
-            </div>
-
-            <p className="text-xs font-black uppercase tracking-widest">
-              {isFireOnTrack
-                ? <span className="text-emerald-600 flex items-center gap-2"><CheckCircle2 size={18} strokeWidth={3} /> On track to FIRE!</span>
-                : <span className="text-rose-600">Short by ₹{(fireNumber - projectedSavings).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-              }
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

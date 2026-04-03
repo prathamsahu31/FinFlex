@@ -40,7 +40,7 @@ async function startServer() {
   app.get('/api/chart/:symbol', async (req, res) => {
     try {
       let symbol = req.params.symbol;
-      const cryptoTickers = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP', 'ADA', 'DOT'];
+      const cryptoTickers = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'DOT'];
       if (cryptoTickers.includes(symbol.toUpperCase())) {
         symbol = `${symbol.toUpperCase()}-USD`;
       }

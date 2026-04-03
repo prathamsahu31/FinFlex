@@ -1,280 +1,265 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Search, TrendingUp, Sparkles, Trophy, Star, ArrowUpRight, ArrowDownRight, Loader2, Coins as CoinsIcon, Activity } from 'lucide-react';
-import { supabase } from './lib/supabase';
+import { useState, useEffect, useRef } from 'react';
+import { Search, TrendingUp, TrendingDown, Activity, AlertCircle } from 'lucide-react';
+import { StockChart } from './components/StockChart';
+import { TradeModal } from './components/TradeModal';
+import { Stock } from './types';
 import { cn } from './utils';
-import { TabComponentProps } from './constants';
-import StockDetail from './StockDetail';
 
-// Reliable Hybrid Pairs for Presentation
-const HYBRID_PAIRS = [
-  { symbol: "BTC", name: "Bitcoin", type: "crypto" },
-  { symbol: "ETH", name: "Ethereum", type: "crypto" },
-  { symbol: "SOL", name: "Solana", type: "crypto" },
-  { symbol: "BNB", name: "Binance Coin", type: "crypto" },
-  { symbol: "DOGE", name: "Dogecoin", type: "crypto" },
-  { symbol: "TSLA", name: "Tesla, Inc.", type: "stock" },
-  { symbol: "AAPL", name: "Apple Inc.", type: "stock" },
-  { symbol: "NVDA", name: "NVIDIA Corp.", type: "stock" },
-  { symbol: "MSFT", name: "Microsoft Corp.", type: "stock" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", type: "stock" }
-];
-
-export default function Trading({ user }: TabComponentProps & { user: any }) {
-  const backendUrl = window.location.origin;
-  const [activeStock, setActiveStock] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [gamification, setGamification] = useState({ coins: 10000, xp: 0, level: 1 });
-  
-  // ML States
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [riskProfile, setRiskProfile] = useState<any>({ category: 'Analyzing...', risk_score: 50 });
-  const [isLoadingRecs, setIsLoadingRecs] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-
-    // 1. Fetch Gamification Data
-    const fetchGamification = async () => {
-      const { data, error } = await supabase
-        .from('user_gamification')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-        
-      if (data) setGamification(data);
-      if (error && error.code !== 'PGRST116') console.error('Error fetching gamification:', error);
-    };
-
-    // 2. Fetch ML Recommendations (Local Monolith)
-    const fetchML = async () => {
-      setIsLoadingRecs(true);
-      try {
-        const recRes = await fetch(`${backendUrl}/api/ml/recommendations/${user.id}`).catch(() => null);
-        if (recRes?.ok) {
-          const recData = await recRes.json();
-          setRecommendations(recData.recommendations || []);
-        } else {
-          setRecommendations([]);
-        }
-
-        const riskRes = await fetch(`${backendUrl}/api/ml/risk-profile/${user.id}`).catch(() => null);
-        if (riskRes?.ok) {
-          const riskData = await riskRes.json();
-          setRiskProfile(riskData);
-        } else {
-          setRiskProfile({ category: 'Unavailable', risk_score: 0 });
-        }
-      } catch (err) {
-        console.error("ML Fetch failed", err);
-      } finally {
-        setIsLoadingRecs(false);
-      }
-    };
-
-    fetchGamification();
-    fetchML();
-  }, [user, backendUrl]);
-
-  const [showDropdown, setShowDropdown] = useState(false);
+export default function Trading({ setActiveTab, user, profile }: any) {
+  const [searchQuery, setSearchQuery] = useState('AAPL');
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [currentStock, setCurrentStock] = useState<Stock | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [tradeModal, setTradeModal] = useState<{ isOpen: boolean, type: 'BUY'|'SELL' }>({ isOpen: false, type: 'BUY' });
+  const [chartPeriod, setChartPeriod] = useState('1mo');
+  const searchRef = useRef<HTMLFormElement>(null);
+
+  const fetchQuote = async (symbol: string, isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+      setError('');
+    }
+    try {
+      const res = await fetch(`/api/stock/quote/${symbol}`);
+      if (!res.ok) throw new Error('Failed to fetch quote');
+      const data = await res.json();
+      setCurrentStock({
+        symbol: data.symbol,
+        shortName: data.shortName || data.longName || data.symbol,
+        regularMarketPrice: data.regularMarketPrice,
+        regularMarketChangePercent: data.regularMarketChangePercent,
+      });
+    } catch (err) {
+      if (!isBackground) {
+        setError('Could not find stock symbol. Try searching by company name.');
+      }
+      console.error(err);
+    } finally {
+      if (!isBackground) {
+        setLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    
-    // Instant local search for highest reliability during presentation
-    const filtered = HYBRID_PAIRS.filter(c => 
-      c.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      c.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 5);
-    
-    setSearchResults(filtered);
+    fetchQuote('AAPL');
+  }, []);
 
-    // If no local matches, search the backend for any ticker
-    if (filtered.length === 0 && searchQuery.length >= 2) {
-      const timer = setTimeout(async () => {
+  // Poll for real-time updates every 10 seconds
+  useEffect(() => {
+    if (!currentStock?.symbol) return;
+    
+    const interval = setInterval(() => {
+      fetchQuote(currentStock.symbol, true);
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [currentStock?.symbol]);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2 && showResults) {
         try {
-          const res = await fetch(`${backendUrl}/api/stock/search?q=${encodeURIComponent(searchQuery)}`);
+          const res = await fetch(`/api/stock/search?q=${encodeURIComponent(searchQuery)}`);
           if (res.ok) {
             const data = await res.json();
-            setSearchResults(data.map((d: any) => ({ symbol: d.symbol, name: d.name, type: 'stock' })));
+            setSearchResults(data);
           }
         } catch (e) {
-          // Silently fail — local results already shown
+          console.error(e);
         }
-      }, 300); // debounce
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery, backendUrl]);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, showResults]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setActiveStock(searchQuery.toUpperCase().trim());
-      setSearchQuery('');
-      setShowDropdown(false);
+      setShowResults(false);
+      fetchQuote(searchQuery.toUpperCase());
     }
   };
 
-  const calculateStandardXp = (level: number) => level * 1000;
-  const xpPercent = Math.min((gamification.xp / calculateStandardXp(gamification.level)) * 100, 100);
+  const handleSelectResult = (symbol: string) => {
+    setSearchQuery(symbol);
+    setShowResults(false);
+    fetchQuote(symbol);
+  };
 
-  // If a stock is selected, render the detail view
-  if (activeStock) {
-    const assetData = HYBRID_PAIRS.find(p => p.symbol === activeStock) || searchResults.find(r => r.symbol === activeStock);
-    return <StockDetail 
-             symbol={activeStock} 
-             assetType={assetData?.type || 'stock'}
-             user={user} 
-             onBack={() => setActiveStock(null)} 
-             coins={gamification.coins}
-             onTradeComplete={(newCoins: number, newXp: number, newLevel: number) => {
-                setGamification(prev => ({...prev, coins: newCoins, xp: newXp, level: newLevel}));
-             }}
-           />;
-  }
+  const periods = [
+    { label: '1D', value: '1d' },
+    { label: '5D', value: '5d' },
+    { label: '1M', value: '1mo' },
+    { label: '3M', value: '3mo' },
+    { label: '6M', value: '6mo' },
+    { label: '1Y', value: '1y' },
+    { label: '5Y', value: '5y' },
+  ];
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-8">
-      {/* Header & HUD */}
-      <div>
-        <h1 className="text-4xl font-black font-headline text-black uppercase tracking-tight">Trading Floor</h1>
-        <p className="text-black font-bold text-sm mt-1 border-l-4 border-black pl-3 uppercase tracking-tighter">AI-Powered Gamified Market Simulator</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Virtual Account HUD */}
-        <div className="md:col-span-2 flex flex-col justify-between bg-gumroad-yellow border-4 border-black neo-brutalism-shadow p-6">
-          <div className="flex justify-between items-start mb-6">
-             <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-black/60 mb-1">Available Capital</p>
-                <div className="flex items-center gap-3">
-                  <CoinsIcon size={32} strokeWidth={3} className="text-black" />
-                  <h2 className="text-5xl font-black font-headline tracking-tighter text-black">
-                    {gamification.coins.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </h2>
-                </div>
-             </div>
-             <div className="bg-white border-4 border-black px-4 py-2 neo-brutalism-shadow-xs rotate-3 flex items-center gap-2">
-                <Trophy size={18} className="text-gumroad-pink" />
-                <span className="font-black text-black">LVL {gamification.level}</span>
-             </div>
-          </div>
-          
-          <div>
-            <div className="flex justify-between items-end mb-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-black">Trader XP</span>
-              <span className="text-xs font-bold text-black">{gamification.xp} / {calculateStandardXp(gamification.level)}</span>
-            </div>
-            <div className="w-full bg-white border-4 border-black h-4 overflow-hidden relative">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${xpPercent}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full border-r-4 border-black bg-gumroad-pink"
-              />
-            </div>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Market Dashboard</h1>
+          <p className="text-slate-400 mt-1">Simulate trades with real-time market data</p>
         </div>
-
-        {/* Risk Profile Card */}
-        <div className="bg-white border-4 border-black neo-brutalism-shadow p-6 relative overflow-hidden flex flex-col justify-center">
-            <div className="absolute -right-4 -top-4 opacity-10">
-               <Activity size={120} strokeWidth={3} />
-            </div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-black mb-4 flex items-center gap-2 relative z-10">
-              <Sparkles size={14} className="text-gumroad-pink" /> AI Risk Profile
-            </h3>
-            <p className="text-3xl font-black font-headline text-black tracking-tighter relative z-10">{riskProfile.category}</p>
-            <p className="text-sm font-bold text-black/60 relative z-10 mt-1">Score: {riskProfile.risk_score} / 100</p>
-        </div>
-      </div>
-
-      {/* Search Bar with Autocomplete Dropdown */}
-      <form onSubmit={handleSearch} className="relative z-20">
-        <div className="flex items-center">
-          <div className="relative flex-1">
-            <Search size={24} strokeWidth={3} className="absolute left-4 top-1/2 -translate-y-1/2 text-black" />
-            <input 
-              type="text" 
+        
+        <form onSubmit={handleSearch} className="w-full md:w-auto relative" ref={searchRef}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <input
+              type="text"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setShowDropdown(true);
+                setShowResults(true);
               }}
-              onFocus={() => setShowDropdown(true)}
-              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-              placeholder="ENTER SYMBOL (e.g., BTC, AAPL, SOL, TSLA)..." 
-              className="w-full h-16 bg-white border-4 border-black pl-14 pr-6 font-black text-xl uppercase tracking-widest placeholder:text-black/20 focus:outline-none focus:bg-gumroad-pink/5 transition-colors neo-brutalism-shadow-sm"
+              onFocus={() => {
+                if (searchQuery.length >= 2) setShowResults(true);
+              }}
+              placeholder="Search company or symbol..."
+              className="w-full md:w-80 bg-slate-800 border border-slate-700 rounded-full py-2 pl-10 pr-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
-            {showDropdown && searchQuery && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black neo-brutalism-shadow-sm flex flex-col z-30">
-                {searchResults.map((stock: any) => (
-                  <div 
-                    key={stock.symbol}
-                    onMouseDown={(e) => {
-                       e.preventDefault(); // Prevent onBlur from firing before click
-                       setActiveStock(stock.symbol);
-                       setSearchQuery('');
-                       setShowDropdown(false);
-                    }}
-                    className="flex justify-between items-center p-4 border-b-2 border-black/10 hover:bg-gumroad-yellow cursor-pointer transition-colors"
+            {showResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto">
+                {searchResults.map((result) => (
+                  <button
+                    key={result.symbol}
+                    type="button"
+                    onClick={() => handleSelectResult(result.symbol)}
+                    className="w-full text-left px-4 py-3 hover:bg-slate-700 transition-colors border-b border-slate-700/50 last:border-0"
                   >
-                     <span className="font-black font-headline text-lg text-black">{stock.symbol}</span>
-                     <span className="font-bold text-xs uppercase tracking-widest text-black/60">{stock.name}</span>
-                  </div>
+                    <div className="flex justify-between items-center">
+                      <div className="font-bold text-white">{result.symbol}</div>
+                    </div>
+                    <div className="text-sm text-slate-400 truncate">{result.name || result.shortName || result.longName}</div>
+                  </button>
                 ))}
               </div>
             )}
           </div>
-          <button type="submit" className="h-16 px-8 bg-black text-white border-4 border-black font-black uppercase tracking-widest hover:bg-gumroad-pink hover:text-black transition-colors neo-brutalism-shadow-sm -ml-4 cursor-pointer hover:-translate-y-1 z-10">
-            Trade
-          </button>
-        </div>
-      </form>
-
-      {/* ML Recommendations */}
-      <div>
-        <h3 className="text-2xl font-black font-headline uppercase tracking-tighter text-black mb-6 flex items-center gap-3">
-          <Sparkles size={24} className="text-gumroad-pink" /> Recommended For You
-        </h3>
-
-        {isLoadingRecs ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 size={40} className="animate-spin text-black" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {recommendations.map((rec, idx) => (
-              <motion.div 
-                key={idx}
-                whileHover={{ y: -4, x: -4, boxShadow: '8px 8px 0px 0px rgba(0,0,0,1)' }}
-                className="bg-white border-4 border-black neo-brutalism-shadow-sm p-5 cursor-pointer flex flex-col justify-between transition-all"
-                onClick={() => setActiveStock(rec.symbol)}
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-3xl font-black font-headline tracking-tight bg-gumroad-yellow px-2 border-2 border-black inline-block -rotate-2">
-                       {rec.symbol}
-                    </span>
-                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-black text-white px-2 py-1">
-                      {rec.confidence}% Match
-                    </span>
-                  </div>
-                  <p className="text-sm font-bold text-black/70 mb-4 line-clamp-2">{rec.reason}</p>
-                </div>
-                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gumroad-pink group-hover:text-black transition-colors">
-                  Trade Now <ArrowUpRight size={14} strokeWidth={3} />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+        </form>
       </div>
 
+      {error && (
+        <div className="bg-rose-500/10 border border-rose-500/50 text-rose-400 p-4 rounded-xl flex items-center gap-3 mb-8">
+          <AlertCircle className="h-5 w-5" />
+          {error}
+        </div>
+      )}
+
+      {currentStock && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">{currentStock.shortName}</h2>
+                  <p className="text-slate-400 font-mono">{currentStock.symbol}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-mono font-bold text-white">
+                    ${currentStock.regularMarketPrice?.toFixed(2)}
+                  </div>
+                  <div className={cn(
+                    "flex items-center justify-end gap-1 font-medium mt-1",
+                    currentStock.regularMarketChangePercent >= 0 ? "text-emerald-400" : "text-rose-400"
+                  )}>
+                    {currentStock.regularMarketChangePercent >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                    {Math.abs(currentStock.regularMarketChangePercent || 0).toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                {periods.map((p) => (
+                  <button
+                    key={p.value}
+                    onClick={() => setChartPeriod(p.value)}
+                    className={cn(
+                      "px-3 py-1 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
+                      chartPeriod === p.value 
+                        ? "bg-emerald-500/20 text-emerald-400" 
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <StockChart symbol={currentStock.symbol} period={chartPeriod} />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Activity className="h-5 w-5 text-emerald-500" />
+                Trade {currentStock.symbol}
+              </h3>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => setTradeModal({ isOpen: true, type: 'BUY' })}
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-colors"
+                >
+                  Buy Shares
+                </button>
+                <button
+                  onClick={() => setTradeModal({ isOpen: true, type: 'SELL' })}
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl border border-slate-700 transition-colors"
+                >
+                  Sell Shares
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4">Market Info</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between border-b border-slate-800 pb-2">
+                  <span className="text-slate-400">Status</span>
+                  <span className="text-emerald-400 font-medium">Market Open</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-800 pb-2">
+                  <span className="text-slate-400">Data Source</span>
+                  <span className="text-white">Yahoo Finance</span>
+                </div>
+                <div className="flex justify-between pb-2">
+                  <span className="text-slate-400">Currency</span>
+                  <span className="text-white">USD</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {currentStock && (
+        <TradeModal
+          isOpen={tradeModal.isOpen}
+          onClose={() => setTradeModal({ ...tradeModal, isOpen: false })}
+          symbol={currentStock.symbol}
+          currentPrice={currentStock.regularMarketPrice}
+          type={tradeModal.type}
+        />
+      )}
     </div>
   );
 }
