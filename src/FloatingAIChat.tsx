@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bot, Send, Sparkles, X, Mic, Paperclip, MessageSquare } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { getGeminiClient } from './lib/gemini';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 
@@ -79,10 +79,7 @@ export default function FloatingAIChat({ user, profile }: FloatingAIChatProps) {
   }, [user, isOpen]);
 
   const initChat = (currentModel: 'gemini-2.0-flash' | 'gemini-1.5-flash') => {
-    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("MISSING_KEY");
-
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = getGeminiClient();
     const context = `
 You are FinFlex AI, a global Gen-Z financial advisor. 
 Style: Fun, slightly roasting, encouraging, and highly analytical. Use slang like "no cap", "giving millionaire energy", "vibe check".
@@ -215,10 +212,7 @@ ${JSON.stringify(transactions, null, 2)}
     }]);
 
     try {
-      const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error("MISSING_KEY");
-
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = getGeminiClient();
       const reader = new FileReader();
 
       reader.onload = async () => {

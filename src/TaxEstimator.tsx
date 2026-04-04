@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { IndianRupee, Upload, Sparkles, TrendingUp, AlertCircle, FileText, Loader2, Info } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { getGeminiClient } from './lib/gemini';
 import { cn } from './utils';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -74,10 +74,7 @@ export default function TaxEstimator() {
       const base64Data = (reader.result as string).split(',')[1];
       
       try {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (!apiKey) throw new Error("Missing Gemini API Key");
-
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = getGeminiClient();
         const response = await ai.models.generateContent({
             model: 'gemini-2.0-flash',
             contents: [

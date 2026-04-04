@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, Bot, AlertCircle, Loader2 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { getGeminiClient } from '../lib/gemini';
 import { cn } from '../utils';
 
 interface AIInsightsProps {
@@ -20,10 +20,7 @@ export default function AIInsights({ transactions }: AIInsightsProps) {
       setIsLoading(true);
       setError(false);
       try {
-        const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-        if (!apiKey) throw new Error("Missing Key");
-
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = getGeminiClient();
         
         // Fallback for Demo Mode / Broken Supabase
         const dataToAnalyze = transactions.length > 0 ? transactions : [

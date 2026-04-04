@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Bot, Send, Sparkles, Trash2, Maximize2, Minimize2, TrendingUp, CreditCard, Target, PieChart, User } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { getGeminiClient } from './lib/gemini';
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { TabComponentProps } from './types';
@@ -125,10 +125,7 @@ The user's latest message is: "${input}"
 
     const callAI = async (modelName: 'gemini-2.0-flash' | 'gemini-1.5-flash' = 'gemini-2.0-flash', retryCount = 0) => {
       try {
-        const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-        if (!apiKey) throw new Error("MISSING_KEY");
-
-        const ai = new GoogleGenAI({ apiKey });
+        const ai = getGeminiClient();
         
         // Use the pattern compatible with @google/genai with internal fallback
         const internalFetch = async (currentModel: 'gemini-2.0-flash' | 'gemini-1.5-flash') => {

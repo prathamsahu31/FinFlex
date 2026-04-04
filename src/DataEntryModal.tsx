@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
-import { GoogleGenAI, Type } from '@google/genai';
+import { getGeminiClient } from './lib/gemini';
+import { Type } from '@google/genai';
 import { supabase } from './lib/supabase';
 
 interface DataEntryModalProps {
@@ -60,7 +61,7 @@ export default function DataEntryModal({ isOpen, onClose, onSuccess }: DataEntry
           const base64Data = (reader.result as string).split(',')[1];
           const mimeType = file.type;
 
-          const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY });
+          const ai = getGeminiClient();
           
           const response = await ai.models.generateContent({
             model: 'gemini-2.0-flash',

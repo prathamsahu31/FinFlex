@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { getGeminiClient } from '../lib/gemini';
 import { cn } from '../utils';
 
 interface StockAnalysisProps {
@@ -26,12 +26,7 @@ export default function StockAnalysis({ stock }: StockAnalysisProps) {
       setAnalysis('');
       setRecommendation(null);
       try {
-        const apiKey = (process.env.VITE_GEMINI_API_KEY) || 
-                       (process.env.GEMINI_API_KEY) || 
-                       (import.meta as any).env.VITE_GEMINI_API_KEY;
-        if (!apiKey) throw new Error("Missing Key");
-
-        const ai = new GoogleGenAI(apiKey);
+        const ai = getGeminiClient();
         const context = `
 Analyze this stock: ${stock.symbol} (${stock.shortName})
 Current Price: $${stock.regularMarketPrice}

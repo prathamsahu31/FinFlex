@@ -4,7 +4,7 @@ import { Users, Plus, IndianRupee, CreditCard, ArrowRight, Check, X, Search, Fil
 import { supabase } from './lib/supabase';
 import { cn } from './utils';
 import { TabComponentProps } from './types';
-import { GoogleGenAI } from '@google/genai';
+import { getGeminiClient } from './lib/gemini';
 
 export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabComponentProps & { user: any }) {
   const [billSplitTab, setBillSplitTab] = useState<'groups' | 'friends' | 'activity'>('groups');
@@ -131,11 +131,6 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      alert("Gemini API key is missing! Please set VITE_GEMINI_API_KEY.");
-      return;
-    }
 
     setIsScanning(true);
     try {
@@ -144,7 +139,7 @@ export default function BillSplit({ setActiveTab: setAppActiveTab, user }: TabCo
         const base64Data = (reader.result as string).split(',')[1];
         
         try {
-          const ai = new GoogleGenAI({ apiKey });
+          const ai = getGeminiClient();
           const response = await ai.models.generateContent({
              model: 'gemini-2.5-flash',
              contents: [
